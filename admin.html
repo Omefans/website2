@@ -1,0 +1,47 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; background: #222; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { background: #333; padding: 2rem; border-radius: 8px; width: 400px; }
+        form div { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; }
+        input { width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #555; background: #444; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #upload-form { display: none; }
+        #message { margin-top: 1rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="login-form">
+            <h2>Admin Login</h2>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <form id="upload-form">
+            <h2>Add New Content</h2>
+            <div>
+                <label for="imageUrl">Image URL:</label>
+                <input type="url" id="imageUrl" name="imageUrl" required>
+            </div>
+            <div>
+                <label for="affiliateUrl">Affiliate URL:</label>
+                <input type="url" id="affiliateUrl" name="affiliateUrl" required>
+            </div>
+            <button type="submit">Add Content</button>
+        </form>
+        <p id="message"></p>
+    </div>
+
+    <script src="admin-scripts.js"></script>
+</body>
+</html>
