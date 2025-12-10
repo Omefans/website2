@@ -252,10 +252,9 @@ body {
 
 .gallery-controls {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
     margin-bottom: 40px;
-    flex-wrap: wrap;
     gap: 20px;
     width: 100%;
 }
@@ -417,6 +416,10 @@ body {
     color: #00d9ff;
 }
 
+.item-text-content {
+    flex-grow: 1; /* This new container will expand, pushing the footer down. */
+}
+
 .item-desc {
     font-size: 0.85rem;
     color: #ccc;
@@ -448,7 +451,7 @@ body {
 }
 
 .item-footer {
-    margin-top: auto;
+    /* margin-top: auto; is no longer needed due to the new flex-grow wrapper. */
     display: flex;
     justify-content: space-between;
     align-items: center;

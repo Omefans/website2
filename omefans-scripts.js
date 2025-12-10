@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // This function can be called multiple times to apply effects to new elements
         if (!follower || !window.matchMedia("(pointer: fine)").matches) return;
         
-        const interactables = document.querySelectorAll('a, button, input, textarea, .gallery-item');
+        const interactables = document.querySelectorAll('a, button, input, textarea, .gallery-item, .item-desc.is-expandable');
         interactables.forEach(el => {
             // Prevent adding the same listener multiple times
             if (el.dataset.followerAttached) return;
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let currentSort = 'date'; // 'date' or 'name'
     let dateSortDirection = 'desc'; // 'desc' for recent, 'asc' for older
     let nameSortDirection = 'asc'; // 'asc' for A-Z, 'desc' for Z-A
-    
+
     function debounce(func, delay) {
         let timeout;
         return function(...args) {
@@ -160,40 +160,55 @@ document.addEventListener("DOMContentLoaded", function() {
                         <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
                     </a>
                     <div class="gallery-item-details">
-                        <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="item-name-link">
-                            <h3 class="item-name">${data.name}</h3>
-                        </a>
-                        ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
+                        <div class="item-text-content">
+                            <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="item-name-link">
+                                <h3 class="item-name">${data.name}</h3>
+                            </a>
+                            ${
+                                (() => {
+                                    if (!data.description) return '';
+                                    if (data.description.length > 20) {
+                                        const truncated = data.description.substring(0, 20) + '...';
+                                        return `<p class="item-desc is-expandable" data-full="${data.description.replace(/"/g, '&quot;')}" data-truncated="${truncated}">${truncated}</p>`;
+                                    }
+                                    return `<p class="item-desc">${data.description}</p>`;
+                                })()
+                            }
+                        </div>
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
                             <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
                         </div>
                     </div>
                 `;
-                
                 galleryContainer.appendChild(itemArticle);
             });
 
-            // After rendering, check for long descriptions and make them expandable
-            galleryContainer.querySelectorAll('.gallery-item').forEach(card => {
-                const desc = card.querySelector('.item-desc');
-
-                // Check if the content height is greater than the visible height. Using offsetHeight is more robust.
-                if (desc && desc.scrollHeight > desc.offsetHeight) {
-                    desc.classList.add('is-expandable');
-
+            // Use a short timeout to ensure the browser has rendered the elements before we check their height.
+            // This reliably fixes the race condition with font loading and layout reflow.
+            setTimeout(() => {
+                galleryContainer.querySelectorAll('.item-desc.is-expandable').forEach(desc => {
                     const toggleExpand = (e) => {
-                        e.preventDefault(); // Prevent link navigation if desc is inside a link
+                        e.preventDefault();
                         e.stopPropagation();
-                        desc.classList.toggle('expanded');
+                        const p = e.currentTarget;
+                        p.classList.toggle('expanded');
+                        if (p.classList.contains('expanded')) {
+                            p.textContent = p.dataset.full;
+                        } else {
+                            p.textContent = p.dataset.truncated;
+                        }
                     };
+                    if (!desc.dataset.expandListener) {
+                        desc.addEventListener('click', toggleExpand);
+                        desc.dataset.expandListener = 'true';
+                    }
+                });
 
-                    desc.addEventListener('click', toggleExpand);
-                }
-            });
+                // Re-apply mouse follower effects AFTER the .is-expandable class has been added.
+                applyMouseFollowerEffects();
 
-            // Re-apply mouse follower effects to the new dynamic items
-            applyMouseFollowerEffects();
+            }, 100); // 100ms delay is a safe value.
 
             // Setup pagination for the newly created items
             allItems = Array.from(galleryContainer.querySelectorAll('.gallery-item'));
@@ -204,12 +219,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
         function updateDisplay() {
             let processedData = [...masterGalleryData];
-            const searchTerm = searchBar.value.toLowerCase();
+            const searchTerm = searchBar ? searchBar.value.toLowerCase() : '';
 
             // 1. Filter by search term
             if (searchTerm) {
                 processedData = processedData.filter(item => 
-                    item.name.toLowerCase().includes(searchTerm)
+                    item.name && item.name.toLowerCase().includes(searchTerm)
                 );
             }
 
@@ -222,9 +237,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             } else if (currentSort === 'name') {
                 if (nameSortDirection === 'asc') {
-                    processedData.sort((a, b) => a.name.localeCompare(b.name)); // A-Z
+                    processedData.sort((a, b) => (a.name || '').localeCompare(b.name || '')); // A-Z
                 } else { // 'desc'
-                    processedData.sort((a, b) => b.name.localeCompare(a.name)); // Z-A
+                    processedData.sort((a, b) => (b.name || '').localeCompare(a.name || '')); // Z-A
                 }
             }
 
@@ -248,53 +263,45 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // Set initial button state to show the default sort direction
-        sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`; // Active by default
-        sortNameBtn.innerHTML = `Name`; // Inactive, no arrow
-
         fetchAndDisplayGallery();
 
-        // Add event listeners for controls
-        searchBar.addEventListener('input', debounce(() => {
-            updateDisplay();
-        }, 300)); // 300ms delay before triggering search
+        if (searchBar && sortDateBtn && sortNameBtn) {
+            // Set initial button state to show the default sort direction
+            sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`; // Active by default
+            sortNameBtn.innerHTML = `Name`; // Inactive, no arrow
 
-        sortDateBtn.addEventListener('click', () => {
-            if (currentSort === 'date') {
-                // If already sorting by date, just toggle the direction
-                dateSortDirection = dateSortDirection === 'desc' ? 'asc' : 'desc';
-            } else {
-                // If switching from another sort, set to default date sort
-                currentSort = 'date';
-                dateSortDirection = 'desc';
-            }
+            // Add event listeners for controls
+            searchBar.addEventListener('input', debounce(() => {
+                updateDisplay();
+            }, 300));
 
-            // Update button text to show sort direction
-            sortDateBtn.innerHTML = `Date <span class="sort-arrow">${dateSortDirection === 'desc' ? '&darr;' : '&uarr;'}</span>`; // ↓ or ↑
-            sortNameBtn.innerHTML = 'Name'; // Remove arrow from other button
+            sortDateBtn.addEventListener('click', () => {
+                if (currentSort === 'date') {
+                    dateSortDirection = dateSortDirection === 'desc' ? 'asc' : 'desc';
+                } else {
+                    currentSort = 'date';
+                    dateSortDirection = 'desc';
+                }
+                sortDateBtn.innerHTML = `Date <span class="sort-arrow">${dateSortDirection === 'desc' ? '&darr;' : '&uarr;'}</span>`;
+                sortNameBtn.innerHTML = 'Name';
+                sortDateBtn.classList.add('active');
+                sortNameBtn.classList.remove('active');
+                updateDisplay();
+            });
 
-            sortDateBtn.classList.add('active');
-            sortNameBtn.classList.remove('active');
-            updateDisplay();
-        });
-
-        sortNameBtn.addEventListener('click', () => {
-            if (currentSort === 'name') {
-                // If already sorting by name, just toggle the direction
-                nameSortDirection = nameSortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                // If switching from another sort, set to default name sort
-                currentSort = 'name';
-                nameSortDirection = 'asc';
-            }
-
-            // Update button text to show sort direction
-            sortNameBtn.innerHTML = `Name <span class="sort-arrow">${nameSortDirection === 'asc' ? '&uarr;' : '&darr;'}</span>`; // ↑ or ↓
-            sortDateBtn.innerHTML = 'Date'; // Remove arrow from other button
-
-            sortNameBtn.classList.add('active');
-            sortDateBtn.classList.remove('active');
-            updateDisplay();
-        });
+            sortNameBtn.addEventListener('click', () => {
+                if (currentSort === 'name') {
+                    nameSortDirection = nameSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort = 'name';
+                    nameSortDirection = 'asc';
+                }
+                sortNameBtn.innerHTML = `Name <span class="sort-arrow">${nameSortDirection === 'asc' ? '&uarr;' : '&darr;'}</span>`;
+                sortDateBtn.innerHTML = 'Date';
+                sortNameBtn.classList.add('active');
+                sortDateBtn.classList.remove('active');
+                updateDisplay();
+            });
+        }
     }
 });
