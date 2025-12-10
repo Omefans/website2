@@ -208,8 +208,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // 1. Filter by search term
             if (searchTerm) {
                 processedData = processedData.filter(item => 
-                    item.name.toLowerCase().includes(searchTerm) ||
-                    (item.description && item.description.toLowerCase().includes(searchTerm))
+                    item.name.toLowerCase().includes(searchTerm)
                 );
             }
 
