@@ -167,8 +167,8 @@ document.addEventListener("DOMContentLoaded", function() {
                             ${
                                 (() => {
                                     if (!data.description) return '';
-                                    if (data.description.length > 20) {
-                                        const truncated = data.description.substring(0, 20) + '...';
+                                    if (data.description.length > 40) {
+                                        const truncated = data.description.substring(0, 40) + '...';
                                         return `<p class="item-desc is-expandable" data-full="${data.description.replace(/"/g, '&quot;')}" data-truncated="${truncated}">${truncated}</p>`;
                                     }
                                     return `<p class="item-desc">${data.description}</p>`;
