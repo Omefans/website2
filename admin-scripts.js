@@ -17,15 +17,33 @@ document.addEventListener('DOMContentLoaded', () => {
     let adminPassword = '';
     let galleryItemsCache = [];
 
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         adminPassword = passwordInput.value;
-        if (adminPassword) {
+        messageEl.textContent = 'Authenticating...';
+
+        try {
+            const response = await fetch(`${AppConfig.backendUrl}/api/auth/check`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: adminPassword })
+            });
+
+            if (!response.ok) {
+                const errorResult = await response.json();
+                throw new Error(errorResult.error || 'Authentication failed.');
+            }
+
+            // If successful:
             loginForm.style.display = 'none';
             uploadForm.style.display = 'block';
             managementContainer.style.display = 'block';
             messageEl.textContent = 'Logged in. You can now add content.';
             loadManageableItems();
+
+        } catch (error) {
+            messageEl.textContent = `Login failed: ${error.message}`;
+            adminPassword = ''; // Clear the invalid password
         }
     });
 

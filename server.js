@@ -50,6 +50,23 @@ app.get('/api/gallery', (req, res) => {
     }
 });
 
+// POST: Check admin password for login
+app.post('/api/auth/check', (req, res) => {
+    const { password } = req.body;
+
+    // Use a timing-safe comparison to protect against timing attacks.
+    const userPassword = (typeof password === 'string') ? password : '';
+    const storedPassBuf = Buffer.from(ADMIN_PASSWORD);
+    const providedPassBuf = Buffer.from(userPassword);
+
+    if (storedPassBuf.length !== providedPassBuf.length || !crypto.timingSafeEqual(storedPassBuf, providedPassBuf)) {
+        // Use a 401 Unauthorized status for login failures
+        return res.status(401).json({ error: 'Unauthorized: Invalid password.' });
+    }
+
+    res.status(200).json({ success: true, message: 'Authentication successful.' });
+});
+
 // POST: Add a new gallery item from a URL (Password Protected)
 app.post('/api/upload', (req, res) => {
     const { password, name, description, imageUrl, affiliateUrl } = req.body;
