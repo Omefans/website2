@@ -423,7 +423,7 @@ utilityStyles.textContent = `
         transform: scale(1.1);
     }
     .gallery-item-details {
-        padding: 8px 15px 15px; /* Reduced top padding to bring text closer to image */
+        padding: 5px 15px 15px; /* Further reduced top padding to bring title just under the image */
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
