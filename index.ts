@@ -22,7 +22,7 @@ const isAuthorized = (password: unknown, secret: string | undefined): boolean =>
 // --- API Routes ---
 
 app.get('/', (c) => {
-	return c.json({ status: 'ok', message: 'Omefans API on Vercel is running.' });
+	return c.json({ status: 'ok', message: 'Omefans API on Vercel v1.1 - SECURE BUILD' });
 });
 
 app.get('/gallery', async (c) => {
