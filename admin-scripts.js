@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editIdInput.value = itemToEdit.id;
         document.getElementById('name').value = itemToEdit.name;
         document.getElementById('description').value = itemToEdit.description;
-        document.getElementById('imageUrl').value = itemToEdit.image_path;
+        document.getElementById('imageUrl').value = itemToEdit.imageUrl;
         document.getElementById('affiliateUrl').value = itemToEdit.affiliate_url;
 
         formSubmitButton.textContent = 'Update Item';

@@ -27,7 +27,7 @@ app.get('/', (c) => {
 app.get('/api/gallery', async (c) => {
 	try {
 		const { results } = await c.env.DB.prepare(
-			'SELECT id, name, description, image_path, affiliate_url, created_at FROM gallery_items ORDER BY created_at DESC'
+			'SELECT id, name, description, imageUrl, affiliate_url, created_at FROM gallery_items ORDER BY created_at DESC'
 		).all();
 		return c.json(results);
 	} catch (e: any) {
@@ -60,7 +60,7 @@ app.post('/api/upload', async (c) => {
 			return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
 		}
 
-		await c.env.DB.prepare('INSERT INTO gallery_items (name, description, image_path, affiliate_url) VALUES (?, ?, ?, ?)')
+		await c.env.DB.prepare('INSERT INTO gallery_items (name, description, imageUrl, affiliate_url) VALUES (?, ?, ?, ?)')
 			.bind(name, description || '', imageUrl, affiliateUrl)
 			.run();
 
@@ -107,7 +107,7 @@ app.put('/api/gallery/:id', async (c) => {
 		}
 
 		const { meta } = await c.env.DB.prepare(
-			'UPDATE gallery_items SET name = ?, description = ?, image_path = ?, affiliate_url = ? WHERE id = ?'
+			'UPDATE gallery_items SET name = ?, description = ?, imageUrl = ?, affiliate_url = ? WHERE id = ?'
 		)
 			.bind(name, description || '', imageUrl, affiliateUrl, id)
 			.run();

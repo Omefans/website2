@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 itemArticle.innerHTML = `
                     <div class="gallery-item-image-link">
-                        <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
+                        <img src="${data.imageUrl}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
                     </div>
                     <div class="gallery-item-details">
                         <div class="item-text-content">
