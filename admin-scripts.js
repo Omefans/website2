@@ -82,10 +82,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: adminPassword })
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error);
 
-            messageEl.textContent = 'Item deleted successfully!';
+            if (!response.ok) {
+                // If the server sends a JSON error, it will have this content-type
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.error || `HTTP error! Status: ${response.status}`);
+                }
+                // Otherwise, it's likely an HTML error page (like a 404)
+                throw new Error(`Server returned an unexpected response. Status: ${response.status}. Make sure the backend is deployed with the latest code.`);
+            }
+            const result = await response.json();
+            messageEl.textContent = result.message || 'Item deleted successfully!';
             loadManageableItems(); // Refresh the list
         } catch (error) {
             messageEl.textContent = `Error: ${error.message}`;
@@ -145,9 +153,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(data),
             });
 
-            const result = await response.json();
+            if (!response.ok) {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.error || `HTTP error! Status: ${response.status}`);
+                }
+                // This will catch the "not valid JSON" error because the server sent an HTML 404 page.
+                throw new Error(`Server returned an unexpected response. Status: ${response.status}. Make sure the backend is deployed with the latest code.`);
+            }
 
-            if (response.ok) {
+            const result = await response.json();
+            messageEl.textContent = result.message;
+            if (isEditing) {
+                cancelEdit();
+            } else {
+                uploadForm.reset();
+            }
+            loadManageableItems(); // Refresh the list
+        } catch (error) {
+            messageEl.textContent = `Error: ${error.message}`;
+            console.error(error);
+        }
+    });
+});
                 messageEl.textContent = result.message;
                 if (isEditing) {
                     cancelEdit();
