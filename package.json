@@ -4,15 +4,17 @@
   "description": "Backend for gallery management on Vercel",
   "private": true,
   "scripts": {
-    "dev": "vercel dev"
+    "start": "node dist/server.js",
+    "build": "tsc"
   },
   "dependencies": {
-    "@vercel/postgres": "^0.9.0",
-    "hono": "^4.4.6"
+    "hono": "^4.4.6",
+    "@hono/node-server": "^1.11.1",
+    "pg": "^8.12.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
     "typescript": "^5.3.3",
-    "vercel": "^34.2.0"
+    "@types/pg": "^8.11.6"
   }
 }

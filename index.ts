@@ -1,13 +1,18 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { timingSafeEqual } from 'hono/utils/buffer';
-import { sql } from '@vercel/postgres';
+import { Pool } from 'pg';
+
+// Create a new pool instance. It will automatically use the DATABASE_URL from the environment.
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
 const app = new Hono().basePath('/api');
 
 app.use('/*', cors());
 
-console.log("Vercel Worker v1.0: Secure auth enabled.");
+console.log("Render Worker v1.0: Secure auth enabled.");
 
 // Helper for password validation
 const isAuthorized = (password: unknown, secret: string | undefined): boolean => {
@@ -22,12 +27,12 @@ const isAuthorized = (password: unknown, secret: string | undefined): boolean =>
 // --- API Routes ---
 
 app.get('/', (c) => {
-	return c.json({ status: 'ok', message: 'Omefans API on Vercel v1.1 - SECURE BUILD' });
+	return c.json({ status: 'ok', message: 'Omefans API on Render is running.' });
 });
 
 app.get('/gallery', async (c) => {
 	try {
-		const { rows } = await sql`SELECT id, name, description, "imageUrl", "affiliateUrl", created_at as "createdAt" FROM gallery_items ORDER BY "createdAt" DESC`;
+		const { rows } = await pool.query('SELECT id, name, description, "imageUrl", "affiliateUrl", created_at as "createdAt" FROM gallery_items ORDER BY "createdAt" DESC');
 		return c.json(rows);
 	} catch (e: any) {
 		console.error('Postgres query failed:', e.message);
@@ -59,7 +64,7 @@ app.post('/upload', async (c) => {
 			return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
 		}
 
-		await sql`INSERT INTO gallery_items (name, description, "imageUrl", "affiliateUrl") VALUES (${name}, ${description || ''}, ${imageUrl}, ${affiliateUrl})`;
+		await pool.query('INSERT INTO gallery_items (name, description, "imageUrl", "affiliateUrl") VALUES ($1, $2, $3, $4)', [name, description || '', imageUrl, affiliateUrl]);
 
 		return c.json({ success: true, message: 'Item added successfully.' }, 201);
 	} catch (e: any) {
@@ -82,7 +87,7 @@ app.delete('/gallery/:id', async (c) => {
 			return c.json({ error: 'Invalid item ID provided.' }, 400);
 		}
 
-		const result = await sql`DELETE FROM gallery_items WHERE id = ${id}`;
+		const result = await pool.query('DELETE FROM gallery_items WHERE id = $1', [id]);
 
 		if (result.rowCount > 0) {
 			return c.json({ success: true, message: 'Item deleted successfully.' });
@@ -113,7 +118,7 @@ app.put('/gallery/:id', async (c) => {
 			return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
 		}
 
-		const result = await sql`UPDATE gallery_items SET name = ${name}, description = ${description || ''}, "imageUrl" = ${imageUrl}, "affiliateUrl" = ${affiliateUrl} WHERE id = ${id}`;
+		const result = await pool.query('UPDATE gallery_items SET name = $1, description = $2, "imageUrl" = $3, "affiliateUrl" = $4 WHERE id = $5', [name, description || '', imageUrl, affiliateUrl, id]);
 
 		if (result.rowCount > 0) {
 			return c.json({ success: true, message: 'Item updated successfully.' });
@@ -126,4 +131,4 @@ app.put('/gallery/:id', async (c) => {
 	}
 });
 
-export default app.fetch;
+export default app;
