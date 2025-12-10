@@ -90,6 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let masterGalleryData = []; // Holds the original full list of items from the server
     let currentSort = 'date'; // 'date' or 'name'
     let dateSortDirection = 'desc'; // 'desc' for recent, 'asc' for older
+    let nameSortDirection = 'asc'; // 'asc' for A-Z, 'desc' for Z-A
     
     function debounce(func, delay) {
         let timeout;
@@ -220,7 +221,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     processedData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // Oldest first
                 }
             } else if (currentSort === 'name') {
-                processedData.sort((a, b) => a.name.localeCompare(b.name));
+                if (nameSortDirection === 'asc') {
+                    processedData.sort((a, b) => a.name.localeCompare(b.name)); // A-Z
+                } else { // 'desc'
+                    processedData.sort((a, b) => b.name.localeCompare(a.name)); // Z-A
+                }
             }
 
             // 3. Render the processed data
@@ -244,7 +249,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         // Set initial button state to show the default sort direction
-        sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`;
+        sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`; // Newest first
+        sortNameBtn.innerHTML = `Name <span class="sort-arrow">&uarr;</span>`; // A-Z first
 
         fetchAndDisplayGallery();
 
@@ -272,8 +278,18 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         sortNameBtn.addEventListener('click', () => {
-            currentSort = 'name';
-            sortDateBtn.innerHTML = 'Date'; // Reset date button text, removing arrow
+            if (currentSort === 'name') {
+                // If already sorting by name, just toggle the direction
+                nameSortDirection = nameSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                // If switching from another sort, set to default name sort
+                currentSort = 'name';
+                nameSortDirection = 'asc';
+            }
+
+            // Update button text to show sort direction
+            sortNameBtn.innerHTML = `Name <span class="sort-arrow">${nameSortDirection === 'asc' ? '&uarr;' : '&darr;'}</span>`; // ↑ or ↓
+
             sortNameBtn.classList.add('active');
             sortDateBtn.classList.remove('active');
             updateDisplay();
@@ -356,12 +372,14 @@ utilityStyles.textContent = `
     .sort-arrow {
         display: inline-block;
         margin-left: 6px;
-        font-size: 1.1em;
+        font-size: 1.2em;
         line-height: 1;
+        font-weight: bold;
+        vertical-align: middle;
     }
     .sort-btn.active {
         background-color: #00d9ff;
-        color: #111;
+        color: #000;
     }
     .sort-btn:not(.active):hover {
         background-color: #333;
