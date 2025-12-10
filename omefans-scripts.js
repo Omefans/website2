@@ -89,6 +89,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let masterGalleryData = []; // Holds the original full list of items from the server
     let currentSort = 'date'; // 'date' or 'name'
+    let dateSortDirection = 'desc'; // 'desc' for recent, 'asc' for older
     
     function debounce(func, delay) {
         let timeout;
@@ -213,7 +214,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // 2. Sort the data
             if (currentSort === 'date') {
-                processedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                if (dateSortDirection === 'desc') {
+                    processedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Newest first
+                } else { // 'asc'
+                    processedData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // Oldest first
+                }
             } else if (currentSort === 'name') {
                 processedData.sort((a, b) => a.name.localeCompare(b.name));
             }
@@ -246,7 +251,18 @@ document.addEventListener("DOMContentLoaded", function() {
         }, 300)); // 300ms delay before triggering search
 
         sortDateBtn.addEventListener('click', () => {
-            currentSort = 'date';
+            if (currentSort === 'date') {
+                // If already sorting by date, just toggle the direction
+                dateSortDirection = dateSortDirection === 'desc' ? 'asc' : 'desc';
+            } else {
+                // If switching from another sort, set to default date sort
+                currentSort = 'date';
+                dateSortDirection = 'desc';
+            }
+
+            // Update button text to show sort direction
+            sortDateBtn.innerHTML = `Date ${dateSortDirection === 'desc' ? '&darr;' : '&uarr;'}`; // ↓ or ↑
+
             sortDateBtn.classList.add('active');
             sortNameBtn.classList.remove('active');
             updateDisplay();
@@ -254,6 +270,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         sortNameBtn.addEventListener('click', () => {
             currentSort = 'name';
+            sortDateBtn.innerHTML = 'Date'; // Reset date button text
             sortNameBtn.classList.add('active');
             sortDateBtn.classList.remove('active');
             updateDisplay();
