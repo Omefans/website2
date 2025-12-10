@@ -13,8 +13,8 @@ app.use('/api/*', cors());
 
 // Helper for password validation
 const isAuthorized = (password: unknown, secret: string | undefined): boolean => {
-	// If the secret isn't set on the worker, no password can be valid.
-	if (!secret) {
+	// If the secret is not set, is empty, or just whitespace, no password can be valid.
+	if (!secret || secret.trim() === '') {
 		return false;
 	}
 	const userPassword = typeof password === 'string' ? password : '';
