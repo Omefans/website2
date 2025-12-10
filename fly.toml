@@ -6,7 +6,7 @@ app = 'omefans-backend'
 
 # The primary region you want to deploy to.
 # IMPORTANT: Make sure this is the region code you chose (e.g., 'lax', 'ams', 'sin').
-primary_region = 'lax'
+primary_region = 'ams'
 
 # This section tells Fly.io to use your Dockerfile to build the app.
 [build]
