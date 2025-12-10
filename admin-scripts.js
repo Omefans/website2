@@ -1,6 +1,6 @@
 const AppConfig = {
     // This is the address of your new backend server on Fly.io
-    backendUrl: 'https://omefans-backend-api.your-name.workers.dev' // <-- PASTE YOUR ACTUAL WORKER URL HERE
+    backendUrl: 'https://omefans-backend-api.your-account.workers.dev' // <-- PASTE YOUR REAL URL HERE
 };
 
 document.addEventListener('DOMContentLoaded', () => {
