@@ -170,10 +170,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
                     </a>
                     <div class="gallery-item-details">
-                        <div class="item-text-content">
+                        <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="item-name-link">
                             <h3 class="item-name">${data.name}</h3>
-                            ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
-                        </div>
+                        </a>
+                        ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
                             <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
@@ -181,26 +181,23 @@ document.addEventListener("DOMContentLoaded", function() {
                     </div>
                 `;
                 
-                // Make the entire card clickable, except for the button itself.
-                itemArticle.addEventListener('click', (e) => {
-                    if (!e.target.closest('.btn-view')) {
-                        window.open(data.affiliate_url, '_blank');
-                    }
-                });
-
                 galleryContainer.appendChild(itemArticle);
             });
 
             // After rendering, check for long descriptions and make them expandable
-            galleryContainer.querySelectorAll('.item-desc').forEach(desc => {
-                // Check if the content's full height is greater than its visible height
-                if (desc.scrollHeight > desc.clientHeight) {
-                    desc.classList.add('is-expandable'); // Add class to make it clickable
+            galleryContainer.querySelectorAll('.gallery-item').forEach(card => {
+                const desc = card.querySelector('.item-desc');
 
-                    desc.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent the card's main click event
+                if (desc && desc.scrollHeight > desc.clientHeight) {
+                    desc.classList.add('is-expandable');
+
+                    const toggleExpand = (e) => {
+                        e.preventDefault(); // Prevent link navigation if desc is inside a link
+                        e.stopPropagation();
                         desc.classList.toggle('expanded');
-                    });
+                    };
+
+                    desc.addEventListener('click', toggleExpand);
                 }
             });
 
@@ -411,7 +408,6 @@ utilityStyles.textContent = `
         border-radius: 8px;
         overflow: hidden;
         background-color: #1a1a1a;
-        cursor: pointer;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         display: flex; /* Use flexbox for column layout */
         flex-direction: column;
@@ -423,7 +419,7 @@ utilityStyles.textContent = `
     .gallery-item-image-link {
         display: block;
         width: 100%;
-        overflow: hidden;
+        overflow: hidden; /* Keep this to contain the hover effect */
     }
     .gallery-item-img {
         width: 100%;
@@ -435,17 +431,25 @@ utilityStyles.textContent = `
         transform: scale(1.1);
     }
     .gallery-item-details {
-        padding: 12px 15px;
+        padding: 10px 15px 15px; /* Tighter top padding */
         display: flex;
         flex-direction: column;
+        flex-grow: 1; /* Make this section fill the card height */
         box-sizing: border-box;
         color: #fff;
     }
     .item-name {
         font-family: 'Orbitron', sans-serif;
         font-size: 1.1rem;
-        margin: 0 0 5px 0;
+        margin: 0 0 8px 0;
         color: #fff;
+    }
+    .item-name-link {
+        text-decoration: none;
+        color: inherit;
+    }
+    .item-name-link:hover .item-name {
+        color: #00d9ff;
     }
     .item-desc {
         font-size: 0.85rem;
@@ -453,7 +457,8 @@ utilityStyles.textContent = `
         margin: 0 0 12px 0;
         line-height: 1.4;
         /* Truncation styles */
-        max-height: 4.2em; /* Approx. 3 lines (3 * 1.4em) */
+        word-break: break-all; /* Force long strings like URLs to wrap */
+        max-height: 1.4em; /* Approx. 1 line */
         overflow: hidden;
         position: relative;
         transition: max-height 0.4s ease-in-out;
@@ -475,6 +480,7 @@ utilityStyles.textContent = `
         background: linear-gradient(to top, #1a1a1a 10%, transparent);
     }
     .item-footer {
+        margin-top: auto; /* This is the key change to lock the footer to the bottom */
         display: flex;
         justify-content: space-between;
         align-items: center;
