@@ -165,6 +165,13 @@ document.addEventListener('DOMContentLoaded', () => {
             affiliateUrl: document.getElementById('affiliateUrl').value
         };
 
+        // Frontend validation to provide immediate feedback
+        if (!data.name || !data.imageUrl || !data.affiliateUrl) {
+            messageEl.textContent = 'Validation Error: Name, Image URL, and Affiliate URL are required. Please fill them out before submitting.';
+            console.error("Frontend validation failed. Data object being sent:", data);
+            return; // Stop the function here
+        }
+
         const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
         const method = isEditing ? 'PUT' : 'POST';
 
