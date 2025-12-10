@@ -5,6 +5,29 @@ const AppConfig = {
 
 document.addEventListener("DOMContentLoaded", function() {
 
+    /* --- NEW: MODAL SETUP --- */
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const closeModal = document.querySelector('.close-modal');
+
+    if (modal && closeModal && modalImg) {
+        const close = () => {
+            modal.style.display = "none";
+            modalImg.src = ""; // Clear src to stop loading if in progress
+        };
+        closeModal.addEventListener('click', close);
+        modal.addEventListener('click', (e) => {
+            // Close if clicking on the background, but not on the image itself
+            if (e.target === modal) {
+                close();
+            }
+        });
+        // Also close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && modal.style.display === "block") close();
+        });
+    }
+
     /* --- 1. STAR BACKGROUND --- */
     const starsContainer = document.getElementById('stars');
     if (starsContainer) {
@@ -156,9 +179,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
 
                 itemArticle.innerHTML = `
-                    <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="gallery-item-image-link">
+                    <div class="gallery-item-image-link">
                         <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
-                    </a>
+                    </div>
                     <div class="gallery-item-details">
                         <div class="item-text-content">
                             <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="item-name-link">
@@ -181,6 +204,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                     </div>
                 `;
+
+                // NEW: Add click listener for the modal popup
+                const img = itemArticle.querySelector('.gallery-item-img');
+                if (img && modal && modalImg) {
+                    img.addEventListener('click', () => {
+                        modal.style.display = "block";
+                        modalImg.src = img.src;
+                    });
+                }
+
                 galleryContainer.appendChild(itemArticle);
             });
 

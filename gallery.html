@@ -19,6 +19,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <link href="omefans-style.css" rel="stylesheet">
+    <style>
+        /* Styles for the Image Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001; /* Higher than other content */
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 90%;
+            max-height: 80vh;
+            animation-name: zoom;
+            animation-duration: 0.3s;
+        }
+        @keyframes zoom { from {transform:scale(0.1)} to {transform:scale(1)} }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .close-modal:hover, .close-modal:focus { color: #bbb; text-decoration: none; }
+        .gallery-item-img { cursor: pointer; }
+    </style>
 </head>
 <body>
 
@@ -103,6 +143,12 @@
             </div>
         </footer>
 
+    </div>
+
+    <!-- Modal for viewing images -->
+    <div id="imageModal" class="modal">
+      <span class="close-modal">&times;</span>
+      <img class="modal-content" id="modalImage">
     </div>
     
     <script src="omefans-scripts.js"></script>
