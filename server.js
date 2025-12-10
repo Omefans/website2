@@ -2,7 +2,9 @@
 require('dotenv').config();
 const crypto = require('crypto');
 const express = require('express');
+const path = require('path');
 const Database = require('better-sqlite3');
+const fs = require('fs');
 const cors = require('cors');
 
 const app = express();
@@ -10,7 +12,14 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // --- Database Setup ---
-const db = new Database('database.db');
+// Use a persistent disk path if available (for Render), otherwise use a local file.
+const dbPath = process.env.RENDER_DISK_MOUNT_PATH ? path.join(process.env.RENDER_DISK_MOUNT_PATH, 'database.db') : 'database.db';
+
+// Ensure the directory for the database exists if using a custom path
+if (process.env.RENDER_DISK_MOUNT_PATH && !fs.existsSync(process.env.RENDER_DISK_MOUNT_PATH)) {
+    fs.mkdirSync(process.env.RENDER_DISK_MOUNT_PATH, { recursive: true });
+}
+const db = new Database(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS gallery_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
