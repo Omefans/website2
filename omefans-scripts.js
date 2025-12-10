@@ -1,6 +1,6 @@
 const AppConfig = {
     // This is the address of your new backend server on Fly.io
-    backendUrl: 'https://omefans-backend-api.omefans.workers.dev'
+    backendUrl: '' // API is now on the same domain
 };
 
 document.addEventListener("DOMContentLoaded", function() {
