@@ -35,7 +35,7 @@ const isAuthorized = (password: unknown, secret: string | undefined): boolean =>
 // --- API Routes ---
 
 app.get('/', (c) => {
-	return c.json({ status: 'ok', message: 'Omefans API Worker is running.' });
+	return c.json({ status: 'ok', message: 'Omefans API Worker v2.0 - SECURE BUILD' });
 });
 
 app.get('/api/gallery', async (c) => {
