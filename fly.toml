@@ -1,30 +1,30 @@
-# fly.toml file for your omefans-backend application
+# fly.toml app configuration file generated for omefans-backend on 2025-12-10T12:44:44+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-# The name of your app on Fly.io.
-# IMPORTANT: Make sure this matches the app name you chose during 'fly launch'.
 app = 'omefans-backend'
-
-# The primary region you want to deploy to.
-# IMPORTANT: Make sure this is the region code you chose (e.g., 'lax', 'ams', 'sin').
 primary_region = 'ams'
 
-# This section tells Fly.io to use your Dockerfile to build the app.
 [build]
   dockerfile = 'Dockerfile'
 
-# This sets environment variables for your server.
 [env]
-  DATA_DIR = "/data/db"
-  PORT = "3000"
+  DATA_DIR = '/data/db'
+  PORT = '3000'
 
-# This section configures the web service.
+[[mounts]]
+  source = 'omefans_data_ams'
+  destination = '/data/db'
+
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
 
-# This attaches your persistent storage volume for the database.
-[[mounts]]
-  source = "omefans_data"
-  destination = "/data/db"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024
