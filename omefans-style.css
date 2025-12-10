@@ -141,6 +141,8 @@ body {
     border: 1px solid rgba(255,255,255,0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: none;
+    position: relative;
+    overflow: hidden;
 }
 
 .cta-button:first-child {
@@ -198,95 +200,6 @@ body {
 .footer-copyright a { color: var(--primary); text-decoration: none; cursor: none; }
 
 /* --- 5. GALLERY GRID --- */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.gallery-grid {
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: 25px; 
-    width: 100%; 
-    margin-top: 20px;
-}
-
-.gallery-item {
-    position: relative;
-    border-radius: 15px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.04);
-    transition: all 0.4s ease;
-    padding: 10px; 
-    display: flex;
-    flex-direction: column;
-}
-
-.gallery-item a.affiliate-link-wrapper {
-    text-decoration: none;
-    display: block;
-    cursor: none;
-}
-
-.gallery-item img {
-    width: 100%;
-    height: 200px; 
-    object-fit: cover;
-    border-radius: 8px;
-    transition: transform 0.5s ease;
-    display: block;
-}
-
-.gallery-item:hover {
-    transform: translateY(-7px);
-    border-color: var(--primary);
-    box-shadow: 0 0 25px rgba(0, 217, 255, 0.2);
-    z-index: 2;
-}
-
-.gallery-item:hover img { transform: scale(1.03); }
-
-.gallery-item h3 {
-    margin-top: 15px;
-    font-family: var(--font-heading);
-    font-size: 1.1rem;
-    color: #fff;
-    font-weight: 600;
-}
-
-.gallery-item p {
-    font-size: 0.9rem;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 15px;
-}
-
-.btn-view {
-    display: block;
-    text-align: center;
-    padding: 10px 12px;
-    background: rgba(0, 217, 255, 0.1);
-    color: var(--primary);
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 700;
-    border: 1px solid rgba(0, 217, 255, 0.3);
-    font-size: 0.9rem;
-    margin-top: auto;
-    transition: all 0.3s;
-    cursor: none;
-}
-
-.btn-view:hover {
-    background: var(--primary);
-    color: #000;
-    box-shadow: 0 0 10px var(--primary);
-}
 
 /* --- 6. ANIMATIONS & FX --- */
 @keyframes slideDown { 0% { transform: translateY(-100%); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
@@ -294,6 +207,7 @@ body {
 @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-15px) scale(1); } 100% { transform: translateY(0px) scale(1); } }
 @keyframes slideUp { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes ripple { to { width: 300px; height: 300px; opacity: 0; } }
 @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(0, 217, 255, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(0, 217, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 217, 255, 0); } }
 
 .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
@@ -319,34 +233,287 @@ body {
 @media (max-width: 768px) {
     .logo-container { display: flex; justify-content: center; padding: 20px; }
     .logo img { height: 50px; }
-    .center-logo-img { max-width: 200px; margin-bottom: 20px; }
-    .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .center-logo-img { max-width: 200px; margin-bottom: 20px; }    
     .cta-container { flex-direction: column; align-items: center; }
     .cta-button { width: 80%; max-width: 280px; text-align: center; }
 }
 
-/* PAGINATION */
-.pagination-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+/* --- 7. GALLERY & DYNAMIC CONTENT --- */
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gallery-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+}
+
+.search-wrapper {
+    position: relative;
+    flex-grow: 1;
+    max-width: 450px;
+}
+
+#search-bar {
+    width: 100%;
+    padding: 12px 20px 12px 45px;
+    border-radius: 50px;
+    border: 1px solid #444;
+    background-color: #1a1a1a;
+    color: white;
+    font-size: 1rem;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+    cursor: none;
+}
+
+#search-bar:focus {
+    border-color: #00d9ff;
+    box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+}
+
+.search-wrapper::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+    pointer-events: none; /* Allows clicking through the icon */
+}
+
+.sort-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #1a1a1a;
+    padding: 5px;
+    border-radius: 50px;
+    border: 1px solid #444;
+}
+
+.sort-buttons span {
+    padding-left: 15px;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.sort-btn {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    padding: 8px 15px;
+    border-radius: 50px;
+    cursor: none;
+    font-weight: 600;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.sort-arrow {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 1.4em;
+    line-height: 1;
+    font-weight: 900;
+    vertical-align: middle;
+}
+
+.sort-btn.active {
+    background-color: #00d9ff;
+    color: #000;
+}
+
+.sort-btn.active .sort-arrow {
+    color: #000; /* Explicitly set arrow color to black */
+}
+
+.sort-btn:not(.active):hover {
+    background-color: #333;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    width: 100%;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #1a1a1a;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex; /* Use flexbox for column layout */
+    flex-direction: column;
+    cursor: none;
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 217, 255, 0.1);
+}
+
+.gallery-item-image-link {
+    display: block;
+    width: 100%;
+    overflow: hidden; /* Keep this to contain the hover effect */
+    aspect-ratio: 16 / 10; /* Enforce a consistent aspect ratio for a uniform grid */
+}
+
+.gallery-item-img {
+    width: 100%;
+    height: 100%; /* Make image fill the container's enforced aspect ratio */
+    object-fit: cover; /* This will crop the image to fit, but preserves its aspect ratio */
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.gallery-item:hover .gallery-item-img {
+    transform: scale(1.1);
+}
+
+.gallery-item-details {
+    padding: 10px 15px 15px; /* Tighter top padding */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Make this section fill the card height */
+    box-sizing: border-box;
     color: #fff;
+}
+
+.item-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    margin: 0 0 8px 0;
+    color: #fff;
+}
+
+.item-name-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.item-name-link:hover .item-name {
+    color: #00d9ff;
+}
+
+.item-desc {
+    font-size: 0.85rem;
+    color: #ccc;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+    word-break: break-all;
+    max-height: 1.4em; /* Approx. 1 line */
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.4s ease-in-out;
+}
+
+.item-desc.expanded {
+    max-height: 500px; /* A large value to allow full expansion */
+}
+
+.item-desc.is-expandable {
+    cursor: pointer;
+}
+
+.item-desc:not(.expanded)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1.5em;
+    background: linear-gradient(to top, #1a1a1a 10%, transparent);
+}
+
+.item-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item-date {
+    font-size: 0.8rem;
+    color: #ddd;
+    font-weight: 600;
+}
+
+.btn-view {
+    background: #00d9ff;
+    color: #111;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: none;
+}
+
+.btn-view:hover {
+    background: #fff;
+}
+
+.gallery-message { color: white; text-align: center; width: 100%; }
+
+.ripple {
+    position: absolute;
+    width: 20px; height: 20px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple 0.6s ease-out;
+}
+
+.pagination-btn {
+    background-color: #2a2a2a;
+    color: #ccc;
+    border: 1px solid #444;
     padding: 10px 15px;
     margin: 0 5px;
-    border-radius: 8px;
-    font-family: var(--font-display);
+    border-radius: 5px;
     cursor: none;
-    transition: all 0.3s ease;
-}
-.pagination-btn:hover {
-    background: var(--secondary);
-    color: #fff;
-    box-shadow: 0 0 15px var(--secondary);
-    transform: translateY(-2px);
-}
-.pagination-btn.active {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
-    border-color: transparent;
-    color: #fff;
-    box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
+    transition: background-color 0.3s, color 0.3s;
     font-weight: bold;
+}
+
+.pagination-btn:hover, .pagination-btn.active {
+    background-color: #00d9ff;
+    color: #111;
+    border-color: #00d9ff;
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
 }
