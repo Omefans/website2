@@ -430,7 +430,7 @@ utilityStyles.textContent = `
         color: #fff;
     }
     .item-text-content {
-        margin-bottom: 10px; /* Space between text and footer */
+        margin-bottom: 3px; /* Reduced to bring title closer to image */
     }
     .item-name {
         font-family: 'Orbitron', sans-serif;
