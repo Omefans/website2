@@ -30,6 +30,14 @@
         <form id="upload-form">
             <h2>Add New Content</h2>
             <div>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="description">Description (Optional):</label>
+                <textarea id="description" name="description" rows="3"></textarea>
+            </div>
+            <div>
                 <label for="imageUrl">Image URL:</label>
                 <input type="url" id="imageUrl" name="imageUrl" required>
             </div>
@@ -42,6 +50,7 @@
         <p id="message"></p>
     </div>
 
-    <script src="admin-scripts.js"></script>
+    <!-- Make sure this path is correct for your project structure -->
+    <script src="../website/admin-scripts.js"></script>
 </body>
 </html>

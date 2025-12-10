@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = {
             password: adminPassword,
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value,
             imageUrl: document.getElementById('imageUrl').value,
             affiliateUrl: document.getElementById('affiliateUrl').value
         };
