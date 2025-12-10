@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { timingSafeEqual } from 'hono/timing';
+import { timingSafeEqual } from 'hono/utils/buffer';
 
 export interface Env {
 	DB: D1Database;

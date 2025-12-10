@@ -4,5 +4,5 @@ compatibility_date = "2024-05-01"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "omefans-gallery-db"
-database_id = "<PASTE_YOUR_DATABASE_ID_HERE>"
+database_name = "website2"
+database_id = "dab3b36b-f87d-49e1-9a7e-fa9b640303db"
