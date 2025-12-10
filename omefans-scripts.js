@@ -243,6 +243,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Set initial button state to show the default sort direction
+        sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`;
+
         fetchAndDisplayGallery();
 
         // Add event listeners for controls
@@ -261,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             // Update button text to show sort direction
-            sortDateBtn.innerHTML = `Date ${dateSortDirection === 'desc' ? '&darr;' : '&uarr;'}`; // ↓ or ↑
+            sortDateBtn.innerHTML = `Date <span class="sort-arrow">${dateSortDirection === 'desc' ? '&darr;' : '&uarr;'}</span>`; // ↓ or ↑
 
             sortDateBtn.classList.add('active');
             sortNameBtn.classList.remove('active');
@@ -270,7 +273,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         sortNameBtn.addEventListener('click', () => {
             currentSort = 'name';
-            sortDateBtn.innerHTML = 'Date'; // Reset date button text
+            sortDateBtn.innerHTML = 'Date'; // Reset date button text, removing arrow
             sortNameBtn.classList.add('active');
             sortDateBtn.classList.remove('active');
             updateDisplay();
@@ -349,6 +352,12 @@ utilityStyles.textContent = `
         cursor: pointer;
         font-weight: 600;
         transition: background-color 0.3s, color 0.3s;
+    }
+    .sort-arrow {
+        display: inline-block;
+        margin-left: 6px;
+        font-size: 1.1em;
+        line-height: 1;
     }
     .sort-btn.active {
         background-color: #00d9ff;
