@@ -83,7 +83,13 @@ document.addEventListener("DOMContentLoaded", function() {
     /* --- 4. PAGINATION --- */
     const galleryContainer = document.getElementById('gallery-container');
     const paginationControls = document.getElementById('pagination-controls');
+    const searchBar = document.getElementById('search-bar');
+    const sortDateBtn = document.getElementById('sort-date-btn');
+    const sortNameBtn = document.getElementById('sort-name-btn');
 
+    let masterGalleryData = []; // Holds the original full list of items from the server
+    let currentSort = 'date'; // 'date' or 'name'
+    
     if (galleryContainer && paginationControls) {
         const limit = 9;
         let allItems = []; // To hold all items fetched from the server
@@ -129,6 +135,85 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        function renderItems(itemsToRender) {
+            galleryContainer.innerHTML = ''; // Clear previous content
+
+            if (itemsToRender.length === 0) {
+                galleryContainer.innerHTML = '<p class="gallery-message">No items match your search.</p>';
+                paginationControls.style.display = 'none';
+                return;
+            }
+
+            itemsToRender.forEach(data => {
+                const itemArticle = document.createElement('article');
+                itemArticle.className = 'gallery-item';
+
+                // Format the date for display
+                const releaseDate = new Date(data.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                itemArticle.innerHTML = `
+                    <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="gallery-item-image-link">
+                        <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
+                    </a>
+                    <div class="gallery-item-details">
+                        <div class="item-text-content">
+                            <h3 class="item-name">${data.name}</h3>
+                            ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
+                        </div>
+                        <div class="item-footer">
+                            <span class="item-date">${releaseDate}</span>
+                            <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
+                        </div>
+                    </div>
+                `;
+                
+                // Make the entire card clickable, except for the button itself.
+                itemArticle.addEventListener('click', (e) => {
+                    if (!e.target.closest('.btn-view')) {
+                        window.open(data.affiliate_url, '_blank');
+                    }
+                });
+
+                galleryContainer.appendChild(itemArticle);
+            });
+
+            // Re-apply mouse follower effects to the new dynamic items
+            applyMouseFollowerEffects();
+
+            // Setup pagination for the newly created items
+            allItems = Array.from(galleryContainer.querySelectorAll('.gallery-item'));
+            const totalPages = Math.ceil(allItems.length / limit);
+            createPaginationButtons(totalPages);
+            if (totalPages > 0) showPage(1);
+        }
+
+        function updateDisplay() {
+            let processedData = [...masterGalleryData];
+            const searchTerm = searchBar.value.toLowerCase();
+
+            // 1. Filter by search term
+            if (searchTerm) {
+                processedData = processedData.filter(item => 
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    (item.description && item.description.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            // 2. Sort the data
+            if (currentSort === 'date') {
+                processedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else if (currentSort === 'name') {
+                processedData.sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            // 3. Render the processed data
+            renderItems(processedData);
+        }
+
         async function fetchAndDisplayGallery() {
             // Show a loading message while fetching data.
             galleryContainer.innerHTML = '<p class="gallery-message">Loading gallery...</p>';
@@ -136,63 +221,8 @@ document.addEventListener("DOMContentLoaded", function() {
             try {
                 const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
                 if (!response.ok) throw new Error('Network response was not ok');
-                const galleryData = await response.json();
-
-                // Handle the case where the gallery is empty.
-                if (galleryData.length === 0) {
-                    galleryContainer.innerHTML = '<p class="gallery-message">The gallery is currently empty.</p>';
-                    paginationControls.style.display = 'none';
-                    return;
-                }
-
-                galleryContainer.innerHTML = ''; // Clear any static HTML content
-
-                // Create gallery items dynamically from server data with the new design
-                galleryData.forEach(data => {
-                    const itemArticle = document.createElement('article');
-                    itemArticle.className = 'gallery-item';
-
-                    // Format the date for display
-                    const releaseDate = new Date(data.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    });
-
-                    itemArticle.innerHTML = `
-                        <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="gallery-item-image-link">
-                            <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
-                        </a>
-                        <div class="gallery-item-details">
-                            <div class="item-text-content">
-                                <h3 class="item-name">${data.name}</h3>
-                                ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
-                            </div>
-                            <div class="item-footer">
-                                <span class="item-date">${releaseDate}</span>
-                                <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Make the entire card clickable, except for the button itself.
-                    itemArticle.addEventListener('click', (e) => {
-                        if (!e.target.closest('.btn-view')) {
-                            window.open(data.affiliate_url, '_blank');
-                        }
-                    });
-
-                    galleryContainer.appendChild(itemArticle);
-                });
-
-                // Re-apply mouse follower effects to the new dynamic items
-                applyMouseFollowerEffects();
-
-                // Setup pagination for the newly created items
-                allItems = Array.from(galleryContainer.querySelectorAll('.gallery-item'));
-                const totalPages = Math.ceil(allItems.length / limit);
-                createPaginationButtons(totalPages);
-                if (totalPages > 0) showPage(1);
+                masterGalleryData = await response.json();
+                updateDisplay(); // Initial render
 
             } catch (error) {
                 console.error("Error fetching gallery:", error);
@@ -201,6 +231,26 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         fetchAndDisplayGallery();
+
+        // Add event listeners for controls
+        searchBar.addEventListener('input', () => {
+            // Use a debounce function in a real app to avoid firing on every keystroke
+            updateDisplay();
+        });
+
+        sortDateBtn.addEventListener('click', () => {
+            currentSort = 'date';
+            sortDateBtn.classList.add('active');
+            sortNameBtn.classList.remove('active');
+            updateDisplay();
+        });
+
+        sortNameBtn.addEventListener('click', () => {
+            currentSort = 'name';
+            sortNameBtn.classList.add('active');
+            sortDateBtn.classList.remove('active');
+            updateDisplay();
+        });
     }
 });
 
@@ -208,6 +258,43 @@ document.addEventListener("DOMContentLoaded", function() {
 // we can inject the necessary styles into the document head.
 const utilityStyles = document.createElement('style');
 utilityStyles.textContent = `
+    .gallery-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    #search-bar {
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: 1px solid #444;
+        background: #2a2a2a;
+        color: white;
+        font-size: 1rem;
+        flex-grow: 1;
+        max-width: 400px;
+    }
+    .sort-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sort-btn {
+        background: none;
+        border: 1px solid #555;
+        color: #ccc;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .sort-btn.active, .sort-btn:hover {
+        background-color: #00d9ff;
+        color: #111;
+        border-color: #00d9ff;
+    }
     .gallery-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
