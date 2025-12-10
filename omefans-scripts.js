@@ -90,6 +90,14 @@ document.addEventListener("DOMContentLoaded", function() {
     let masterGalleryData = []; // Holds the original full list of items from the server
     let currentSort = 'date'; // 'date' or 'name'
     
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
     if (galleryContainer && paginationControls) {
         const limit = 9;
         let allItems = []; // To hold all items fetched from the server
@@ -233,10 +241,9 @@ document.addEventListener("DOMContentLoaded", function() {
         fetchAndDisplayGallery();
 
         // Add event listeners for controls
-        searchBar.addEventListener('input', () => {
-            // Use a debounce function in a real app to avoid firing on every keystroke
+        searchBar.addEventListener('input', debounce(() => {
             updateDisplay();
-        });
+        }, 300)); // 300ms delay before triggering search
 
         sortDateBtn.addEventListener('click', () => {
             currentSort = 'date';
@@ -262,38 +269,76 @@ utilityStyles.textContent = `
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
         flex-wrap: wrap;
         gap: 20px;
     }
+    .search-wrapper {
+        position: relative;
+        flex-grow: 1;
+        max-width: 450px;
+    }
     #search-bar {
-        padding: 10px 15px;
-        border-radius: 5px;
+        width: 100%;
+        padding: 12px 20px 12px 45px;
+        border-radius: 50px;
         border: 1px solid #444;
-        background: #2a2a2a;
+        background-color: #1a1a1a;
         color: white;
         font-size: 1rem;
-        flex-grow: 1;
-        max-width: 400px;
+        font-family: 'Space Grotesk', sans-serif;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        outline: none;
+    }
+    #search-bar:focus {
+        border-color: #00d9ff;
+        box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+    }
+    .search-wrapper::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.6;
+        transition: opacity 0.3s;
+        pointer-events: none; /* Allows clicking through the icon */
     }
     .sort-buttons {
         display: flex;
         align-items: center;
         gap: 10px;
+        background-color: #1a1a1a;
+        padding: 5px;
+        border-radius: 50px;
+        border: 1px solid #444;
+    }
+    .sort-buttons span {
+        padding-left: 15px;
+        font-size: 0.9rem;
+        color: #aaa;
     }
     .sort-btn {
-        background: none;
-        border: 1px solid #555;
+        background: transparent;
+        border: none;
         color: #ccc;
         padding: 8px 15px;
-        border-radius: 5px;
+        border-radius: 50px;
         cursor: pointer;
+        font-weight: 600;
         transition: background-color 0.3s, color 0.3s;
     }
-    .sort-btn.active, .sort-btn:hover {
+    .sort-btn.active {
         background-color: #00d9ff;
         color: #111;
-        border-color: #00d9ff;
+    }
+    .sort-btn:not(.active):hover {
+        background-color: #333;
     }
     .gallery-grid {
         display: grid;
