@@ -38,6 +38,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // --- API Routes ---
 
+// GET: Root route for health check and API status
+app.get('/', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        message: 'Omefans API is running.'
+    });
+});
+
 // GET: Fetch all gallery items (No changes needed here)
 app.get('/api/gallery', (req, res) => {
     try {
