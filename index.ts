@@ -70,11 +70,16 @@ app.post('/upload', async (c) => {
 
 app.delete('/gallery/:id', async (c) => {
 	try {
-		const id = c.req.param('id');
+		const idParam = c.req.param('id');
+		const id = parseInt(idParam, 10);
 		const { password } = await c.json();
 
 		if (!isAuthorized(password, process.env.ADMIN_PASSWORD)) {
 			return c.json({ error: 'Forbidden: Invalid password.' }, 403);
+		}
+
+		if (isNaN(id)) {
+			return c.json({ error: 'Invalid item ID provided.' }, 400);
 		}
 
 		const result = await sql`DELETE FROM gallery_items WHERE id = ${id}`;
@@ -92,11 +97,16 @@ app.delete('/gallery/:id', async (c) => {
 
 app.put('/gallery/:id', async (c) => {
 	try {
-		const id = c.req.param('id');
+		const idParam = c.req.param('id');
+		const id = parseInt(idParam, 10);
 		const { password, name, description, imageUrl, affiliateUrl } = await c.json();
 
 		if (!isAuthorized(password, process.env.ADMIN_PASSWORD)) {
 			return c.json({ error: 'Forbidden: Invalid password.' }, 403);
+		}
+
+		if (isNaN(id)) {
+			return c.json({ error: 'Invalid item ID provided.' }, 400);
 		}
 
 		if (!name || !imageUrl || !affiliateUrl) {
