@@ -170,10 +170,8 @@ document.addEventListener("DOMContentLoaded", function() {
                         <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
                     </a>
                     <div class="gallery-item-details">
-                        <div class="item-text-content">
-                            <h3 class="item-name">${data.name}</h3>
-                            ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
-                        </div>
+                        <h3 class="item-name">${data.name}</h3>
+                        ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
                             <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
@@ -410,38 +408,34 @@ utilityStyles.textContent = `
     .gallery-item-image-link {
         display: block;
         width: 100%;
-        aspect-ratio: 1 / 1; /* Make image area square */
         overflow: hidden;
     }
     .gallery-item-img {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: auto; /* Let the image's aspect ratio determine its height */
+        display: block; /* Removes any extra space below the image */
         transition: transform 0.4s ease;
     }
     .gallery-item:hover .gallery-item-img {
         transform: scale(1.1);
     }
     .gallery-item-details {
-        padding: 5px 15px 15px; /* Further reduced top padding to bring title just under the image */
+        padding: 12px 15px;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
         color: #fff;
     }
-    .item-text-content {
-        margin-bottom: 3px; /* Reduced to bring title closer to image */
-    }
     .item-name {
         font-family: 'Orbitron', sans-serif;
         font-size: 1.1rem;
-        margin: 0 0 5px 0;
+        margin: 0; /* Title is now flush with the top padding */
         color: #fff;
     }
     .item-desc {
         font-size: 0.85rem;
         color: #ccc;
-        margin: 0;
+        margin: 8px 0; /* Space above and below description */
         line-height: 1.4;
     }
     .item-footer {
