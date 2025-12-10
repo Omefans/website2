@@ -160,11 +160,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
 
                     itemArticle.innerHTML = `
-                        <img src="${data.image_path}" alt="Gallery Content" loading="lazy" class="gallery-item-img">
-                        <div class="gallery-item-overlay">
-                            <div class="item-details">
-                                <span class="item-date">${releaseDate}</span>
-                            </div>
+                        <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="gallery-item-image-link">
+                            <img src="${data.image_path}" alt="Gallery Content" loading="lazy" class="gallery-item-img">
+                        </a>
+                        <div class="gallery-item-info">
+                            <span class="item-date">${releaseDate}</span>
                             <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
                         </div>
                     `;
@@ -197,17 +197,25 @@ utilityStyles.textContent = `
     .gallery-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+        gap: 25px;
     }
     .gallery-item {
-        position: relative;
-        overflow: hidden;
+        background-color: #1a1a1a;
         border-radius: 8px;
-        aspect-ratio: 3 / 4;
+        overflow: hidden;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #222;
+        flex-direction: column;
+        border: 1px solid #2a2a2a;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .gallery-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 217, 255, 0.1);
+    }
+    .gallery-item-image-link {
+        display: block;
+        overflow: hidden;
+        aspect-ratio: 1 / 1;
     }
     .gallery-item-img {
         width: 100%;
@@ -218,47 +226,27 @@ utilityStyles.textContent = `
     .gallery-item:hover .gallery-item-img {
         transform: scale(1.1);
     }
-    .gallery-item-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+    .gallery-item-info {
+        padding: 15px;
         display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
+        justify-content: space-between;
         align-items: center;
-        padding: 20px;
-        box-sizing: border-box;
-        opacity: 0;
-        transition: opacity 0.4s ease;
+        background-color: #1a1a1a;
+        border-top: 1px solid #2a2a2a;
     }
-    .gallery-item:hover .gallery-item-overlay {
-        opacity: 1;
-    }
-    .item-details {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        background: rgba(0,0,0,0.6);
-        padding: 5px 10px;
-        border-radius: 5px;
+    .item-date {
         font-size: 0.8rem;
-        color: #eee;
+        color: #aaa;
     }
     .btn-view {
         background: #00d9ff;
         color: #111;
-        padding: 10px 25px;
-        border-radius: 50px;
+        padding: 8px 16px;
+        border-radius: 5px;
         text-decoration: none;
         font-weight: bold;
-        transform: translateY(20px);
-        transition: transform 0.4s ease, background-color 0.3s;
-    }
-    .gallery-item:hover .btn-view {
-        transform: translateY(0);
+        font-size: 0.9rem;
+        transition: background-color 0.3s;
     }
     .btn-view:hover {
         background: #fff;
