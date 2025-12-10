@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
 // GET: Fetch all gallery items (No changes needed here)
 app.get('/api/gallery', (req, res) => {
     try {
-        const stmt = db.prepare('SELECT image_path, affiliate_url FROM gallery_items ORDER BY created_at DESC');
+        const stmt = db.prepare('SELECT id, image_path, affiliate_url, created_at FROM gallery_items ORDER BY created_at DESC');
         const items = stmt.all();
         res.json(items);
     } catch (error) {

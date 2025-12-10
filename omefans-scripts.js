@@ -147,19 +147,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 galleryContainer.innerHTML = ''; // Clear any static HTML content
 
-                // Create gallery items dynamically from server data
+                // Create gallery items dynamically from server data with the new design
                 galleryData.forEach(data => {
-                    const itemLink = document.createElement('a');
-                    itemLink.href = data.affiliate_url;
-                    itemLink.className = 'gallery-item';
-                    itemLink.target = '_blank';
-                    itemLink.rel = 'noopener noreferrer';
+                    const itemArticle = document.createElement('article');
+                    itemArticle.className = 'gallery-item';
 
-                    itemLink.innerHTML = `
-                        <img src="${data.image_path}" alt="Gallery Content" loading="lazy">
-                        <div class="overlay"><span>View Product</span></div>
+                    // Format the date for display
+                    const releaseDate = new Date(data.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+
+                    itemArticle.innerHTML = `
+                        <img src="${data.image_path}" alt="Gallery Content" loading="lazy" class="gallery-item-img">
+                        <div class="gallery-item-overlay">
+                            <div class="item-details">
+                                <span class="item-date">${releaseDate}</span>
+                            </div>
+                            <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
+                        </div>
                     `;
-                    galleryContainer.appendChild(itemLink);
+                    galleryContainer.appendChild(itemArticle);
                 });
 
                 // Re-apply mouse follower effects to the new dynamic items
@@ -185,6 +194,75 @@ document.addEventListener("DOMContentLoaded", function() {
 // we can inject the necessary styles into the document head.
 const utilityStyles = document.createElement('style');
 utilityStyles.textContent = `
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    .gallery-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        aspect-ratio: 3 / 4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #222;
+    }
+    .gallery-item-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    .gallery-item:hover .gallery-item-img {
+        transform: scale(1.1);
+    }
+    .gallery-item-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    .gallery-item:hover .gallery-item-overlay {
+        opacity: 1;
+    }
+    .item-details {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: rgba(0,0,0,0.6);
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        color: #eee;
+    }
+    .btn-view {
+        background: #00d9ff;
+        color: #111;
+        padding: 10px 25px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        transform: translateY(20px);
+        transition: transform 0.4s ease, background-color 0.3s;
+    }
+    .gallery-item:hover .btn-view {
+        transform: translateY(0);
+    }
+    .btn-view:hover {
+        background: #fff;
+    }
     .gallery-message { color: white; text-align: center; width: 100%; }
     .ripple {
         position: absolute;
@@ -192,6 +270,16 @@ utilityStyles.textContent = `
         background: rgba(255, 255, 255, 0.4);
         border-radius: 50%;
         transform: translate(-50%, -50%);
+    }
+    @media (max-width: 768px) {
+        .gallery-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .gallery-grid {
+            grid-template-columns: 1fr;
+        }
     }
 `;
 document.head.appendChild(utilityStyles);
