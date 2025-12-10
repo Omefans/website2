@@ -373,7 +373,7 @@ utilityStyles.textContent = `
     }
     .sort-arrow {
         display: inline-block;
-        margin-left: 6px;
+        margin-left: 4px;
         font-size: 1.4em;
         line-height: 1;
         font-weight: 900;
@@ -382,6 +382,9 @@ utilityStyles.textContent = `
     .sort-btn.active {
         background-color: #00d9ff;
         color: #000;
+    }
+    .sort-btn.active .sort-arrow {
+        color: #000; /* Explicitly set arrow color to black */
     }
     .sort-btn:not(.active):hover {
         background-color: #333;
@@ -421,11 +424,9 @@ utilityStyles.textContent = `
         transform: scale(1.1);
     }
     .gallery-item-details {
-        flex-grow: 1; /* Allow details section to take remaining space */
         padding: 15px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
         box-sizing: border-box;
         color: #fff;
     }
