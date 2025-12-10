@@ -1,0 +1,8 @@
+name = "omefans-backend-api"
+main = "src/worker.ts"
+compatibility_date = "2024-05-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "omefans-gallery-db"
+database_id = "<PASTE_YOUR_DATABASE_ID_HERE>"

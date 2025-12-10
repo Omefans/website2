@@ -1,15 +1,17 @@
 {
-  "name": "omefans-backend",
+  "name": "omefans-worker-backend",
   "version": "1.0.0",
-  "description": "Backend for gallery management",
-  "main": "server.js",
+  "description": "Backend for gallery management on Cloudflare Workers",
+  "private": true,
   "scripts": {
-    "start": "node server.js"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
   },
   "dependencies": {
-    "better-sqlite3": "^11.1.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "hono": "^4.4.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "wrangler": "^3.60.3"
   }
 }
