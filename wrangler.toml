@@ -1,8 +1,8 @@
 name = "omefans-backend-api"
 main = "src/worker.ts"
-compatibility_date = "2024-05-01"
+compatibility_date = "2024-07-18"
 
 [[d1_databases]]
-binding = "DB"
+binding = "DB" # This is the name your worker will use to access the database.
 database_name = "website2"
 database_id = "dab3b36b-f87d-49e1-9a7e-fa9b640303db"
