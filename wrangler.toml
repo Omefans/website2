@@ -4,5 +4,5 @@ compatibility_date = "2024-07-18"
 
 [[d1_databases]]
 binding = "DB" # This is the name your worker will use to access the database.
-database_name = "website2"
-database_id = "dab3b36b-f87d-49e1-9a7e-fa9b640303db"
+database_name = "omefans-gallery-db"
+database_id = "bea4c2c8-45bb-40af-bef2-27b5769f1ddd"
