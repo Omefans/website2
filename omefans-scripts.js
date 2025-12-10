@@ -249,8 +249,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         // Set initial button state to show the default sort direction
-        sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`; // Newest first
-        sortNameBtn.innerHTML = `Name <span class="sort-arrow">&uarr;</span>`; // A-Z first
+        sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`; // Active by default
+        sortNameBtn.innerHTML = `Name`; // Inactive, no arrow
 
         fetchAndDisplayGallery();
 
@@ -271,6 +271,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Update button text to show sort direction
             sortDateBtn.innerHTML = `Date <span class="sort-arrow">${dateSortDirection === 'desc' ? '&darr;' : '&uarr;'}</span>`; // ↓ or ↑
+            sortNameBtn.innerHTML = 'Name'; // Remove arrow from other button
 
             sortDateBtn.classList.add('active');
             sortNameBtn.classList.remove('active');
@@ -289,6 +290,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Update button text to show sort direction
             sortNameBtn.innerHTML = `Name <span class="sort-arrow">${nameSortDirection === 'asc' ? '&uarr;' : '&darr;'}</span>`; // ↑ or ↓
+            sortDateBtn.innerHTML = 'Date'; // Remove arrow from other button
 
             sortNameBtn.classList.add('active');
             sortDateBtn.classList.remove('active');
@@ -372,9 +374,9 @@ utilityStyles.textContent = `
     .sort-arrow {
         display: inline-block;
         margin-left: 6px;
-        font-size: 1.2em;
+        font-size: 1.4em;
         line-height: 1;
-        font-weight: bold;
+        font-weight: 900;
         vertical-align: middle;
     }
     .sort-btn.active {
