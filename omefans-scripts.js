@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 itemArticle.className = 'gallery-item';
 
                 // Format the date for display
-                const releaseDate = new Date(data.created_at).toLocaleDateString('en-US', {
+                const releaseDate = new Date(data.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     </div>
                     <div class="gallery-item-details">
                         <div class="item-text-content">
-                            <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="item-name-link">
+                            <a href="${data.affiliateUrl}" target="_blank" rel="noopener noreferrer" class="item-name-link">
                                 <h3 class="item-name">${data.name}</h3>
                             </a>
                             ${
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
-                            <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
+                            <a href="${data.affiliateUrl}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
                         </div>
                     </div>
                 `;
@@ -277,9 +277,9 @@ document.addEventListener("DOMContentLoaded", function() {
             // 2. Sort the data
             if (currentSort === 'date') {
                 if (dateSortDirection === 'desc') {
-                    processedData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Newest first
+                    processedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Newest first
                 } else { // 'asc'
-                    processedData.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)); // Oldest first
+                    processedData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Oldest first
                 }
             } else if (currentSort === 'name') {
                 if (nameSortDirection === 'asc') {

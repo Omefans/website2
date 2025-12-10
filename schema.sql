@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS gallery_items (
     name TEXT NOT NULL,
     description TEXT,
     imageUrl TEXT NOT NULL,
-    affiliate_url TEXT NOT NULL,
+    affiliateUrl TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -1666,6 +1666,9 @@ var timingSafeEqual = /* @__PURE__ */ __name(async (a, b, hashFunction) => {
 var app = new Hono2();
 app.use("/api/*", cors());
 var isAuthorized = /* @__PURE__ */ __name((password, secret) => {
+  if (!secret) {
+    return false;
+  }
   const userPassword = typeof password === "string" ? password : "";
   return timingSafeEqual(userPassword, secret);
 }, "isAuthorized");
@@ -1675,7 +1678,7 @@ app.get("/", (c) => {
 app.get("/api/gallery", async (c) => {
   try {
     const { results } = await c.env.DB.prepare(
-      "SELECT id, name, description, imageUrl, affiliate_url, created_at FROM gallery_items ORDER BY created_at DESC"
+      "SELECT id, name, description, imageUrl, affiliateUrl, created_at as createdAt FROM gallery_items ORDER BY createdAt DESC"
     ).all();
     return c.json(results);
   } catch (e) {
@@ -1703,7 +1706,7 @@ app.post("/api/upload", async (c) => {
     if (!name || !imageUrl || !affiliateUrl) {
       return c.json({ error: "Name, Image URL, and Affiliate URL are required." }, 400);
     }
-    await c.env.DB.prepare("INSERT INTO gallery_items (name, description, imageUrl, affiliate_url) VALUES (?, ?, ?, ?)").bind(name, description || "", imageUrl, affiliateUrl).run();
+    await c.env.DB.prepare("INSERT INTO gallery_items (name, description, imageUrl, affiliateUrl) VALUES (?, ?, ?, ?)").bind(name, description || "", imageUrl, affiliateUrl).run();
     return c.json({ success: true, message: "Item added successfully." }, 201);
   } catch (e) {
     console.error("D1 insert failed:", e.message);
@@ -1739,7 +1742,7 @@ app.put("/api/gallery/:id", async (c) => {
       return c.json({ error: "Name, Image URL, and Affiliate URL are required." }, 400);
     }
     const { meta } = await c.env.DB.prepare(
-      "UPDATE gallery_items SET name = ?, description = ?, imageUrl = ?, affiliate_url = ? WHERE id = ?"
+      "UPDATE gallery_items SET name = ?, description = ?, imageUrl = ?, affiliateUrl = ? WHERE id = ?"
     ).bind(name, description || "", imageUrl, affiliateUrl, id).run();
     if (meta.changes > 0) {
       return c.json({ success: true, message: "Item updated successfully." });
