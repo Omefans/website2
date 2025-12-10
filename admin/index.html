@@ -1,0 +1,68 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="icon" type="image/png" href="images/header-logo.png">
+    <style>
+        body { font-family: sans-serif; background: #222; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem 0; }
+        .container { background: #333; padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; }
+        form div { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; }
+        input, textarea { width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #555; background: #444; color: white; box-sizing: border-box; font-family: sans-serif; }
+        button { width: 100%; padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #upload-form { display: none; }
+        #message { margin-top: 1rem; text-align: center; }
+        #item-list div { background: #444; padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .item-actions button { width: auto; padding: 0.5rem 1rem; margin-left: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="login-form">
+            <h2>Admin Login</h2>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+
+        <form id="upload-form">
+            <h2>Add New Content</h2>
+            <input type="hidden" id="edit-id" name="edit-id">
+            <div>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="description">Description (Optional):</label>
+                <textarea id="description" name="description" rows="3"></textarea>
+            </div>
+            <div>
+                <label for="imageUrl">Image URL:</label>
+                <input type="url" id="imageUrl" name="imageUrl" required>
+            </div>
+            <div>
+                <label for="affiliateUrl">Affiliate URL:</label>
+                <input type="url" id="affiliateUrl" name="affiliateUrl" required>
+            </div>
+            <button type="submit">Add Item</button>
+            <button type="button" id="cancel-edit-btn" style="display: none; background: #6c757d; margin-top: 10px;">Cancel Edit</button>
+        </form>
+        <p id="message"></p>
+
+        <div id="management-container" style="display: none; margin-top: 2rem;">
+            <h2>Manage Content</h2>
+            <div id="item-list">
+                <!-- Items will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Make sure this path is correct for your project structure -->
+    <script src="admin-scripts.js"></script>
+</body>
+</html>
