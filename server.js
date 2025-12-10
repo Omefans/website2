@@ -10,6 +10,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
+// Fail-fast check: Ensure the admin password is set on startup.
+if (!ADMIN_PASSWORD) {
+    console.error("FATAL ERROR: The ADMIN_PASSWORD environment variable is not set. The application cannot start.");
+    process.exit(1); // Exit with an error code.
+}
+
 // --- Database Setup ---
 // Use a generic data directory from an environment variable, or default to the current directory.
 // This makes it work on any host (like Fly.io) that supports persistent volumes.
