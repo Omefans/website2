@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Show items for the current page
             pageItems.forEach(item => {
-                item.style.display = 'flex';
+                item.style.display = 'block';
                 item.style.animation = 'fadeIn 0.5s ease forwards';
             });
 
@@ -295,6 +295,26 @@ utilityStyles.textContent = `
         background: rgba(255, 255, 255, 0.4);
         border-radius: 50%;
         transform: translate(-50%, -50%);
+    }
+    .pagination-btn {
+        background-color: #2a2a2a;
+        color: #ccc;
+        border: 1px solid #444;
+        padding: 10px 15px;
+        margin: 0 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+        font-weight: bold;
+    }
+    .pagination-btn:hover, .pagination-btn.active {
+        background-color: #00d9ff;
+        color: #111;
+        border-color: #00d9ff;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     @media (max-width: 768px) {
         .gallery-grid {
