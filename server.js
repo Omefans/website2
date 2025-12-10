@@ -10,17 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// Fail-fast check: Ensure the admin password is set on startup.
-if (!ADMIN_PASSWORD) {
-    console.error("FATAL ERROR: The ADMIN_PASSWORD environment variable is not set. The application cannot start.");
-    process.exit(1); // Exit with an error code.
-}
-
 // --- Database Setup ---
-// Use a generic data directory from an environment variable, or default to the current directory.
-// This makes it work on any host (like Fly.io) that supports persistent volumes.
-const dataDir = process.env.DATA_DIR || __dirname;
-const dbPath = path.join(dataDir, 'database.db');
+// Use a persistent disk path if available (for Render), otherwise use a local file.
+const dbPath = process.env.RENDER_DISK_MOUNT_PATH ? path.join(process.env.RENDER_DISK_MOUNT_PATH, 'database.db') : 'database.db';
 const db = new Database(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS gallery_items (
@@ -37,14 +29,6 @@ app.use(express.json()); // Use express's built-in JSON parser
 app.use(express.urlencoded({ extended: true }));
 
 // --- API Routes ---
-
-// GET: Root route for health check and API status
-app.get('/', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        message: 'Omefans API is running.'
-    });
-});
 
 // GET: Fetch all gallery items (No changes needed here)
 app.get('/api/gallery', (req, res) => {
