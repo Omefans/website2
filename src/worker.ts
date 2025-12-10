@@ -11,17 +11,25 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.use('/api/*', cors());
 
-console.log("Worker v1.2: Secure auth enabled."); // Add this version log
+console.log("Worker v1.3: Hardened auth with detailed logging."); // New version marker
 
 // Helper for password validation
 const isAuthorized = (password: unknown, secret: string | undefined): boolean => {
+	console.log("Authorizing request..."); // Log every auth attempt
 	// If the secret is not set, is empty, or just whitespace, no password can be valid.
 	if (!secret || secret.trim() === '') {
+		console.error("CRITICAL: Authorization failed because ADMIN_PASSWORD secret is not set on the worker.");
 		return false;
 	}
 	const userPassword = typeof password === 'string' ? password : '';
 	// Use Hono's built-in timing-safe comparison utility
-	return timingSafeEqual(userPassword, secret);
+	const authorized = timingSafeEqual(userPassword, secret);
+	if (authorized) {
+		console.log("Authorization successful: Provided password matches the secret.");
+	} else {
+		console.log("Authorization FAILED: Provided password does not match the secret.");
+	}
+	return authorized;
 };
 
 // --- API Routes ---
@@ -45,6 +53,7 @@ app.get('/api/gallery', async (c) => {
 app.post('/api/auth/check', async (c) => {
 	try {
 		const { password } = await c.json();
+		console.log("Received request to /api/auth/check");
 		if (!isAuthorized(password, c.env.ADMIN_PASSWORD)) {
 			return c.json({ error: 'Unauthorized: Invalid password.' }, 401);
 		}
