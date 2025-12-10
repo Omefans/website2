@@ -28,6 +28,19 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    /* --- NEW: DISABLE RIGHT-CLICK AND CTRL+U --- */
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
+
+    // Disable Ctrl+U (View Source)
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+        }
+    });
+
     /* --- 1. STAR BACKGROUND --- */
     const starsContainer = document.getElementById('stars');
     if (starsContainer) {
