@@ -11,6 +11,8 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.use('/api/*', cors());
 
+console.log("Worker v1.2: Secure auth enabled."); // Add this version log
+
 // Helper for password validation
 const isAuthorized = (password: unknown, secret: string | undefined): boolean => {
 	// If the secret is not set, is empty, or just whitespace, no password can be valid.
