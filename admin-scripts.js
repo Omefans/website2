@@ -194,19 +194,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-                messageEl.textContent = result.message;
-                if (isEditing) {
-                    cancelEdit();
-                } else {
-                    uploadForm.reset();
-                }
-                loadManageableItems(); // Refresh the list
-            } else {
-                throw new Error(result.error || 'Failed to add content.');
-            }
-        } catch (error) {
-            messageEl.textContent = `Error: ${error.message}`;
-            console.error(error);
-        }
-    });
-});
