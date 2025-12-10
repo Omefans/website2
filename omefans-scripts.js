@@ -170,8 +170,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
                     </a>
                     <div class="gallery-item-details">
-                        <h3 class="item-name">${data.name}</h3>
-                        ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
+                        <div class="item-text-content">
+                            <h3 class="item-name">${data.name}</h3>
+                            ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
+                        </div>
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
                             <a href="${data.affiliate_url}" class="btn-view" target="_blank" rel="noopener noreferrer">View Content</a>
@@ -187,6 +189,19 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
 
                 galleryContainer.appendChild(itemArticle);
+            });
+
+            // After rendering, check for long descriptions and make them expandable
+            galleryContainer.querySelectorAll('.item-desc').forEach(desc => {
+                // Check if the content's full height is greater than its visible height
+                if (desc.scrollHeight > desc.clientHeight) {
+                    desc.classList.add('is-expandable'); // Add class to make it clickable
+
+                    desc.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent the card's main click event
+                        desc.classList.toggle('expanded');
+                    });
+                }
             });
 
             // Re-apply mouse follower effects to the new dynamic items
@@ -429,14 +444,35 @@ utilityStyles.textContent = `
     .item-name {
         font-family: 'Orbitron', sans-serif;
         font-size: 1.1rem;
-        margin: 0; /* Title is now flush with the top padding */
+        margin: 0 0 5px 0;
         color: #fff;
     }
     .item-desc {
         font-size: 0.85rem;
         color: #ccc;
-        margin: 8px 0; /* Space above and below description */
+        margin: 0 0 12px 0;
         line-height: 1.4;
+        /* Truncation styles */
+        max-height: 4.2em; /* Approx. 3 lines (3 * 1.4em) */
+        overflow: hidden;
+        position: relative;
+        transition: max-height 0.4s ease-in-out;
+    }
+    .item-desc.expanded {
+        max-height: 500px; /* A large value to allow full expansion */
+    }
+    .item-desc.is-expandable {
+        cursor: pointer;
+    }
+    /* Fade-out effect for truncated text */
+    .item-desc:not(.expanded)::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1.5em;
+        background: linear-gradient(to top, #1a1a1a 10%, transparent);
     }
     .item-footer {
         display: flex;
