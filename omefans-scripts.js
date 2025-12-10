@@ -160,11 +160,13 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
 
                     itemArticle.innerHTML = `
-                        <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
-                        <div class="gallery-item-content">
-                            <div class="item-text">
+                        <a href="${data.affiliate_url}" target="_blank" rel="noopener noreferrer" class="gallery-item-image-link">
+                            <img src="${data.image_path}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
+                        </a>
+                        <div class="gallery-item-details">
+                            <div class="item-text-content">
                                 <h3 class="item-name">${data.name}</h3>
-                                <p class="item-desc">${data.description || ''}</p>
+                                ${data.description ? `<p class="item-desc">${data.description}</p>` : ''}
                             </div>
                             <div class="item-footer">
                                 <span class="item-date">${releaseDate}</span>
@@ -215,14 +217,21 @@ utilityStyles.textContent = `
         position: relative;
         border-radius: 8px;
         overflow: hidden;
-        aspect-ratio: 3 / 4;
         background-color: #1a1a1a;
         cursor: pointer;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex; /* Use flexbox for column layout */
+        flex-direction: column;
     }
     .gallery-item:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 217, 255, 0.1);
+    }
+    .gallery-item-image-link {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1 / 1; /* Make image area square */
+        overflow: hidden;
     }
     .gallery-item-img {
         width: 100%;
@@ -231,38 +240,31 @@ utilityStyles.textContent = `
         transition: transform 0.4s ease;
     }
     .gallery-item:hover .gallery-item-img {
-        transform: scale(1.05);
+        transform: scale(1.1);
     }
-    .gallery-item-content {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
+    .gallery-item-details {
+        flex-grow: 1; /* Allow details section to take remaining space */
         padding: 15px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%;
         box-sizing: border-box;
-        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 100%);
-        transition: background 0.3s ease;
+        color: #fff;
     }
-    .item-text {
-        /* Takes up available space */
+    .item-text-content {
+        margin-bottom: 10px; /* Space between text and footer */
     }
     .item-name {
         font-family: 'Orbitron', sans-serif;
         font-size: 1.1rem;
         margin: 0 0 5px 0;
         color: #fff;
-        text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
     }
     .item-desc {
         font-size: 0.85rem;
         color: #ccc;
         margin: 0;
         line-height: 1.4;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
     }
     .item-footer {
         display: flex;
