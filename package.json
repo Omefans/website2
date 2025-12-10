@@ -1,0 +1,18 @@
+{
+  "name": "omefans-vercel-backend",
+  "version": "1.0.0",
+  "description": "Backend for gallery management on Vercel",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/postgres": "^0.9.0",
+    "hono": "^4.4.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3",
+    "vercel": "^34.2.0"
+  }
+}
