@@ -25,6 +25,28 @@ db.exec(`
   )
 `);
 
+// --- Simple Migration ---
+// This will add missing columns to an existing database without deleting it.
+try {
+    const columns = db.prepare(`PRAGMA table_info(gallery_items)`).all();
+    const hasNameColumn = columns.some(col => col.name === 'name');
+    const hasDescriptionColumn = columns.some(col => col.name === 'description');
+
+    if (!hasNameColumn) {
+        console.log("Running migration: Adding 'name' column.");
+        db.exec('ALTER TABLE gallery_items ADD COLUMN name TEXT NOT NULL DEFAULT ""');
+    }
+
+    if (!hasDescriptionColumn) {
+        console.log("Running migration: Adding 'description' column.");
+        db.exec('ALTER TABLE gallery_items ADD COLUMN description TEXT');
+    }
+} catch (error) {
+    // This might fail if the table doesn't exist yet, which is fine.
+    // The CREATE TABLE statement will handle that case.
+    console.log('Could not run migration, probably because table does not exist yet. This is safe.');
+}
+
 // --- Middleware ---
 app.use(cors());
 app.use(express.json()); // Use express's built-in JSON parser

@@ -50,7 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadManageableItems() {
         try {
             const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
-            if (!response.ok) throw new Error('Failed to fetch items.');
+            if (!response.ok) {
+                // Attempt to parse JSON error, otherwise provide generic message
+                const errorText = await response.text();
+                let errorMessage = `Failed to fetch items. Status: ${response.status}`;
+                try { errorMessage += ` - ${JSON.parse(errorText).error}`; } catch (e) { /* ignore */ }
+                throw new Error(errorMessage);
+            }
             galleryItemsCache = await response.json();
 
             itemListContainer.innerHTML = ''; // Clear previous list
