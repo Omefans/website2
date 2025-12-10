@@ -8,23 +8,122 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('upload-form');
     const passwordInput = document.getElementById('password');
     const messageEl = document.getElementById('message');
+    const managementContainer = document.getElementById('management-container');
+    const itemListContainer = document.getElementById('item-list');
+    const editIdInput = document.getElementById('edit-id');
+    const formSubmitButton = uploadForm.querySelector('button[type="submit"]');
+    const cancelEditButton = document.getElementById('cancel-edit-btn');
 
     let adminPassword = '';
+    let galleryItemsCache = [];
 
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         adminPassword = passwordInput.value;
-        // Simple check. In a real app, you'd verify this with the server.
         if (adminPassword) {
             loginForm.style.display = 'none';
             uploadForm.style.display = 'block';
+            managementContainer.style.display = 'block';
             messageEl.textContent = 'Logged in. You can now add content.';
+            loadManageableItems();
         }
     });
 
+    async function loadManageableItems() {
+        try {
+            const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
+            if (!response.ok) throw new Error('Failed to fetch items.');
+            galleryItemsCache = await response.json();
+
+            itemListContainer.innerHTML = ''; // Clear previous list
+            if (galleryItemsCache.length === 0) {
+                itemListContainer.innerHTML = '<p>No items to manage yet.</p>';
+                return;
+            }
+
+            galleryItemsCache.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.dataset.id = item.id;
+                itemEl.innerHTML = `
+                    <span>${item.name}</span>
+                    <div class="item-actions">
+                        <button class="edit-btn">Edit</button>
+                        <button class="delete-btn" style="background: #dc3545;">Delete</button>
+                    </div>
+                `;
+                itemListContainer.appendChild(itemEl);
+            });
+
+        } catch (error) {
+            itemListContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+        }
+    }
+
+    itemListContainer.addEventListener('click', (e) => {
+        const target = e.target;
+        const itemEl = target.closest('[data-id]');
+        if (!itemEl) return;
+
+        const itemId = itemEl.dataset.id;
+
+        if (target.classList.contains('delete-btn')) {
+            handleDelete(itemId);
+        } else if (target.classList.contains('edit-btn')) {
+            handleEdit(itemId);
+        }
+    });
+
+    async function handleDelete(itemId) {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+
+        try {
+            const response = await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: adminPassword })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+
+            messageEl.textContent = 'Item deleted successfully!';
+            loadManageableItems(); // Refresh the list
+        } catch (error) {
+            messageEl.textContent = `Error: ${error.message}`;
+        }
+    }
+
+    function handleEdit(itemId) {
+        const itemToEdit = galleryItemsCache.find(item => item.id == itemId);
+        if (!itemToEdit) return;
+
+        editIdInput.value = itemToEdit.id;
+        document.getElementById('name').value = itemToEdit.name;
+        document.getElementById('description').value = itemToEdit.description;
+        document.getElementById('imageUrl').value = itemToEdit.image_path;
+        document.getElementById('affiliateUrl').value = itemToEdit.affiliate_url;
+
+        formSubmitButton.textContent = 'Update Item';
+        formSubmitButton.style.background = '#28a745';
+        cancelEditButton.style.display = 'block';
+        uploadForm.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        uploadForm.reset();
+        editIdInput.value = '';
+        formSubmitButton.textContent = 'Add Item';
+        formSubmitButton.style.background = '#007bff';
+        cancelEditButton.style.display = 'none';
+    }
+
+    cancelEditButton.addEventListener('click', cancelEdit);
+
     uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        messageEl.textContent = 'Adding content...';
+        const editingId = editIdInput.value;
+        const isEditing = !!editingId;
+
+        messageEl.textContent = isEditing ? 'Updating content...' : 'Adding content...';
 
         const data = {
             password: adminPassword,
@@ -34,9 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
             affiliateUrl: document.getElementById('affiliateUrl').value
         };
 
+        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
+        const method = isEditing ? 'PUT' : 'POST';
+
         try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/upload`, {
-                method: 'POST',
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -46,8 +148,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                messageEl.textContent = 'Content added successfully!';
-                uploadForm.reset();
+                messageEl.textContent = result.message;
+                if (isEditing) {
+                    cancelEdit();
+                } else {
+                    uploadForm.reset();
+                }
+                loadManageableItems(); // Refresh the list
             } else {
                 throw new Error(result.error || 'Failed to add content.');
             }

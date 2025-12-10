@@ -79,6 +79,72 @@ app.post('/api/upload', (req, res) => {
     }
 });
 
+// DELETE: Remove a gallery item (Password Protected)
+app.delete('/api/gallery/:id', (req, res) => {
+    const { password } = req.body;
+    const { id } = req.params;
+
+    // Password validation
+    const userPassword = (typeof password === 'string') ? password : '';
+    const storedPassBuf = Buffer.from(ADMIN_PASSWORD);
+    const providedPassBuf = Buffer.from(userPassword);
+
+    if (storedPassBuf.length !== providedPassBuf.length || !crypto.timingSafeEqual(storedPassBuf, providedPassBuf)) {
+        return res.status(403).json({ error: 'Forbidden: Invalid password.' });
+    }
+
+    if (!id) {
+        return res.status(400).json({ error: 'Item ID is required.' });
+    }
+
+    try {
+        const stmt = db.prepare('DELETE FROM gallery_items WHERE id = ?');
+        const info = stmt.run(id);
+
+        if (info.changes > 0) {
+            res.status(200).json({ success: true, message: 'Item deleted successfully.' });
+        } else {
+            res.status(404).json({ error: 'Item not found.' });
+        }
+    } catch (error) {
+        console.error('Database deletion failed:', error);
+        res.status(500).json({ error: 'Database deletion failed.' });
+    }
+});
+
+// PUT: Update a gallery item (Password Protected)
+app.put('/api/gallery/:id', (req, res) => {
+    const { password, name, description, imageUrl, affiliateUrl } = req.body;
+    const { id } = req.params;
+
+    // Password validation
+    const userPassword = (typeof password === 'string') ? password : '';
+    const storedPassBuf = Buffer.from(ADMIN_PASSWORD);
+    const providedPassBuf = Buffer.from(userPassword);
+
+    if (storedPassBuf.length !== providedPassBuf.length || !crypto.timingSafeEqual(storedPassBuf, providedPassBuf)) {
+        return res.status(403).json({ error: 'Forbidden: Invalid password.' });
+    }
+
+    if (!name || !imageUrl || !affiliateUrl) {
+        return res.status(400).json({ error: 'Name, Image URL, and Affiliate URL are required.' });
+    }
+
+    try {
+        const stmt = db.prepare('UPDATE gallery_items SET name = ?, description = ?, image_path = ?, affiliate_url = ? WHERE id = ?');
+        const info = stmt.run(name, description || '', imageUrl, affiliateUrl, id);
+
+        if (info.changes > 0) {
+            res.status(200).json({ success: true, message: 'Item updated successfully.' });
+        } else {
+            res.status(404).json({ error: 'Item not found.' });
+        }
+    } catch (error) {
+        console.error('Database update failed:', error);
+        res.status(500).json({ error: 'Database update failed.' });
+    }
+});
+
 // --- Start Server ---
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
