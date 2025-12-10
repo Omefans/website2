@@ -1,6 +1,6 @@
 const AppConfig = {
     // This is the address of your new backend server on Fly.io
-    backendUrl: '' // API is now on the same domain
+    backendUrl: 'https://omefans-api.onrender.com' // <-- PASTE YOUR RENDER URL HERE
 };
 
 document.addEventListener('DOMContentLoaded', () => {
