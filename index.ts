@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env, MiddlewareHandler } from 'hono/types';
+import { jwt, sign } from '@hono/jwt'
 
 // Define the environment variables for type safety. This improves
 // autocompletion and helps catch errors early.
@@ -8,6 +9,7 @@ type AppEnv = {
   Bindings: {
     DB: D1Database;
     ADMIN_PASSWORD: string;
+    JWT_SECRET: string;
   }
 }
 
@@ -16,43 +18,30 @@ const app = new Hono<AppEnv>();
 // Use CORS middleware to allow your frontend to call the API.
 app.use('/api/*', cors());
 
-/**
- * A constant-time string comparison function.
- * This is important to prevent timing attacks on the password.
- * @param {string} a The user-provided password.
- * @param {string} b The secret password from the environment.
- * @returns {boolean} True if the strings are equal.
- */
-const timingSafeEqual = (a: string, b: string): boolean => {
-  if (a.length !== b.length) {
-    return false;
-  }
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
-};
+// --- Password Hashing Helpers ---
+const bufferToHex = (buffer: ArrayBuffer) => Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-// --- AUTHENTICATION MIDDLEWARE ---
-// This runs before any protected endpoint to check the password.
-const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
-  const password = c.req.header('Authorization');
-  
-  // In Cloudflare, ADMIN_PASSWORD will be a secret environment variable.
-  const secret = c.env.ADMIN_PASSWORD;
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
+  const derivedBits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: encoder.encode(salt), iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
+  return bufferToHex(derivedBits);
+}
 
-  if (!secret) {
-    console.error("CRITICAL: ADMIN_PASSWORD secret is not set in the environment.");
-    return c.json({ error: 'Server configuration error.' }, 500);
+// --- AUTHENTICATION & AUTHORIZATION MIDDLEWARE ---
+
+// Middleware to verify the JWT token on protected routes.
+const authMiddleware = jwt({
+  secret: (c) => c.env.JWT_SECRET,
+  alg: 'HS256'
+});
+
+// Middleware to ensure only users with the 'admin' role can proceed.
+const adminOnly: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const payload = c.get('jwtPayload');
+  if (!payload || payload.role !== 'admin') {
+    return c.json({ error: 'Forbidden: This action requires admin privileges.' }, 403);
   }
-
-  // Use the timing-safe comparison function.
-  if (!timingSafeEqual(password || '', secret)) {
-    return c.json({ error: 'Unauthorized: Invalid password.' }, 401);
-  }
-
-  // If the password is correct, proceed to the actual endpoint.
   await next();
 };
 
@@ -85,13 +74,60 @@ app.get('/api/gallery', async (c) => {
   }
 });
 
-// --- PROTECTED ADMIN ROUTES ---
+// --- AUTHENTICATION ROUTES ---
 
-// Check password endpoint
-app.post('/api/auth/check', authMiddleware, async (c) => {
-  // If authMiddleware passes, the password is correct.
-  return c.json({ success: true, message: 'Authentication successful.' });
+app.post('/api/auth/register', async (c) => {
+  const userCount = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first<{ count: number }>();
+  if (userCount && userCount.count > 0) {
+    return c.json({ error: 'Registration is closed.' }, 403);
+  }
+
+  try {
+    const { name, description, imageUrl, affiliateUrl } = await c.req.json<any>();
+
+    if (!name || !imageUrl || !affiliateUrl) {
+      return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
+    }
+
+    const salt = bufferToHex(crypto.getRandomValues(new Uint8Array(16)));
+    const passwordHash = await hashPassword(imageUrl, salt);
+    const finalHash = `${salt}:${passwordHash}`;
+
+    await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role) VALUES (?, ?, ?)')
+      .bind(name, finalHash, 'admin')
+      .run();
+
+    return c.json({ success: true, message: 'Admin user created successfully. You can now log in.' }, 201);
+  } catch (e: any) {
+    return c.json({ error: 'Admin creation failed.', details: e.message }, 500);
+  }
 });
+
+app.post('/api/auth/login', async (c) => {
+  const { username, password } = await c.req.json<any>();
+  if (!username || !password) {
+    return c.json({ error: 'Username and password are required.' }, 400);
+  }
+
+  const user = await c.env.DB.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<{ id: number; username: string; passwordHash: string; role: string; }>();
+  if (!user) {
+    return c.json({ error: 'Invalid credentials.' }, 401);
+  }
+
+  const [salt, storedHash] = user.passwordHash.split(':');
+  const providedHash = await hashPassword(password, salt);
+
+  if (providedHash !== storedHash) {
+    return c.json({ error: 'Invalid credentials.' }, 401);
+  }
+
+  const payload = { sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
+  const token = await sign(payload, c.env.JWT_SECRET);
+
+  return c.json({ success: true, token });
+});
+
+// --- PROTECTED ADMIN ROUTES ---
 
 // Upload a new item
 app.post('/api/upload', authMiddleware, async (c) => {
@@ -162,6 +198,32 @@ app.put('/api/gallery/:id', authMiddleware, async (c) => {
   } catch (e: any) {
     console.error('D1 update failed:', e.message);
     return c.json({ error: 'Database update failed.', details: e.message }, 500);
+  }
+});
+
+// --- ADMIN-ONLY ROUTES ---
+
+// Create a new user (manager)
+app.post('/api/users', authMiddleware, adminOnly, async (c) => {
+  try {
+    const { username, password, role } = await c.req.json<any>();
+    if (!username || !password || !role) {
+      return c.json({ error: 'Username, password, and role are required.' }, 400);
+    }
+    if (role !== 'manager') {
+      return c.json({ error: 'Only "manager" role can be created.' }, 400);
+    }
+
+    const salt = bufferToHex(crypto.getRandomValues(new Uint8Array(16)));
+    const passwordHash = await hashPassword(password, salt);
+    const finalHash = `${salt}:${passwordHash}`;
+
+    await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role) VALUES (?, ?, ?)')
+      .bind(username, finalHash, role).run();
+    return c.json({ success: true, message: `User "${username}" created successfully.` }, 201);
+  } catch (e: any) {
+    if (e.message?.includes('UNIQUE constraint failed')) return c.json({ error: 'Username already exists.' }, 409);
+    return c.json({ error: 'Failed to create user.', details: e.message }, 500);
   }
 });
 

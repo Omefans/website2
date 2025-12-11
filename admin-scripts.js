@@ -6,22 +6,26 @@ const AppConfig = {
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const uploadForm = document.getElementById('upload-form');
+    const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const managementContainer = document.getElementById('management-container');
     const itemListContainer = document.getElementById('item-list');
     const editIdInput = document.getElementById('edit-id');
     const formSubmitButton = uploadForm.querySelector('button[type="submit"]');
     const cancelEditButton = document.getElementById('cancel-edit-btn');
+    const logoutButton = document.getElementById('logout-btn');
 
     const loginButton = loginForm.querySelector('button[type="submit"]');
 
-    let adminPassword = '';
     let galleryItemsCache = [];
     let currentSearchTerm = '';
     let currentSort = {
         field: 'createdAt', // 'createdAt' or 'name'
         order: 'desc'       // 'asc' or 'desc'
     };
+
+    let authToken = localStorage.getItem('authToken');
+    let userRole = '';
 
     /**
      * Sets the loading state for a button to prevent double-clicks and provide user feedback.
@@ -79,28 +83,341 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initToastContainer();
 
+    // Check if a token exists on page load
+    if (authToken) {
+        try {
+            userRole = decodeJwt(authToken).role;
+            showLoggedInState();
+        } catch (e) {
+            console.error("Invalid token found:", e);
+            logout();
+        }
+    }
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        adminPassword = passwordInput.value;
+        const username = usernameInput.value;
+        const password = passwordInput.value;
         setButtonLoadingState(loginButton, true, 'Authenticating...');
         try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/auth/check`, {
+            const response = await fetch(`${AppConfig.backendUrl}/api/auth/login`, {
                 method: 'POST',
-                headers: { 'Authorization': adminPassword }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!response.ok) {
+                const errorResult = await response.json();
+                throw new Error(errorResult.error || 'Authentication failed.');
+            }
+
+            const { token } = await response.json();
+            authToken = token;
+            localStorage.setItem('authToken', token);
+            userRole = decodeJwt(token).role;
+
+            showLoggedInState();
+
+        } catch (error) {
+            showToast(`Login failed: ${error.message || 'Check credentials.'}`, 'error');
+        } finally {
+            setButtonLoadingState(loginButton, false);
+        }
+    });
+
+    function showLoggedInState() {
+        loginForm.style.display = 'none';
+        uploadForm.style.display = 'block';
+        managementContainer.style.display = 'block';
+        logoutButton.style.display = 'block';
+        showToast('Login successful!', 'success');
+
+        if (userRole === 'admin') {
+            const userManagementContainer = document.getElementById('user-management-container');
+            if (userManagementContainer) userManagementContainer.style.display = 'block';
+        }
+
+        // Inject search and sort controls if they don't exist
+        if (!document.getElementById('admin-controls')) {
+            const controlsHtml = `
+                <div id="admin-controls" class="admin-controls">
+                    <div class="search-wrapper">
+                        <input type="search" id="admin-search-bar" placeholder="Search items by name...">
+                    </div>
+                    <div class="sort-buttons">
+                        <span>Sort by:</span>
+                        <button id="admin-sort-date-btn" class="sort-btn"></button>
+                        <button id="admin-sort-name-btn" class="sort-btn"></button>
+                    </div>
+                </div>
+            `;
+            managementContainer.insertAdjacentHTML('afterbegin', controlsHtml);
+            addControlListeners();
+        }
+        // Set initial sort and load data
+        setSort('createdAt');
+    }
+
+    function addControlListeners() {
+        document.getElementById('admin-search-bar').addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase();
+            renderItems();
+        });
+
+        document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('createdAt'));
+        document.getElementById('admin-sort-name-btn').addEventListener('click', () => setSort('name'));
+
+        const addUserForm = document.getElementById('add-user-form');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', handleAddUser);
+        }
+    }
+
+    function setSort(sortType) {
+        if (currentSort.field === sortType) {
+            // If clicking the same sort field, toggle the order
+            currentSort.order = currentSort.order === 'desc' ? 'asc' : 'desc';
+        } else {
+            // If switching to a new sort field, set a default order
+            currentSort.field = sortType;
+            currentSort.order = sortType === 'createdAt' ? 'desc' : 'asc';
+        }
+        updateSortButtonUI();
+        loadManageableItems();
+    }
+
+    function updateSortButtonUI() {
+        const dateBtn = document.getElementById('admin-sort-date-btn');
+        const nameBtn = document.getElementById('admin-sort-name-btn');
+
+        // Reset both buttons
+        dateBtn.innerHTML = 'Date';
+        nameBtn.innerHTML = 'Name';
+        dateBtn.classList.remove('active');
+        nameBtn.classList.remove('active');
+
+        if (currentSort.field === 'createdAt') {
+            dateBtn.classList.add('active');
+            dateBtn.innerHTML = `Date ${currentSort.order === 'desc' ? '&#9660;' : '&#9650;'}`; // ▼ or ▲
+        } else { // name
+            nameBtn.classList.add('active');
+            nameBtn.innerHTML = `Name ${currentSort.order === 'asc' ? 'A-Z' : 'Z-A'}`;
+        }
+    }
+
+    async function loadManageableItems() {
+        const url = new URL(`${AppConfig.backendUrl}/api/gallery`);
+        url.searchParams.set('sort', currentSort.field);
+        url.searchParams.set('order', currentSort.order);
+
+        try {
+            const response = await fetch(url.toString());
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage = `Failed to fetch items. Status: ${response.status}`;
+                // Try to parse for more details
+                try { const errorResult = JSON.parse(errorText); errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error || errorMessage; } catch (e) { /* ignore */ }
+                throw new Error(errorMessage);
+            }
+            galleryItemsCache = await response.json();
+            renderItems();
+        } catch (error) {
+            itemListContainer.innerHTML = `<p class="error-message">Error loading items: ${error.message}</p>`;
+        }
+    }
+
+    function renderItems() {
+        let itemsToDisplay = [...galleryItemsCache];
+
+        // 1. Filter by search term
+        if (currentSearchTerm) {
+            itemsToDisplay = itemsToDisplay.filter(item => 
+                item.name.toLowerCase().includes(currentSearchTerm)
+            );
+        }
+
+        itemListContainer.innerHTML = ''; // Clear previous list
+        if (itemsToDisplay.length === 0) {
+            const message = currentSearchTerm ? 'No items match your search.' : 'No items to manage yet.';
+            itemListContainer.innerHTML = `<p>${message}</p>`;
+            return;
+        }
+
+        itemsToDisplay.forEach(item => {
+            const createdAt = new Date(item.createdAt);
+            const formattedDate = createdAt.toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            });
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'admin-item-card';
+            itemEl.dataset.id = item.id;
+            itemEl.innerHTML = `
+                <img src="${item.imageUrl}" alt="Preview" class="item-card-image" onerror="this.style.display='none'">
+                <div class="item-card-content">
+                    <div class="item-card-header">
+                        <span class="item-name">${item.name || 'Untitled Item'}</span>
+                        <span class="item-date">${formattedDate}</span>
+                    </div>
+                    <div class="item-actions">
+                        <button type="button" class="edit-btn">Edit</button>
+                        <button type="button" class="delete-btn">Delete</button>
+                    </div>
+                </div>
+            `;
+            itemListContainer.appendChild(itemEl);
+        });
+    }
+
+    itemListContainer.addEventListener('click', (e) => {
+        const target = e.target;
+        const itemEl = target.closest('[data-id]');
+        if (!itemEl) return;
+
+        const itemId = itemEl.dataset.id;
+
+        if (target.classList.contains('delete-btn')) handleDelete(itemId);
+        else if (target.classList.contains('edit-btn')) handleEdit(itemId);
+    });
+
+    async function handleDelete(itemId) {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+
+        try {
+            const response = await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            if (!response.ok) {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const errorResult = await response.json();
+                    const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
+                    throw new Error(errorMessage || `HTTP error! Status: ${response.status}`);
+                }
+                throw new Error(`Server returned an unexpected response. Status: ${response.status}.`);
+            }
+            const result = await response.json();
+            showToast(result.message || 'Item deleted successfully!', 'success');
+            loadManageableItems(); // Refresh the list
+        } catch (error) {
+            showToast(`Deletion failed: ${error.message}`, 'error');
+        }
+    }
+
+    function handleEdit(itemId) {
+        // Use strict equality (===) and parseInt for robust type-safe comparison.
+        const numericItemId = parseInt(itemId, 10);
+        const itemToEdit = galleryItemsCache.find(item => item.id === numericItemId);
+        if (!itemToEdit) return;
+
+        editIdInput.value = itemToEdit.id;
+        document.getElementById('name').value = itemToEdit.name || '';
+        document.getElementById('description').value = itemToEdit.description || '';
+        document.getElementById('imageUrl').value = itemToEdit.imageUrl || '';
+        document.getElementById('affiliateUrl').value = itemToEdit.affiliateUrl || '';
+
+        formSubmitButton.textContent = 'Update Item';
+        formSubmitButton.classList.add('btn-update');
+        cancelEditButton.style.display = 'block';
+        uploadForm.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        uploadForm.reset();
+        editIdInput.value = '';
+        formSubmitButton.textContent = 'Add Item';
+        formSubmitButton.classList.remove('btn-update');
+        cancelEditButton.style.display = 'none';
+    }
+
+    cancelEditButton.addEventListener('click', cancelEdit);
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const editingId = editIdInput.value;
+        const isEditing = !!editingId;
+
+        const loadingText = isEditing ? 'Updating...' : 'Adding...';
+        setButtonLoadingState(formSubmitButton, true, loadingText);
+        const data = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value,
+            imageUrl: document.getElementById('imageUrl').value,
+            affiliateUrl: document.getElementById('affiliateUrl').value
+        };
+
+        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
             });
 
             if (!response.ok) {
                 const errorResult = await response.json();
                 const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
-                throw new Error(errorMessage || 'Authentication failed.');
+                throw new Error(errorMessage || `HTTP error! Status: ${response.status}`);
             }
 
-            // If successful:
-            loginForm.style.display = 'none';
-            uploadForm.style.display = 'block';
-            managementContainer.style.display = 'block';
-            showToast('Login successful!', 'success');
-            
+            const result = await response.json();
+            showToast(result.message, 'success');
+            isEditing ? cancelEdit() : uploadForm.reset();
+            loadManageableItems(); // Refresh the list
+        } catch (error) {
+            showToast(`${isEditing ? 'Update failed' : 'Add failed'}: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(formSubmitButton, false);
+        }
+    });
+
+    async function handleAddUser(e) {
+        e.preventDefault();
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const username = document.getElementById('new-username').value;
+        const password = document.getElementById('new-password').value;
+        const role = document.getElementById('new-role').value;
+
+        setButtonLoadingState(button, true, 'Creating...');
+        try {
+            const response = await fetch(`${AppConfig.backendUrl}/api/users`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to create user.');
+
+            showToast(result.message, 'success');
+            form.reset();
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
+        }
+    }
+
+    function logout() {
+        authToken = null;
+        userRole = '';
+        localStorage.removeItem('authToken');
+        window.location.reload();
+    }
+
+    logoutButton.addEventListener('click', logout);
+
+    function decodeJwt(token) {
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch (e) {
+            return null;
+        }
+    }
+});
             // Inject search and sort controls if they don't exist
             if (!document.getElementById('admin-controls')) {
                 const controlsHtml = `
