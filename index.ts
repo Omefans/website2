@@ -37,7 +37,8 @@ const authMiddleware = jwt({
   secret: (c) => c.env.JWT_SECRET,
   alg: 'HS256',
   onError: (err, c) => {
-    return c.json({ error: 'Unauthorized', details: err.message }, 401);
+    console.error(`Authentication error: ${err.message}`);
+    return c.json({ error: 'Unauthorized' }, 401);
   },
 });
 
