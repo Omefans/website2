@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemEl.innerHTML = `
                     <span>${item.name || 'Untitled Item'}</span>
                     <div class="item-actions">
-                        <button class="edit-btn">Edit</button>
-                        <button class="delete-btn" style="background: #dc3545;">Delete</button>
+                        <button type="button" class="edit-btn">Edit</button>
+                        <button type="button" class="delete-btn">Delete</button>
                     </div>
                 `;
                 itemListContainer.appendChild(itemEl);
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('affiliateUrl').value = itemToEdit.affiliateUrl || '';
 
         formSubmitButton.textContent = 'Update Item';
-        formSubmitButton.style.background = '#28a745';
+        formSubmitButton.classList.add('btn-update');
         cancelEditButton.style.display = 'block';
         uploadForm.scrollIntoView({ behavior: 'smooth' });
     }
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadForm.reset();
         editIdInput.value = '';
         formSubmitButton.textContent = 'Add Item';
-        formSubmitButton.style.background = '#007bff';
+        formSubmitButton.classList.remove('btn-update');
         cancelEditButton.style.display = 'none';
     }
 
