@@ -36,7 +36,10 @@ async function hashPassword(password: string, salt: string): Promise<string> {
 // Middleware to verify the JWT token on protected routes.
 const authMiddleware = jwt({
   secret: (c) => c.env.JWT_SECRET,
-  alg: 'HS256'
+  alg: 'HS256',
+  onError: (err, c) => {
+    return c.json({ error: 'Unauthorized', details: err.message }, 401);
+  },
 });
 
 // Middleware to ensure only users with the 'admin' role can proceed.
