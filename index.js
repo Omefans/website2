@@ -39,7 +39,7 @@ app.get('/api/gallery', async (c) => {
     return c.json(results);
   } catch (e) {
     console.error('D1 query failed:', e.message);
-    return c.json({ error: 'Failed to retrieve gallery items.' }, 500);
+    return c.json({ error: 'Failed to retrieve gallery items.', details: e.message }, 500);
   }
 });
 
@@ -67,7 +67,8 @@ app.post('/api/upload', authMiddleware, async (c) => {
     return c.json({ success: true, message: 'Item added successfully.' }, 201);
   } catch (e) {
     console.error('D1 insert failed:', e.message);
-    return c.json({ error: 'Database insertion failed.' }, 500);
+    // Provide a more detailed error for easier debugging.
+    return c.json({ error: 'Database insertion failed.', details: e.message }, 500);
   }
 });
 
@@ -86,7 +87,7 @@ app.delete('/api/gallery/:id', authMiddleware, async (c) => {
     }
   } catch (e) {
     console.error('D1 delete failed:', e.message);
-    return c.json({ error: 'Database deletion failed.' }, 500);
+    return c.json({ error: 'Database deletion failed.', details: e.message }, 500);
   }
 });
 
@@ -112,7 +113,7 @@ app.put('/api/gallery/:id', authMiddleware, async (c) => {
     }
   } catch (e) {
     console.error('D1 update failed:', e.message);
-    return c.json({ error: 'Database update failed.' }, 500);
+    return c.json({ error: 'Database update failed.', details: e.message }, 500);
   }
 });
 

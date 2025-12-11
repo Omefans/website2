@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorResult = await response.json();
-                throw new Error(errorResult.error || 'Authentication failed.');
+                const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
+                throw new Error(errorMessage || 'Authentication failed.');
             }
 
             // If successful:
@@ -52,7 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorText = await response.text();
                 let errorMessage = `Failed to fetch items. Status: ${response.status}`;
-                try { errorMessage += ` - ${JSON.parse(errorText).error}`; } catch (e) { /* ignore */ }
+                // Try to parse for more details
+                try { const errorResult = JSON.parse(errorText); errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error || errorMessage; } catch (e) { /* ignore */ }
                 throw new Error(errorMessage);
             }
             galleryItemsCache = await response.json();
@@ -104,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 if (response.headers.get('content-type')?.includes('application/json')) {
                     const errorResult = await response.json();
-                    throw new Error(errorResult.error || `HTTP error! Status: ${response.status}`);
+                    const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
+                    throw new Error(errorMessage || `HTTP error! Status: ${response.status}`);
                 }
                 throw new Error(`Server returned an unexpected response. Status: ${response.status}.`);
             }
@@ -170,7 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorResult = await response.json();
-                throw new Error(errorResult.error || `HTTP error! Status: ${response.status}`);
+                const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
+                throw new Error(errorMessage || `HTTP error! Status: ${response.status}`);
             }
 
             const result = await response.json();
