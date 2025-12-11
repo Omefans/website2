@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env, MiddlewareHandler } from 'hono/types';
-import { jwt } from 'hono/jwt'
+import { jwt, sign } from 'hono/jwt'
 
 // Define the environment variables for type safety. This improves
 // autocompletion and helps catch errors early.
@@ -28,31 +28,6 @@ async function hashPassword(password: string, salt: string): Promise<string> {
   const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
   const derivedBits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: encoder.encode(salt), iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
   return bufferToHex(derivedBits);
-}
-
-// --- JWT Creation Helper ---
-const base64url = (buffer: ArrayBuffer): string => {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-};
-
-async function createJwt(payload: object, secret: string): Promise<string> {
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const encodedHeader = base64url(new TextEncoder().encode(JSON.stringify(header)));
-  const encodedPayload = base64url(new TextEncoder().encode(JSON.stringify(payload)));
-  const dataToSign = `${encodedHeader}.${encodedPayload}`;
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(dataToSign));
-  return `${dataToSign}.${base64url(signature)}`;
 }
 
 // --- AUTHENTICATION & AUTHORIZATION MIDDLEWARE ---
@@ -163,7 +138,7 @@ app.post('/api/auth/login', async (c) => {
     }
 
     const payload = { sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
-    const token = await createJwt(payload, secret);
+    const token = await sign(payload, secret);
 
     return c.json({ success: true, token });
   } catch (e: any) {
