@@ -6,6 +6,9 @@ import { Pool } from 'pg';
 // Create a new pool instance. It will automatically use the DATABASE_URL from the environment.
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // On Fly.io, the database requires an SSL connection. This configuration enables it.
+  // We detect if we're on Fly by checking for a Fly-specific environment variable.
+  ssl: process.env.FLY_APP_NAME ? { rejectUnauthorized: false } : false,
 });
 
 const app = new Hono().basePath('/api');
