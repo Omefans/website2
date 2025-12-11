@@ -64,9 +64,22 @@ app.get('/api', (c) => c.json({ status: 'ok', message: 'Omefans API is running.'
 // Get all gallery items (this is public for everyone to see)
 app.get('/api/gallery', async (c) => {
   try {
-    const { results } = await c.env.DB.prepare('SELECT id, name, description, "imageUrl", "affiliateUrl", "createdAt" FROM gallery_items ORDER BY "createdAt" DESC').all();
+    const { sort = 'createdAt', order = 'DESC' } = c.req.query();
+
+    // Whitelist validation to prevent SQL injection.
+    const allowedSorts = ['createdAt', 'name'];
+    const allowedOrders = ['ASC', 'DESC'];
+
+    const sortField = allowedSorts.includes(sort) ? sort : 'createdAt';
+    const sortOrder = allowedOrders.includes(order.toUpperCase()) ? order.toUpperCase() : 'DESC';
+
+    // Use a quoted identifier for "createdAt" to ensure it's a valid column name.
+    const safeSortField = sortField === 'createdAt' ? '"createdAt"' : 'name';
+
+    const query = `SELECT id, name, description, "imageUrl", "affiliateUrl", "createdAt" FROM gallery_items ORDER BY ${safeSortField} ${sortOrder}`;
+    const { results } = await c.env.DB.prepare(query).all();
     return c.json(results);
-  } catch (e) {
+  } catch (e: any) {
     console.error('D1 query failed:', e.message);
     return c.json({ error: 'Failed to retrieve gallery items.', details: e.message }, 500);
   }
@@ -83,7 +96,7 @@ app.post('/api/auth/check', authMiddleware, async (c) => {
 // Upload a new item
 app.post('/api/upload', authMiddleware, async (c) => {
   try {
-    const { name, description, imageUrl, affiliateUrl } = await c.req.json();
+    const { name, description, imageUrl, affiliateUrl } = await c.req.json<any>();
 
     if (!name || !imageUrl || !affiliateUrl) {
       return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
@@ -94,7 +107,7 @@ app.post('/api/upload', authMiddleware, async (c) => {
     ).bind(name, description || '', imageUrl, affiliateUrl).run();
 
     return c.json({ success: true, message: 'Item added successfully.' }, 201);
-  } catch (e) {
+  } catch (e: any) {
     console.error('D1 insert failed:', e.message);
     // Provide a more detailed error for easier debugging.
     return c.json({ error: 'Database insertion failed.', details: e.message }, 500);
@@ -114,7 +127,7 @@ app.delete('/api/gallery/:id', authMiddleware, async (c) => {
     } else {
       return c.json({ error: 'Item not found.' }, 404);
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('D1 delete failed:', e.message);
     return c.json({ error: 'Database deletion failed.', details: e.message }, 500);
   }
@@ -124,7 +137,7 @@ app.delete('/api/gallery/:id', authMiddleware, async (c) => {
 app.put('/api/gallery/:id', authMiddleware, async (c) => {
   try {
     const id = c.req.param('id');
-    const { name, description, imageUrl, affiliateUrl } = await c.req.json();
+    const { name, description, imageUrl, affiliateUrl } = await c.req.json<any>();
 
     if (!id) return c.json({ error: 'Invalid item ID.' }, 400);
     if (!name || !imageUrl || !affiliateUrl) {
@@ -146,7 +159,7 @@ app.put('/api/gallery/:id', authMiddleware, async (c) => {
     ).bind(name, description || '', imageUrl, affiliateUrl, id).run();
 
     return c.json({ success: true, message: 'Item updated successfully.' });
-  } catch (e) {
+  } catch (e: any) {
     console.error('D1 update failed:', e.message);
     return c.json({ error: 'Database update failed.', details: e.message }, 500);
   }

@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const uploadForm = document.getElementById('upload-form');
     const passwordInput = document.getElementById('password');
-    const messageEl = document.getElementById('message');
     const managementContainer = document.getElementById('management-container');
     const itemListContainer = document.getElementById('item-list');
     const editIdInput = document.getElementById('edit-id');
@@ -18,8 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let adminPassword = '';
     let galleryItemsCache = [];
-    let currentSort = 'date'; // 'date' or 'name'
     let currentSearchTerm = '';
+    let currentSort = {
+        field: 'createdAt', // 'createdAt' or 'name'
+        order: 'desc'       // 'asc' or 'desc'
+    };
 
     /**
      * Sets the loading state for a button to prevent double-clicks and provide user feedback.
@@ -38,23 +40,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Displays a temporary message to the user.
+     * Initializes a container for toast notifications if it doesn't exist.
+     */
+    function initToastContainer() {
+        if (!document.getElementById('toast-container')) {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+    }
+
+    /**
+     * Displays a temporary pop-up "toast" notification.
      * @param {string} text The message to display.
      * @param {'success' | 'error'} type The type of message, for styling.
      */
-    function displayMessage(text, type = 'success') {
-        messageEl.textContent = text;
-        messageEl.className = type === 'success' ? 'message-success' : 'message-error';
+    function showToast(text, type = 'success') {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
 
-        // Automatically clear the message after 4 seconds for better UX.
+        const icon = type === 'success'
+            ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+            : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+
+        toast.innerHTML = `${icon}<span>${text}</span>`;
+        toastContainer.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => toast.classList.add('show'), 100);
+
+        // Animate out and remove after a delay
         setTimeout(() => {
-            // Only clear if the message hasn't been replaced by a newer one.
-            if (messageEl.textContent === text) {
-                messageEl.textContent = '';
-                messageEl.className = '';
-            }
+            toast.classList.remove('show');
+            toast.addEventListener('transitionend', () => toast.remove());
         }, 4000);
     }
+
+    initToastContainer();
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -76,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginForm.style.display = 'none';
             uploadForm.style.display = 'block';
             managementContainer.style.display = 'block';
-            displayMessage('Logged in. You can now add content.', 'success');
+            showToast('Login successful!', 'success');
             
             // Inject search and sort controls if they don't exist
             if (!document.getElementById('admin-controls')) {
@@ -87,19 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="sort-buttons">
                             <span>Sort by:</span>
-                            <button id="admin-sort-date-btn" class="sort-btn active">Date</button>
-                            <button id="admin-sort-name-btn" class="sort-btn">Name</button>
+                            <button id="admin-sort-date-btn" class="sort-btn"></button>
+                            <button id="admin-sort-name-btn" class="sort-btn"></button>
                         </div>
                     </div>
                 `;
                 managementContainer.insertAdjacentHTML('afterbegin', controlsHtml);
                 addControlListeners();
             }
-
-            loadManageableItems();
+            // Set initial sort and load data
+            setSort('createdAt');
 
         } catch (error) {
-            displayMessage(`Login failed: ${error.message || 'Check credentials.'}`, 'error');
+            showToast(`Login failed: ${error.message || 'Check credentials.'}`, 'error');
             adminPassword = ''; // Clear the invalid password
         } finally {
             setButtonLoadingState(loginButton, false);
@@ -112,20 +135,49 @@ document.addEventListener('DOMContentLoaded', () => {
             renderItems();
         });
 
-        document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('date'));
+        document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('createdAt'));
         document.getElementById('admin-sort-name-btn').addEventListener('click', () => setSort('name'));
     }
 
     function setSort(sortType) {
-        currentSort = sortType;
-        document.getElementById('admin-sort-date-btn').classList.toggle('active', sortType === 'date');
-        document.getElementById('admin-sort-name-btn').classList.toggle('active', sortType === 'name');
-        renderItems();
+        if (currentSort.field === sortType) {
+            // If clicking the same sort field, toggle the order
+            currentSort.order = currentSort.order === 'desc' ? 'asc' : 'desc';
+        } else {
+            // If switching to a new sort field, set a default order
+            currentSort.field = sortType;
+            currentSort.order = sortType === 'createdAt' ? 'desc' : 'asc';
+        }
+        updateSortButtonUI();
+        loadManageableItems();
+    }
+
+    function updateSortButtonUI() {
+        const dateBtn = document.getElementById('admin-sort-date-btn');
+        const nameBtn = document.getElementById('admin-sort-name-btn');
+
+        // Reset both buttons
+        dateBtn.innerHTML = 'Date';
+        nameBtn.innerHTML = 'Name';
+        dateBtn.classList.remove('active');
+        nameBtn.classList.remove('active');
+
+        if (currentSort.field === 'createdAt') {
+            dateBtn.classList.add('active');
+            dateBtn.innerHTML = `Date ${currentSort.order === 'desc' ? '&#9660;' : '&#9650;'}`; // ▼ or ▲
+        } else { // name
+            nameBtn.classList.add('active');
+            nameBtn.innerHTML = `Name ${currentSort.order === 'asc' ? 'A-Z' : 'Z-A'}`;
+        }
     }
 
     async function loadManageableItems() {
+        const url = new URL(`${AppConfig.backendUrl}/api/gallery`);
+        url.searchParams.set('sort', currentSort.field);
+        url.searchParams.set('order', currentSort.order);
+
         try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
+            const response = await fetch(url.toString());
             if (!response.ok) {
                 const errorText = await response.text();
                 let errorMessage = `Failed to fetch items. Status: ${response.status}`;
@@ -150,12 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
 
-        // 2. Sort items
-        if (currentSort === 'name') {
-            itemsToDisplay.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        // For 'date', we rely on the API's default descending order.
-
         itemListContainer.innerHTML = ''; // Clear previous list
         if (itemsToDisplay.length === 0) {
             const message = currentSearchTerm ? 'No items match your search.' : 'No items to manage yet.';
@@ -164,12 +210,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         itemsToDisplay.forEach(item => {
+            const createdAt = new Date(item.createdAt);
+            const formattedDate = createdAt.toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            });
+
             const itemEl = document.createElement('div');
             itemEl.dataset.id = item.id;
             itemEl.innerHTML = `
                 <div class="item-details">
                     <img src="${item.imageUrl}" alt="Preview" class="item-thumbnail" onerror="this.style.display='none'">
-                    <span class="item-name">${item.name || 'Untitled Item'}</span>
+                    <div>
+                        <span class="item-name">${item.name || 'Untitled Item'}</span>
+                        <span class="item-date">Published: ${formattedDate}</span>
+                    </div>
                 </div>
                 <div class="item-actions">
                     <button type="button" class="edit-btn">Edit</button>
@@ -209,10 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Server returned an unexpected response. Status: ${response.status}.`);
             }
             const result = await response.json();
-            displayMessage(result.message || 'Item deleted successfully!', 'success');
+            showToast(result.message || 'Item deleted successfully!', 'success');
             loadManageableItems(); // Refresh the list
         } catch (error) {
-            displayMessage(`Deletion failed: ${error.message}`, 'error');
+            showToast(`Deletion failed: ${error.message}`, 'error');
         }
     }
 
@@ -275,11 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const result = await response.json();
-            displayMessage(result.message, 'success');
+            showToast(result.message, 'success');
             isEditing ? cancelEdit() : uploadForm.reset();
             loadManageableItems(); // Refresh the list
         } catch (error) {
-            displayMessage(`${isEditing ? 'Update failed' : 'Add failed'}: ${error.message}`, 'error');
+            showToast(`${isEditing ? 'Update failed' : 'Add failed'}: ${error.message}`, 'error');
         } finally {
             setButtonLoadingState(formSubmitButton, false);
         }
