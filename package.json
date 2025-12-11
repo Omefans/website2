@@ -8,7 +8,8 @@
     "logs": "npx wrangler tail",
     "db:setup": "npx wrangler d1 execute omefans-db --file=./schema.sql --remote",
     "db:setup:local": "npx wrangler d1 execute omefans-db --file=./schema.sql",
-    "db:migrate": "npx wrangler d1 execute omefans-db --file=./migrations/0001_add_userid_to_gallery.sql --remote"
+    "db:migrate": "npx wrangler d1 execute omefans-db --file=./0001_add_userid_to_gallery.sql --remote",
+    "db:migrate:local": "npx wrangler d1 execute omefans-db --file=./0001_add_userid_to_gallery.sql"
   },
   "dependencies": {
     "hono": "^4.4.6"
