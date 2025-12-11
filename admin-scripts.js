@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Displays a formatted error message to the user in the message element.
+     * @param {Error} error The error object.
+     * @param {string} [context='Error'] A prefix for the message.
+     */
+    function displayError(error, context = 'Error') {
+        messageEl.textContent = `${context}: ${error.message || 'An unknown error occurred.'}`;
+        console.error(error);
+    }
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         adminPassword = passwordInput.value;
@@ -59,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadManageableItems();
 
         } catch (error) {
-            messageEl.textContent = `Login failed: ${error.message}`;
+            displayError(error, 'Login failed');
             adminPassword = ''; // Clear the invalid password
         } finally {
             setButtonLoadingState(loginButton, false);
@@ -98,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
         } catch (error) {
-            itemListContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+            itemListContainer.innerHTML = `<p class="error-message">Error loading items: ${error.message}</p>`;
         }
     }
 
@@ -134,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageEl.textContent = result.message || 'Item deleted successfully!';
             loadManageableItems(); // Refresh the list
         } catch (error) {
-            messageEl.textContent = `Error: ${error.message}`;
+            displayError(error, 'Deletion failed');
         }
     }
 
@@ -201,8 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isEditing ? cancelEdit() : uploadForm.reset();
             loadManageableItems(); // Refresh the list
         } catch (error) {
-            messageEl.textContent = `Error: ${error.message}`;
-            console.error(error);
+            displayError(error, isEditing ? 'Update failed' : 'Add failed');
         } finally {
             setButtonLoadingState(formSubmitButton, false);
         }

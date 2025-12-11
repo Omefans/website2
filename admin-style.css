@@ -25,3 +25,8 @@ button:hover { background: #0056b3; }
 .btn-update:hover {
     background: #218838;
 }
+
+.error-message {
+    color: #ff4d4d; /* A distinct error color */
+    font-weight: bold;
+}
