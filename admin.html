@@ -10,8 +10,15 @@
 </head>
 <body>
     <div class="container">
-        <button id="logout-btn">Logout</button>
+        <header id="admin-header">
+            <div class="logo-container">
+                <img src="images/header-logo.png" alt="OmeFans Logo" class="header-logo">
+                <span>Admin Panel</span>
+            </div>
+            <button id="logout-btn">Logout</button>
+        </header>
         <form id="login-form">
+            <img src="images/header-logo.png" alt="OmeFans Logo" class="login-logo">
             <h2>Admin Login</h2>
             <div>
                 <label for="username">Username</label>
@@ -24,7 +31,7 @@
             <button type="submit">Login</button>
         </form>
 
-        <div id="admin-panel-main">
+        <main id="admin-panel-main">
             <nav id="admin-nav">
                 <button id="nav-content-btn" class="nav-btn">Content</button>
                 <button id="nav-users-btn" class="nav-btn">Users</button>
@@ -87,7 +94,7 @@
             <h3>Existing Users</h3>
             <div id="user-list"></div>
         </div>
-        </div>
+        </main>
     </div>
 
     <!-- Make sure this path is correct for your project structure -->
