@@ -293,13 +293,24 @@ document.addEventListener("DOMContentLoaded", function() {
             renderItems(processedData);
         }
 
-        function displayEmptyGallery() {
+        async function fetchAndDisplayGallery() {
+            // Show a loading message while fetching data.
             galleryContainer.innerHTML = '<p class="gallery-message">Loading gallery...</p>';
-            galleryContainer.innerHTML = '<p class="gallery-message">Gallery is currently empty.</p>';
-            paginationControls.style.display = 'none';
+
+            try {
+                // Fetch data from the local JSON file. The query parameter helps prevent browser caching issues.
+                const response = await fetch(`./gallery.json?v=${new Date().getTime()}`);
+                if (!response.ok) throw new Error('Network response was not ok. Make sure gallery.json exists.');
+                masterGalleryData = await response.json();
+                updateDisplay(); // Initial render with default sorting
+
+            } catch (error) {
+                console.error("Error fetching gallery:", error);
+                galleryContainer.innerHTML = '<p class="gallery-message">Failed to load gallery content. Check for errors in the gallery.json file.</p>';
+            }
         }
 
-        displayEmptyGallery();
+        fetchAndDisplayGallery();
 
         if (searchBar && sortDateBtn && sortNameBtn) {
             // Set initial button state to show the default sort direction

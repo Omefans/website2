@@ -2,5 +2,10 @@
   "name": "website2-static",
   "version": "1.0.0",
   "description": "A static website for the gallery.",
-  "private": true
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "hono": "^4.4.6"
+  }
 }
