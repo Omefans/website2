@@ -1,6 +1,6 @@
 const AppConfig = {
-    // This is the address of your new backend server on Fly.io
-    backendUrl: 'https://omefans-api.onrender.com' // <-- PASTE YOUR RENDER URL HERE
+    // The backend has been removed. This file no longer loads dynamic content.
+    backendUrl: ''
 };
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -293,23 +293,13 @@ document.addEventListener("DOMContentLoaded", function() {
             renderItems(processedData);
         }
 
-        async function fetchAndDisplayGallery() {
-            // Show a loading message while fetching data.
+        function displayEmptyGallery() {
             galleryContainer.innerHTML = '<p class="gallery-message">Loading gallery...</p>';
-
-            try {
-                const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                masterGalleryData = await response.json();
-                updateDisplay(); // Initial render
-
-            } catch (error) {
-                console.error("Error fetching gallery:", error);
-                galleryContainer.innerHTML = '<p class="gallery-message">Failed to load gallery content.</p>';
-            }
+            galleryContainer.innerHTML = '<p class="gallery-message">Gallery is currently empty.</p>';
+            paginationControls.style.display = 'none';
         }
 
-        fetchAndDisplayGallery();
+        displayEmptyGallery();
 
         if (searchBar && sortDateBtn && sortNameBtn) {
             // Set initial button state to show the default sort direction
