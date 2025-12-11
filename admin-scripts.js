@@ -117,6 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return response;
     }
 
+    // Add listeners for the new page navigation
+    navContentBtn.addEventListener('click', () => showPage('content'));
+    navUsersBtn.addEventListener('click', () => showPage('users'));
+
     // Check if a token exists on page load
     if (authToken) {
         try {
@@ -167,16 +171,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function showLoggedInState() {
-        loginForm.style.display = 'none';
-        adminPanelMain.style.display = 'block';
-        logoutButton.style.display = 'block';
+        document.body.classList.add('logged-in');
         showToast('Login successful!', 'success');
 
         // Default to the content page view
         showPage('content');
 
         if (userRole === 'admin') {
-            navUsersBtn.style.display = 'inline-block';
+            // A class on the body will control UI visibility via CSS
+            document.body.classList.add('is-admin');
             loadUsers(); // Load user data in the background
         }
 
@@ -209,21 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('createdAt'));
         document.getElementById('admin-sort-name-btn').addEventListener('click', () => setSort('name'));
-
-        const addUserForm = document.getElementById('add-user-form');
-        if (addUserForm) {
-            addUserForm.addEventListener('submit', handleAddUser);
-        }
-
-        const userList = document.getElementById('user-list');
-        if (userList) {
-            userList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-user-btn')) {
-                    const userId = e.target.dataset.userId;
-                    handleDeleteUser(userId);
-                }
-            });
-        }
     }
 
     function setSort(sortType) {
@@ -522,19 +510,18 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {'content' | 'users'} pageName The name of the page to display.
      */
     function showPage(pageName) {
-        // Hide all pages first
-        contentManagementSection.style.display = 'none';
-        userManagementContainer.style.display = 'none';
-
-        // Deactivate all navigation buttons
+        // Hide all pages and deactivate all nav buttons
+        contentManagementSection.classList.remove('active');
+        userManagementContainer.classList.remove('active');
         navContentBtn.classList.remove('active');
         navUsersBtn.classList.remove('active');
 
+        // Show the selected page and activate its nav button
         if (pageName === 'content') {
-            contentManagementSection.style.display = 'block';
+            contentManagementSection.classList.add('active');
             navContentBtn.classList.add('active');
         } else if (pageName === 'users' && userRole === 'admin') {
-            userManagementContainer.style.display = 'block';
+            userManagementContainer.classList.add('active');
             navUsersBtn.classList.add('active');
         }
     }

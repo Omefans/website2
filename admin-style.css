@@ -1,6 +1,6 @@
 /* Use a modern, clean font consistent with the main site for a professional feel. */
-body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #1a1a1a; color: #f0f0f0; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 2rem; box-sizing: border-box; }
-.container { background: #2c2c2c; padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 800px; border: 1px solid #444; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #1a1a1a; color: #f0f0f0; min-height: 100vh; margin: 0; padding: 2rem; box-sizing: border-box; }
+.container { background: #2c2c2c; padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 800px; border: 1px solid #444; box-shadow: 0 8px 32px rgba(0,0,0,0.2); margin: 0 auto; /* Center the container horizontally */ }
 h2 { margin-bottom: 2rem; text-align: center; font-family: 'Orbitron', sans-serif; color: #fff; font-weight: 700; letter-spacing: 1px; }
 form div { margin-bottom: 1.5rem; }
 label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #ccc; }
@@ -11,10 +11,35 @@ button { width: 100%; padding: 0.85rem 1rem; background: linear-gradient(145deg,
 button:hover { box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); transform: translateY(-2px); }
 button:active { transform: translateY(0); box-shadow: none; }
 button:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; }
-#admin-panel-main, #content-management-section, #user-management-container, #cancel-edit-btn, #nav-users-btn { display: none; }
+
+/* --- View State Management --- */
+/* By default, the main panel, logout button, and cancel edit button are hidden. The login form is visible. */
+#login-form { display: block; }
+#admin-panel-main, #logout-btn, #cancel-edit-btn { display: none; }
+
+/* When the user is logged in, hide the login form and show the main panel and logout button. */
+body.logged-in #login-form { display: none; }
+body.logged-in #admin-panel-main { display: block; }
+body.logged-in #logout-btn { display: block; }
+
+/* The 'Users' tab is hidden by default. */
+#nav-users-btn { display: none; }
+
+/* It is shown only if the user has admin privileges. */
+body.is-admin #nav-users-btn { display: inline-block; }
+/* --- End View State Management --- */
+
+
+/* Pages are hidden by default */
+.admin-page {
+    display: none;
+}
+/* The active page is shown */
+.admin-page.active {
+    display: block;
+}
 
 #logout-btn {
-    display: none; /* Initially hidden */
     position: absolute;
     top: 20px;
     right: 20px;
