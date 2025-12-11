@@ -83,14 +83,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initToastContainer();
 
+    /**
+     * A wrapper around fetch that adds the auth token and handles 401 errors by logging out.
+     * @param {string} url The URL to fetch.
+     * @param {RequestInit} options The options for the fetch request.
+     * @returns {Promise<Response>} The fetch response.
+     */
+    async function authenticatedFetch(url, options = {}) {
+        const headers = {
+            ...options.headers,
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+        };
+
+        const response = await fetch(url, { ...options, headers });
+
+        if (response.status === 401) {
+            showToast('Session expired. Please log in again.', 'error');
+            // Use a short delay to allow the user to see the toast before reloading.
+            setTimeout(logout, 1500);
+            // Throw an error to stop the execution of the calling function.
+            throw new Error('Unauthorized');
+        }
+
+        return response;
+    }
+
     // Check if a token exists on page load
     if (authToken) {
         try {
-            userRole = decodeJwt(authToken).role;
+            const payload = decodeJwt(authToken);
+            if (!payload || payload.exp * 1000 < Date.now()) {
+                throw new Error("Token is expired or invalid.");
+            }
+            userRole = payload.role;
             showLoggedInState();
         } catch (e) {
-            console.error("Invalid token found:", e);
-            logout();
+            console.error("Invalid or expired token found:", e.message);
+            logout(); // This will clear the bad token
         }
     }
 
@@ -284,10 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Are you sure you want to delete this item?')) return;
 
         try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/gallery/${itemId}`, { method: 'DELETE' });
 
             if (!response.ok) {
                 if (response.headers.get('content-type')?.includes('application/json')) {
@@ -351,12 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            });
-
+            const response = await authenticatedFetch(url, { method, body: JSON.stringify(data) });
+            
             if (!response.ok) {
                 const errorResult = await response.json();
                 const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
@@ -384,11 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Creating...');
         try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/users`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role })
-            });
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users`, { method: 'POST', body: JSON.stringify({ username, password, role }) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to create user.');
 
@@ -412,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function decodeJwt(token) {
         try {
-            return JSON.parse(atob(token.split('.')[1]));
+            return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
         } catch (e) {
             return null;
         }
