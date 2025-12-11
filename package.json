@@ -4,8 +4,20 @@
   "description": "A static website for the gallery.",
   "private": true,
   "type": "module",
+  "scripts": {
+    "start": "node dist/server.js",
+    "build": "tsc"
+  },
   "dependencies": {
     "@hono/node-server": "^1.11.1",
-    "hono": "^4.4.6"
+    "hono": "^4.4.6",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10",
+    "@types/node": "^20.11.24",
+    "@types/pg": "^8.11.6",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.3.3"
   }
 }

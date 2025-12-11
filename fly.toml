@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for omefans-backend on 2025-12-10T12:44:44+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'omefans-backend'
+primary_region = 'ams'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  PORT = '3000' # This matches the internal_port below
+
+[http_service]
+  internal_port = 3000 # Your backend server will listen on this port inside the container
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+
+[[vm]]
+  memory = '256mb'
+  cpu_kind = 'shared'
+  cpus = 1
