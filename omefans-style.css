@@ -515,7 +515,33 @@ body {
     border-color: #00d9ff;
 }
 
-/* --- 8. MODAL STYLES --- */
+/* --- 8. UTILITY & LAYOUT CLASSES --- */
+.mb-40 {
+    margin-bottom: 40px;
+}
+
+.pt-50 {
+    padding-top: 50px;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.contact-lead {
+    text-align: center;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin-bottom: 40px;
+    line-height: 1.6;
+    color: #ccc;
+}
+
+#pagination-controls {
+    width: 100%; display: flex; justify-content: center; gap: 10px; margin-top: 40px; flex-wrap: wrap;
+}
+
+/* --- 9. MODAL STYLES --- */
 .modal {
     display: none;
     position: fixed;
