@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env, MiddlewareHandler } from 'hono/types';
-import { jwt, sign } from 'hono/jwt'
 
 // Define the environment variables for type safety. This improves
 // autocompletion and helps catch errors early.
@@ -30,17 +29,91 @@ async function hashPassword(password: string, salt: string): Promise<string> {
   return bufferToHex(derivedBits);
 }
 
-// --- AUTHENTICATION & AUTHORIZATION MIDDLEWARE ---
+// --- JWT Creation Helper ---
+const base64url = (buffer: ArrayBuffer): string => {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+};
 
-// Middleware to verify the JWT token on protected routes.
-const authMiddleware = jwt({
-  secret: (c) => c.env.JWT_SECRET,
-  alg: 'HS256',
-  onError: (err, c) => {
-    console.error(`Authentication error: ${err.message}`);
-    return c.json({ error: 'Unauthorized' }, 401);
-  },
-});
+async function createJwt(payload: object, secret: string): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encodedHeader = base64url(new TextEncoder().encode(JSON.stringify(header)));
+  const encodedPayload = base64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const dataToSign = `${encodedHeader}.${encodedPayload}`;
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(dataToSign));
+  return `${dataToSign}.${base64url(signature)}`;
+}
+
+// --- Manual Auth Middleware ---
+const manualAuthMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return c.json({ error: 'Unauthorized: Missing or invalid token.' }, 401);
+    }
+
+    const token = authHeader.substring(7); // Remove "Bearer "
+    const secret = c.env.JWT_SECRET;
+    if (!secret) {
+        console.error('CRITICAL: JWT_SECRET is not defined in the worker environment.');
+        return c.json({ error: 'Server configuration error.' }, 500);
+    }
+
+    try {
+        const [encodedHeader, encodedPayload, signature] = token.split('.');
+        if (!encodedHeader || !encodedPayload || !signature) {
+            throw new Error('Invalid token format.');
+        }
+
+        const dataToSign = `${encodedHeader}.${encodedPayload}`;
+        const key = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['verify']
+        );
+
+        // Decode the signature from base64url
+        const signatureBuffer = new Uint8Array(atob(signature.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
+
+        const isValid = await crypto.subtle.verify(
+            'HMAC',
+            key,
+            signatureBuffer,
+            new TextEncoder().encode(dataToSign)
+        );
+
+        if (!isValid) {
+            throw new Error('Invalid signature.');
+        }
+
+        const payload = JSON.parse(new TextDecoder().decode(new Uint8Array(atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)))));
+
+        if (payload.exp * 1000 < Date.now()) {
+            throw new Error('Token expired.');
+        }
+
+        c.set('jwtPayload', payload);
+        await next();
+
+    } catch (e: any) {
+        console.error(`Manual auth verification failed: ${e.message}`);
+        return c.json({ error: 'Unauthorized', details: e.message }, 401);
+    }
+};
+
+// For simplicity, we'll alias our manual middleware to the name used throughout the app.
+const authMiddleware = manualAuthMiddleware;
 
 // Middleware to ensure only users with the 'admin' role can proceed.
 const adminOnly: MiddlewareHandler<AppEnv> = async (c, next) => {
@@ -139,7 +212,7 @@ app.post('/api/auth/login', async (c) => {
     }
 
     const payload = { sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
-    const token = await sign(payload, secret);
+    const token = await createJwt(payload, secret);
 
     return c.json({ success: true, token });
   } catch (e: any) {

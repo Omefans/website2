@@ -11,7 +11,19 @@ button { width: 100%; padding: 0.85rem 1rem; background: linear-gradient(145deg,
 button:hover { box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); transform: translateY(-2px); }
 button:active { transform: translateY(0); box-shadow: none; }
 button:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; }
-#upload-form, #management-container, #cancel-edit-btn { display: none; }
+#upload-form, #management-container, #cancel-edit-btn, #user-management-container { display: none; }
+
+#logout-btn {
+    display: none; /* Initially hidden */
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: auto;
+    padding: 0.6rem 1.2rem;
+    background: #6c757d;
+    font-weight: 500;
+}
+#logout-btn:hover { background: #5a6268; transform: none; box-shadow: none; }
 
 #item-list {
     display: grid;
