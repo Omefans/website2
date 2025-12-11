@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let adminPassword = '';
     let galleryItemsCache = [];
+    let currentSort = 'date'; // 'date' or 'name'
+    let currentSearchTerm = '';
 
     /**
      * Sets the loading state for a button to prevent double-clicks and provide user feedback.
@@ -75,6 +77,25 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadForm.style.display = 'block';
             managementContainer.style.display = 'block';
             displayMessage('Logged in. You can now add content.', 'success');
+            
+            // Inject search and sort controls if they don't exist
+            if (!document.getElementById('admin-controls')) {
+                const controlsHtml = `
+                    <div id="admin-controls" class="admin-controls">
+                        <div class="search-wrapper">
+                            <input type="search" id="admin-search-bar" placeholder="Search items by name...">
+                        </div>
+                        <div class="sort-buttons">
+                            <span>Sort by:</span>
+                            <button id="admin-sort-date-btn" class="sort-btn active">Date</button>
+                            <button id="admin-sort-name-btn" class="sort-btn">Name</button>
+                        </div>
+                    </div>
+                `;
+                managementContainer.insertAdjacentHTML('afterbegin', controlsHtml);
+                addControlListeners();
+            }
+
             loadManageableItems();
 
         } catch (error) {
@@ -84,6 +105,23 @@ document.addEventListener('DOMContentLoaded', () => {
             setButtonLoadingState(loginButton, false);
         }
     });
+
+    function addControlListeners() {
+        document.getElementById('admin-search-bar').addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase();
+            renderItems();
+        });
+
+        document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('date'));
+        document.getElementById('admin-sort-name-btn').addEventListener('click', () => setSort('name'));
+    }
+
+    function setSort(sortType) {
+        currentSort = sortType;
+        document.getElementById('admin-sort-date-btn').classList.toggle('active', sortType === 'date');
+        document.getElementById('admin-sort-name-btn').classList.toggle('active', sortType === 'name');
+        renderItems();
+    }
 
     async function loadManageableItems() {
         try {
@@ -96,32 +134,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorMessage);
             }
             galleryItemsCache = await response.json();
-
-            itemListContainer.innerHTML = ''; // Clear previous list
-            if (galleryItemsCache.length === 0) {
-                itemListContainer.innerHTML = '<p>No items to manage yet.</p>';
-                return;
-            }
-
-            galleryItemsCache.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.dataset.id = item.id;
-                itemEl.innerHTML = `
-                    <div class="item-details">
-                        <img src="${item.imageUrl}" alt="Preview" class="item-thumbnail" onerror="this.style.display='none'">
-                        <span class="item-name">${item.name || 'Untitled Item'}</span>
-                    </div>
-                    <div class="item-actions">
-                        <button type="button" class="edit-btn">Edit</button>
-                        <button type="button" class="delete-btn">Delete</button>
-                    </div>
-                `;
-                itemListContainer.appendChild(itemEl);
-            });
-
+            renderItems();
         } catch (error) {
             itemListContainer.innerHTML = `<p class="error-message">Error loading items: ${error.message}</p>`;
         }
+    }
+
+    function renderItems() {
+        let itemsToDisplay = [...galleryItemsCache];
+
+        // 1. Filter by search term
+        if (currentSearchTerm) {
+            itemsToDisplay = itemsToDisplay.filter(item => 
+                item.name.toLowerCase().includes(currentSearchTerm)
+            );
+        }
+
+        // 2. Sort items
+        if (currentSort === 'name') {
+            itemsToDisplay.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        // For 'date', we rely on the API's default descending order.
+
+        itemListContainer.innerHTML = ''; // Clear previous list
+        if (itemsToDisplay.length === 0) {
+            const message = currentSearchTerm ? 'No items match your search.' : 'No items to manage yet.';
+            itemListContainer.innerHTML = `<p>${message}</p>`;
+            return;
+        }
+
+        itemsToDisplay.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.dataset.id = item.id;
+            itemEl.innerHTML = `
+                <div class="item-details">
+                    <img src="${item.imageUrl}" alt="Preview" class="item-thumbnail" onerror="this.style.display='none'">
+                    <span class="item-name">${item.name || 'Untitled Item'}</span>
+                </div>
+                <div class="item-actions">
+                    <button type="button" class="edit-btn">Edit</button>
+                    <button type="button" class="delete-btn">Delete</button>
+                </div>
+            `;
+            itemListContainer.appendChild(itemEl);
+        });
     }
 
     itemListContainer.addEventListener('click', (e) => {
