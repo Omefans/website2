@@ -18,6 +18,7 @@ const app = new Hono<AppEnv>();
 app.use('/api/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // --- Password Hashing Helpers ---
