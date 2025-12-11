@@ -25,12 +25,20 @@ body {
     margin: 0;
     padding: 2rem;
     box-sizing: border-box;
-    overflow-x: hidden; /* Hide horizontal overflow from aurora, allow vertical scroll */
-    position: relative;
 }
 
-/* Animated Aurora Background */
-body::before, body::after {
+/* NEW: Animated Aurora Background Container */
+.aurora-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden; /* Contain the large pseudo-elements */
+}
+
+.aurora-background::before, .aurora-background::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -40,11 +48,10 @@ body::before, body::after {
     background-image: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 50%),
                       radial-gradient(circle, rgba(236, 72, 153, 0.4) 50%, transparent 100%);
     border-radius: 50%;
-    z-index: -1;
     animation: aurora 25s linear infinite;
 }
 
-body::after {
+.aurora-background::after {
     animation-delay: -12.5s;
 }
 
