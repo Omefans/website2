@@ -107,27 +107,36 @@ app.post('/api/auth/register', async (c) => {
 });
 
 app.post('/api/auth/login', async (c) => {
-  const { username, password } = await c.req.json<any>();
-  if (!username || !password) {
-    return c.json({ error: 'Username and password are required.' }, 400);
+  try {
+    const { username, password } = await c.req.json<any>();
+    if (!username || !password) {
+      return c.json({ error: 'Username and password are required.' }, 400);
+    }
+
+    const user = await c.env.DB.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<{ id: number; username: string; passwordHash: string; role: string; }>();
+    if (!user || !user.passwordHash) {
+      return c.json({ error: 'Invalid credentials.' }, 401);
+    }
+
+    const [salt, storedHash] = user.passwordHash.split(':');
+    if (!salt || !storedHash) {
+      console.error(`Malformed passwordHash for user: ${username}`);
+      return c.json({ error: 'Authentication error. Please contact support.' }, 500);
+    }
+    const providedHash = await hashPassword(password, salt);
+
+    if (providedHash !== storedHash) {
+      return c.json({ error: 'Invalid credentials.' }, 401);
+    }
+
+    const payload = { sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
+    const token = await sign(payload, c.env.JWT_SECRET);
+
+    return c.json({ success: true, token });
+  } catch (e: any) {
+    console.error('Login failed:', e.message, e.stack);
+    return c.json({ error: 'An internal server error occurred during login.', details: e.message }, 500);
   }
-
-  const user = await c.env.DB.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<{ id: number; username: string; passwordHash: string; role: string; }>();
-  if (!user) {
-    return c.json({ error: 'Invalid credentials.' }, 401);
-  }
-
-  const [salt, storedHash] = user.passwordHash.split(':');
-  const providedHash = await hashPassword(password, salt);
-
-  if (providedHash !== storedHash) {
-    return c.json({ error: 'Invalid credentials.' }, 401);
-  }
-
-  const payload = { sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
-  const token = await sign(payload, c.env.JWT_SECRET);
-
-  return c.json({ success: true, token });
 });
 
 // --- PROTECTED ADMIN ROUTES ---
