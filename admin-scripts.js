@@ -117,7 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleEdit(itemId) {
-        const itemToEdit = galleryItemsCache.find(item => item.id == itemId); // Use == for type coercion if needed
+        // Use strict equality (===) and parseInt for robust type-safe comparison.
+        const numericItemId = parseInt(itemId, 10);
+        const itemToEdit = galleryItemsCache.find(item => item.id === numericItemId);
         if (!itemToEdit) return;
 
         editIdInput.value = itemToEdit.id;
