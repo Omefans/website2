@@ -36,13 +36,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Displays a formatted error message to the user in the message element.
-     * @param {Error} error The error object.
-     * @param {string} [context='Error'] A prefix for the message.
+     * Displays a temporary message to the user.
+     * @param {string} text The message to display.
+     * @param {'success' | 'error'} type The type of message, for styling.
      */
-    function displayError(error, context = 'Error') {
-        messageEl.textContent = `${context}: ${error.message || 'An unknown error occurred.'}`;
-        console.error(error);
+    function displayMessage(text, type = 'success') {
+        messageEl.textContent = text;
+        messageEl.className = type === 'success' ? 'message-success' : 'message-error';
+
+        // Automatically clear the message after 4 seconds for better UX.
+        setTimeout(() => {
+            // Only clear if the message hasn't been replaced by a newer one.
+            if (messageEl.textContent === text) {
+                messageEl.textContent = '';
+                messageEl.className = '';
+            }
+        }, 4000);
     }
 
     loginForm.addEventListener('submit', async (e) => {
@@ -65,11 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
             loginForm.style.display = 'none';
             uploadForm.style.display = 'block';
             managementContainer.style.display = 'block';
-            messageEl.textContent = 'Logged in. You can now add content.';
+            displayMessage('Logged in. You can now add content.', 'success');
             loadManageableItems();
 
         } catch (error) {
-            displayError(error, 'Login failed');
+            displayMessage(`Login failed: ${error.message || 'Check credentials.'}`, 'error');
             adminPassword = ''; // Clear the invalid password
         } finally {
             setButtonLoadingState(loginButton, false);
@@ -141,10 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Server returned an unexpected response. Status: ${response.status}.`);
             }
             const result = await response.json();
-            messageEl.textContent = result.message || 'Item deleted successfully!';
+            displayMessage(result.message || 'Item deleted successfully!', 'success');
             loadManageableItems(); // Refresh the list
         } catch (error) {
-            displayError(error, 'Deletion failed');
+            displayMessage(`Deletion failed: ${error.message}`, 'error');
         }
     }
 
@@ -207,11 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const result = await response.json();
-            messageEl.textContent = result.message;
+            displayMessage(result.message, 'success');
             isEditing ? cancelEdit() : uploadForm.reset();
             loadManageableItems(); // Refresh the list
         } catch (error) {
-            displayError(error, isEditing ? 'Update failed' : 'Add failed');
+            displayMessage(`${isEditing ? 'Update failed' : 'Add failed'}: ${error.message}`, 'error');
         } finally {
             setButtonLoadingState(formSubmitButton, false);
         }
