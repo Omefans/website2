@@ -5,6 +5,28 @@ const AppConfig = {
 
 document.addEventListener("DOMContentLoaded", function() {
 
+    /* --- CHRISTMAS ATMOSPHERE: SNOWFLAKES --- */
+    const SNOWFLAKE_COUNT = 50; // Number of snowflakes
+    const body = document.querySelector('body');
+
+    if (body) {
+        for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
+            const snowflake = document.createElement('div');
+            const fallDuration = Math.random() * 10 + 5; // 5-15 seconds
+            const swayDuration = Math.random() * 4 + 2; // 2-6 seconds
+
+            snowflake.innerHTML = '❄';
+            snowflake.classList.add('snowflake');
+            snowflake.style.left = `${Math.random() * 100}vw`;
+            snowflake.style.fontSize = `${Math.random() * 1 + 0.5}rem`;
+            snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+            snowflake.style.animationDuration = `${fallDuration}s, ${swayDuration}s`;
+            snowflake.style.animationDelay = `${Math.random() * 15}s`;
+
+            body.appendChild(snowflake);
+        }
+    }
+
     /* --- NEW: MODAL SETUP --- */
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
