@@ -131,15 +131,21 @@ app.put('/api/gallery/:id', authMiddleware, async (c) => {
       return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
     }
 
-    const info = await c.env.DB.prepare(
+    // First, verify the item exists to provide a clear "Not Found" error.
+    // This also handles the case where an update doesn't change any data,
+    // which would otherwise report 0 changes and be misinterpreted as "not found".
+    const existingItem = await c.env.DB.prepare('SELECT id FROM gallery_items WHERE id = ?').bind(id).first();
+
+    if (!existingItem) {
+      return c.json({ error: 'Item not found.' }, 404);
+    }
+
+    // If the item exists, proceed with the update.
+    await c.env.DB.prepare(
       'UPDATE gallery_items SET name = ?, description = ?, "imageUrl" = ?, "affiliateUrl" = ? WHERE id = ?'
     ).bind(name, description || '', imageUrl, affiliateUrl, id).run();
 
-    if (info.changes > 0) {
-      return c.json({ success: true, message: 'Item updated successfully.' });
-    } else {
-      return c.json({ error: 'Item not found.' }, 404);
-    }
+    return c.json({ success: true, message: 'Item updated successfully.' });
   } catch (e) {
     console.error('D1 update failed:', e.message);
     return c.json({ error: 'Database update failed.', details: e.message }, 500);
