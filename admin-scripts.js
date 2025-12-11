@@ -1,6 +1,6 @@
 const AppConfig = {
-    // This is the address of your local admin server
-    backendUrl: 'https://omefans-backend-api.your-username.workers.dev' // <-- PASTE YOUR WORKER URL HERE
+    // The live URL for the Cloudflare Worker backend.
+    backendUrl: 'https://omefans-site.omefans.workers.dev'
 };
 
 document.addEventListener('DOMContentLoaded', () => {

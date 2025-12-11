@@ -1,6 +1,6 @@
 const AppConfig = {
-    // This will be your Fly.io backend URL, e.g., https://your-app-name.fly.dev
-    backendUrl: 'https://omefans-backend-api.your-username.workers.dev' // <-- PASTE YOUR WORKER URL HERE
+    // The live URL for the Cloudflare Worker backend.
+    backendUrl: 'https://omefans-site.omefans.workers.dev'
 };
 
 document.addEventListener("DOMContentLoaded", function() {
