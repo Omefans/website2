@@ -1,7 +1,17 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import type { Env, MiddlewareHandler } from 'hono/types';
 
-const app = new Hono();
+// Define the environment variables for type safety. This improves
+// autocompletion and helps catch errors early.
+type AppEnv = {
+  Bindings: {
+    DB: D1Database;
+    ADMIN_PASSWORD: string;
+  }
+}
+
+const app = new Hono<AppEnv>();
 
 // Use CORS middleware to allow your frontend to call the API.
 app.use('/api/*', cors());
@@ -26,7 +36,7 @@ const timingSafeEqual = (a, b) => {
 
 // --- AUTHENTICATION MIDDLEWARE ---
 // This runs before any protected endpoint to check the password.
-const authMiddleware = async (c, next) => {
+const authMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const password = c.req.header('Authorization');
   
   // In Cloudflare, ADMIN_PASSWORD will be a secret environment variable.

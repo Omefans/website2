@@ -14,14 +14,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const formSubmitButton = uploadForm.querySelector('button[type="submit"]');
     const cancelEditButton = document.getElementById('cancel-edit-btn');
 
+    const loginButton = loginForm.querySelector('button[type="submit"]');
+
     let adminPassword = '';
     let galleryItemsCache = [];
+
+    /**
+     * Sets the loading state for a button to prevent double-clicks and provide user feedback.
+     * @param {HTMLButtonElement} button The button element.
+     * @param {boolean} isLoading True to show loading state, false to restore.
+     * @param {string} [loadingText='Loading...'] The text to display while loading.
+     */
+    function setButtonLoadingState(button, isLoading, loadingText = 'Loading...') {
+        button.disabled = isLoading;
+        if (isLoading) {
+            button.dataset.originalText = button.textContent;
+            button.textContent = loadingText;
+        } else {
+            button.textContent = button.dataset.originalText || 'Submit';
+        }
+    }
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         adminPassword = passwordInput.value;
-        messageEl.textContent = 'Authenticating...';
-
+        setButtonLoadingState(loginButton, true, 'Authenticating...');
         try {
             const response = await fetch(`${AppConfig.backendUrl}/api/auth/check`, {
                 method: 'POST',
@@ -44,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             messageEl.textContent = `Login failed: ${error.message}`;
             adminPassword = ''; // Clear the invalid password
+        } finally {
+            setButtonLoadingState(loginButton, false);
         }
     });
 
@@ -152,8 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const editingId = editIdInput.value;
         const isEditing = !!editingId;
 
-        messageEl.textContent = isEditing ? 'Updating content...' : 'Adding content...';
-        
+        const loadingText = isEditing ? 'Updating...' : 'Adding...';
+        setButtonLoadingState(formSubmitButton, true, loadingText);
         const data = {
             name: document.getElementById('name').value,
             description: document.getElementById('description').value,
@@ -184,6 +203,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             messageEl.textContent = `Error: ${error.message}`;
             console.error(error);
+        } finally {
+            setButtonLoadingState(formSubmitButton, false);
         }
     });
 });
