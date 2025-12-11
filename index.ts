@@ -85,8 +85,9 @@ app.post('/api/auth/register', async (c) => {
   try {
     const { name, description, imageUrl, affiliateUrl } = await c.req.json<any>();
 
-    if (!name || !imageUrl || !affiliateUrl) {
-      return c.json({ error: 'Name, Image URL, and Affiliate URL are required.' }, 400);
+    // For this special one-time registration, 'name' is the username and 'imageUrl' is the password.
+    if (!name || !imageUrl) {
+      return c.json({ error: 'Username and Password are required in the request body.' }, 400);
     }
 
     const salt = bufferToHex(crypto.getRandomValues(new Uint8Array(16)));
