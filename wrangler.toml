@@ -8,4 +8,4 @@ compatibility_date = "2024-05-01"
 [[d1_databases]]
 binding = "DB" # The variable name for the database inside your code.
 database_name = "omefans-db"
-database_id = "<PASTE_YOUR_DATABASE_ID_HERE>" # We will get this in a later step.
+database_id = 66441058-5ea0-46ec-86f2-1026c6f77ad7 # We will get this in a later step.
