@@ -24,33 +24,35 @@
             <button type="submit">Login</button>
         </form>
 
-        <form id="upload-form">
-            <h2>Add New Content</h2>
-            <input type="hidden" id="edit-id" name="edit-id">
-            <div>
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div>
-                <label for="description">Description (Optional):</label>
-                <textarea id="description" name="description" rows="3"></textarea>
-            </div>
-            <div>
-                <label for="imageUrl">Image URL:</label>
-                <input type="url" id="imageUrl" name="imageUrl" required>
-            </div>
-            <div>
-                <label for="affiliateUrl">Affiliate URL:</label>
-                <input type="url" id="affiliateUrl" name="affiliateUrl" required>
-            </div>
-            <button type="submit">Add Item</button>
-            <button type="button" id="cancel-edit-btn">Cancel Edit</button>
-        </form>
-
-        <div id="management-container">
-            <h2>Manage Content</h2>
-            <div id="item-list">
-                <!-- Items will be loaded here -->
+        <div id="content-management-section">
+            <form id="upload-form">
+                <h2>Add / Edit Content</h2>
+                <input type="hidden" id="edit-id" name="edit-id">
+                <div>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="description">Description (Optional):</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+                <div>
+                    <label for="imageUrl">Image URL:</label>
+                    <input type="url" id="imageUrl" name="imageUrl" required>
+                </div>
+                <div>
+                    <label for="affiliateUrl">Affiliate URL:</label>
+                    <input type="url" id="affiliateUrl" name="affiliateUrl" required>
+                </div>
+                <button type="submit">Add Item</button>
+                <button type="button" id="cancel-edit-btn">Cancel Edit</button>
+            </form>
+    
+            <div id="management-container">
+                <h2>Manage Content</h2>
+                <div id="item-list">
+                    <!-- Items will be loaded here -->
+                </div>
             </div>
         </div>
 
