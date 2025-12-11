@@ -23,7 +23,7 @@ app.use('/api/*', cors());
  * @param {string} b The secret password from the environment.
  * @returns {boolean} True if the strings are equal.
  */
-const timingSafeEqual = (a, b) => {
+const timingSafeEqual = (a: string, b: string): boolean => {
   if (a.length !== b.length) {
     return false;
   }
