@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let authToken = localStorage.getItem('authToken');
     let userRole = '';
+    let currentUserId = null;
 
     /**
      * Sets the loading state for a button to prevent double-clicks and provide user feedback.
@@ -117,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("Token is expired or invalid.");
             }
             userRole = payload.role;
+            currentUserId = payload.sub;
             showLoggedInState();
         } catch (e) {
             console.error("Invalid or expired token found:", e.message);
@@ -144,7 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const { token } = await response.json();
             authToken = token;
             localStorage.setItem('authToken', token);
-            userRole = decodeJwt(token).role;
+            const payload = decodeJwt(token);
+            userRole = payload.role;
+            currentUserId = payload.sub;
 
             showLoggedInState();
 
@@ -165,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userRole === 'admin') {
             const userManagementContainer = document.getElementById('user-management-container');
             if (userManagementContainer) userManagementContainer.style.display = 'block';
+            loadUsers();
         }
 
         // Inject search and sort controls if they don't exist
@@ -200,6 +205,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const addUserForm = document.getElementById('add-user-form');
         if (addUserForm) {
             addUserForm.addEventListener('submit', handleAddUser);
+        }
+
+        const userList = document.getElementById('user-list');
+        if (userList) {
+            userList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-user-btn')) {
+                    const userId = e.target.dataset.userId;
+                    handleDeleteUser(userId);
+                }
+            });
         }
     }
 
@@ -413,10 +428,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showToast(result.message, 'success');
             form.reset();
+            loadUsers(); // Refresh the user list
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         } finally {
             setButtonLoadingState(button, false);
+        }
+    }
+
+    async function loadUsers() {
+        const userListContainer = document.getElementById('user-list');
+        if (!userListContainer) return;
+    
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users`);
+            if (!response.ok) {
+                const errorResult = await response.json();
+                throw new Error(errorResult.error || 'Failed to fetch users.');
+            }
+            const users = await response.json();
+            userListContainer.innerHTML = ''; // Clear list
+    
+            if (users.length === 0) {
+                userListContainer.innerHTML = '<p>No users found.</p>';
+                return;
+            }
+    
+            users.forEach(user => {
+                const userEl = document.createElement('div');
+                userEl.className = 'user-list-item';
+                const createdAt = new Date(user.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+    
+                // Prevent admin from deleting themselves
+                const deleteButtonHtml = user.id === currentUserId
+                    ? '<button class="delete-user-btn" disabled>Delete (Self)</button>'
+                    : `<button class="delete-user-btn" data-user-id="${user.id}">Delete</button>`;
+    
+                userEl.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-username">${user.username}</span>
+                        <span class="user-role">${user.role}</span>
+                        <span class="user-created">Created: ${createdAt}</span>
+                    </div>
+                    <div class="user-actions">
+                        ${deleteButtonHtml}
+                    </div>
+                `;
+                userListContainer.appendChild(userEl);
+            });
+    
+        } catch (error) {
+            userListContainer.innerHTML = `<p class="error-message">Error loading users: ${error.message}</p>`;
+        }
+    }
+
+    async function handleDeleteUser(userId) {
+        if (!confirm(`Are you sure you want to delete this user? This action cannot be undone.`)) return;
+    
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/${userId}`, { method: 'DELETE' });
+            const result = await response.json();
+    
+            if (!response.ok) throw new Error(result.error || 'Failed to delete user.');
+    
+            showToast(result.message, 'success');
+            loadUsers(); // Refresh the user list
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
         }
     }
 

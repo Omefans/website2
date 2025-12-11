@@ -321,6 +321,38 @@ app.post('/api/users', authMiddleware, adminOnly, async (c) => {
   }
 });
 
+// Get all users (admin only)
+app.get('/api/users', authMiddleware, adminOnly, async (c) => {
+  try {
+    // Exclude passwordHash for security
+    const { results } = await c.env.DB.prepare('SELECT id, username, role, "createdAt" FROM users ORDER BY "createdAt" DESC').all();
+    return c.json(results);
+  } catch (e: any) {
+    return c.json({ error: 'Failed to retrieve users.', details: e.message }, 500);
+  }
+});
+
+// Delete a user (admin only)
+app.delete('/api/users/:id', authMiddleware, adminOnly, async (c) => {
+  const idToDelete = c.req.param('id');
+  const payload = c.get('jwtPayload');
+  
+  if (payload.sub.toString() === idToDelete) {
+    return c.json({ error: 'Admins cannot delete their own account.' }, 400);
+  }
+
+  try {
+    const info = await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(idToDelete).run();
+    if (info.changes > 0) {
+      return c.json({ success: true, message: 'User deleted successfully.' });
+    } else {
+      return c.json({ error: 'User not found.' }, 404);
+    }
+  } catch (e: any) {
+    return c.json({ error: 'Database deletion failed.', details: e.message }, 500);
+  }
+});
+
 // Fallback for any other requests
 app.all('*', () => new Response('Not Found.', { status: 404 }));
 
