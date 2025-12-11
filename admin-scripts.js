@@ -302,7 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="item-card-content">
                     <div class="item-card-header">
                         <span class="item-name">${item.name || 'Untitled Item'}</span>
-                        <span class="item-date">${formattedDate}</span>
+                        <div class="item-meta">
+                            <span class="item-date">${formattedDate}</span>
+                            <span class="item-publisher">by ${item.publisherName || 'Unknown'}</span>
+                        </div>
                     </div>
                     <div class="item-actions">
                         <button type="button" class="edit-btn">Edit</button>

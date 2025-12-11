@@ -144,9 +144,15 @@ app.get('/api/gallery', async (c) => {
     const sortOrder = allowedOrders.includes(order.toUpperCase()) ? order.toUpperCase() : 'DESC';
 
     // Use a quoted identifier for "createdAt" to ensure it's a valid column name.
-    const safeSortField = sortField === 'createdAt' ? '"createdAt"' : 'name';
+    const safeSortField = sortField === 'createdAt' ? 'g."createdAt"' : 'g.name';
 
-    const query = `SELECT id, name, description, "imageUrl", "affiliateUrl", "createdAt" FROM gallery_items ORDER BY ${safeSortField} ${sortOrder}`;
+    const query = `
+      SELECT 
+        g.id, g.name, g.description, g."imageUrl", g."affiliateUrl", g."createdAt",
+        u.username as publisherName
+      FROM gallery_items as g
+      LEFT JOIN users as u ON g.userId = u.id
+      ORDER BY ${safeSortField} ${sortOrder}`;
     const { results } = await c.env.DB.prepare(query).all();
     return c.json(results);
   } catch (e: any) {
@@ -228,6 +234,9 @@ app.post('/api/auth/login', async (c) => {
 // Upload a new item
 app.post('/api/upload', authMiddleware, async (c) => {
   try {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
     const { name, description, imageUrl, affiliateUrl } = await c.req.json<any>();
 
     if (!name || !imageUrl || !affiliateUrl) {
@@ -235,8 +244,8 @@ app.post('/api/upload', authMiddleware, async (c) => {
     }
 
     await c.env.DB.prepare(
-      'INSERT INTO gallery_items (name, description, "imageUrl", "affiliateUrl") VALUES (?, ?, ?, ?)'
-    ).bind(name, description || '', imageUrl, affiliateUrl).run();
+      'INSERT INTO gallery_items (name, description, "imageUrl", "affiliateUrl", userId) VALUES (?, ?, ?, ?, ?)'
+    ).bind(name, description || '', imageUrl, affiliateUrl, userId).run();
 
     return c.json({ success: true, message: 'Item added successfully.' }, 201);
   } catch (e: any) {
