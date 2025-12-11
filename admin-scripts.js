@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const userManagementContainer = document.getElementById('user-management-container');
     const navContentBtn = document.getElementById('nav-content-btn');
     const navUsersBtn = document.getElementById('nav-users-btn');
+    const addUserForm = document.getElementById('add-user-form');
+    const userList = document.getElementById('user-list');
 
     const loginButton = loginForm.querySelector('button[type="submit"]');
 
@@ -169,6 +171,20 @@ document.addEventListener('DOMContentLoaded', () => {
             setButtonLoadingState(loginButton, false);
         }
     });
+
+    // Add event listeners for the user management section.
+    // These are crucial for the 'Users' page functionality.
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', handleAddUser);
+    }
+    if (userList) {
+        userList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-user-btn')) {
+                const userId = e.target.dataset.userId;
+                if (userId) handleDeleteUser(userId);
+            }
+        });
+    }
 
     function showLoggedInState() {
         document.body.classList.add('logged-in');
@@ -436,8 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadUsers() {
-        const userListContainer = document.getElementById('user-list');
-        if (!userListContainer) return;
+        if (!userList) return;
     
         try {
             const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users`);
@@ -446,10 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errorResult.error || 'Failed to fetch users.');
             }
             const users = await response.json();
-            userListContainer.innerHTML = ''; // Clear list
+            userList.innerHTML = ''; // Clear list
     
             if (users.length === 0) {
-                userListContainer.innerHTML = '<p>No users found.</p>';
+                userList.innerHTML = '<p>No users found.</p>';
                 return;
             }
     
@@ -475,11 +490,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${deleteButtonHtml}
                     </div>
                 `;
-                userListContainer.appendChild(userEl);
+                userList.appendChild(userEl);
             });
     
         } catch (error) {
-            userListContainer.innerHTML = `<p class="error-message">Error loading users: ${error.message}</p>`;
+            userList.innerHTML = `<p class="error-message">Error loading users: ${error.message}</p>`;
         }
     }
 
