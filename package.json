@@ -1,0 +1,6 @@
+{
+  "name": "website2-static",
+  "version": "1.0.0",
+  "description": "A static website for the gallery.",
+  "private": true
+}
