@@ -16,7 +16,10 @@ type AppEnv = {
 const app = new Hono<AppEnv>();
 
 // Use CORS middleware to allow your frontend to call the API.
-app.use('/api/*', cors());
+// Explicitly allow all origins for broader compatibility, especially for console commands.
+app.use('/api/*', cors({
+  origin: '*'
+}));
 
 // --- Password Hashing Helpers ---
 const bufferToHex = (buffer: ArrayBuffer) => Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -83,19 +86,18 @@ app.post('/api/auth/register', async (c) => {
   }
 
   try {
-    const { name, description, imageUrl, affiliateUrl } = await c.req.json<any>();
+    const { username, password } = await c.req.json<any>();
 
-    // For this special one-time registration, 'name' is the username and 'imageUrl' is the password.
-    if (!name || !imageUrl) {
+    if (!username || !password) {
       return c.json({ error: 'Username and Password are required in the request body.' }, 400);
     }
 
     const salt = bufferToHex(crypto.getRandomValues(new Uint8Array(16)));
-    const passwordHash = await hashPassword(imageUrl, salt);
+    const passwordHash = await hashPassword(password, salt);
     const finalHash = `${salt}:${passwordHash}`;
 
     await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role) VALUES (?, ?, ?)')
-      .bind(name, finalHash, 'admin')
+      .bind(username, finalHash, 'admin')
       .run();
 
     return c.json({ success: true, message: 'Admin user created successfully. You can now log in.' }, 201);
