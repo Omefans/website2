@@ -1,257 +1,268 @@
-/* Use a modern, clean font consistent with the main site for a professional feel. */
+/* admin-style.css - Gigi's "Nebula" UI Refresh */
+
+/* --- Keyframes for Animations --- */
+@keyframes aurora {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Base & Body Styles --- */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #111827; /* Deep, cool dark blue */
-    background-image: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 40%),
-                      radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.15), transparent 40%);
-    color: #E5E7EB; /* Lighter gray for text */
+    background-color: #0d1117; /* GitHub dark background */
+    color: #c9d1d9; /* GitHub dark text */
     min-height: 100vh;
     margin: 0;
     padding: 2rem;
     box-sizing: border-box;
+    overflow: hidden; /* Hide aurora overflow */
+    position: relative;
 }
+
+/* Animated Aurora Background */
+body::before, body::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120vmax;
+    height: 120vmax;
+    background-image: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 50%),
+                      radial-gradient(circle, rgba(236, 72, 153, 0.4) 50%, transparent 100%);
+    border-radius: 50%;
+    z-index: -1;
+    animation: aurora 25s linear infinite;
+}
+
+body::after {
+    animation-delay: -12.5s;
+}
+
+/* --- Main Container --- */
 .container {
     position: relative;
-    background: rgba(31, 41, 55, 0.6); /* Semi-transparent dark gray-blue */
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(13, 17, 23, 0.75); /* Darker, more opaque glass */
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 2.5rem;
-    border-radius: 16px; /* Larger radius for a softer look */
+    border-radius: 16px;
     width: 90%;
-    max-width: 900px; /* Slightly wider for more content space */
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    max-width: 1000px; /* Wider for more complex layouts */
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
     margin: 0 auto;
+    animation: fadeIn 0.7s ease-out forwards;
 }
+
+/* --- Typography --- */
 h2 {
     margin-bottom: 2rem;
     text-align: center;
-    color: #F9FAFB; /* Pure white for main headers */
+    color: #f0f6fc;
     font-weight: 600;
     letter-spacing: 0.5px;
-    font-family: 'Inter', sans-serif; /* Unify font */
+}
+h3 {
+    color: #f0f6fc;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.75rem;
 }
 form div { margin-bottom: 1.5rem; }
-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #D1D5DB; } /* Softer label color */
+label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #8b949e; } /* GitHub secondary text */
+
+/* --- Forms & Inputs --- */
 input, textarea, select {
     width: 100%;
     padding: 0.75rem 1rem;
-    border-radius: 8px; /* Consistent radius */
-    border: 1px solid #4B5563; /* Gray-blue border */
-    background: #374151; /* Darker input background */
-    color: #F9FAFB;
+    border-radius: 6px;
+    border: 1px solid #30363d; /* GitHub border */
+    background: #0d1117; /* Match body background */
+    color: #c9d1d9;
     box-sizing: border-box;
     font-size: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 input:focus, textarea:focus, select:focus {
-    border-color: #3B82F6; /* Vibrant blue accent */
+    border-color: #58a6ff; /* GitHub focus blue */
     outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
 }
 textarea { resize: vertical; min-height: 100px; }
+
+/* --- Buttons --- */
 button {
+    position: relative;
+    overflow: hidden;
     width: 100%;
     padding: 0.85rem 1rem;
-    background: #3B82F6; /* Primary action color */
+    background: #238636; /* GitHub green */
     color: white;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid rgba(240, 246, 252, 0.1);
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
-    font-weight: 600; /* Bolder font for buttons */
-    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s;
 }
 button:hover:not(:disabled) {
-    background: #2563EB; /* Darker shade on hover */
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
-    transform: translateY(-2px);
+    background: #2ea043;
 }
-button:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+button:active:not(:disabled) {
+    background: #238636;
+    transform: scale(0.98);
+}
 button:disabled {
-    background: #4B5563; /* More distinct disabled state */
-    color: #9CA3AF;
+    background: #21262d;
+    color: #8b949e;
+    border-color: #30363d;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
 /* --- Header & Logo --- */
 #admin-header {
-    display: none; /* Hidden by default, shown with .logged-in */
+    display: none;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid #30363d;
 }
-.logo-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-.header-logo {
-    height: 40px;
-}
-.logo-container span {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #F9FAFB;
-}
-.login-logo {
-    display: block;
-    height: 60px;
-    margin: 0 auto 1.5rem auto;
-}
+.logo-container { display: flex; align-items: center; gap: 1rem; }
+.header-logo { height: 40px; }
+.logo-container span { font-size: 1.25rem; font-weight: 600; color: #f0f6fc; }
+.login-logo { display: block; height: 60px; margin: 0 auto 1.5rem auto; }
 
 /* --- View State Management --- */
 /* By default, the main panel, logout button, and cancel edit button are hidden. The login form is visible. */
 #login-form { display: block; }
 #admin-header, #admin-panel-main, #logout-btn, #cancel-edit-btn { display: none; }
-
 /* When the user is logged in, hide the login form and show the main panel and logout button. */
 body.logged-in #login-form { display: none; }
-body.logged-in #admin-header { display: flex; } /* Use flex for the header */
+body.logged-in #admin-header { display: flex; }
 body.logged-in #admin-panel-main { display: block; }
 body.logged-in #logout-btn { display: block; }
-
 /* The 'Users' tab is hidden by default. */
 #nav-users-btn { display: none; }
-
 /* It is shown only if the user has admin privileges. */
 body.is-admin #nav-users-btn { display: inline-block; }
 /* --- End View State Management --- */
 
-/* Pages are hidden by default */
+/* --- Page Navigation --- */
 .admin-page { display: none; }
 /* The active page is shown */
-.admin-page.active { display: block; }
+.admin-page.active { display: block; animation: fadeIn 0.5s ease-out forwards; }
 
 #logout-btn {
-    /* No longer needs absolute positioning */
     width: auto;
     padding: 0.6rem 1.2rem;
-    background: #4B5563; /* Secondary button color */
+    background: #21262d;
     font-weight: 500;
 }
-#logout-btn:hover { background: #6B7280; transform: none; box-shadow: none; }
+#logout-btn:hover { background: #30363d; }
 
-/* Styles for Page Navigation */
 #admin-nav {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 2rem;
-    background-color: #374151; /* Nav background */
-    padding: 0.5rem;
-    border-radius: 10px;
 }
-
 .nav-btn {
-    /* Complete redesign for a "pill" or "tab" look */
     flex-grow: 1;
-    width: auto;
     background: none;
     border: none;
-    border-radius: 8px;
+    border-bottom: 2px solid #30363d;
+    border-radius: 0;
     padding: 0.75rem 1rem;
-    color: #D1D5DB;
-    font-weight: 600;
-    transition: background-color 0.2s, color 0.2s;
+    color: #8b949e;
+    font-weight: 500;
+    transition: color 0.2s, border-color 0.2s;
 }
-.nav-btn:hover:not(.active) {
-    background-color: rgba(75, 85, 99, 0.5);
-}
+.nav-btn:hover:not(.active) { color: #c9d1d9; }
 .nav-btn.active {
-    background-color: #3B82F6;
-    color: #FFF;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    color: #f0f6fc;
+    font-weight: 600;
+    border-bottom-color: #58a6ff;
 }
 
+/* --- Content Management Cards --- */
 #item-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
 }
-
 .admin-item-card {
-    background: #374151; /* Match input background */
-    border-radius: 12px;
+    background: #161b22; /* Slightly lighter than body */
+    border-radius: 6px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid #4B5563;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    border: 1px solid #30363d;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-
 .admin-item-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
-    border-color: #3B82F6;
+    transform: translateY(-4px);
+    border-color: #58a6ff;
+    box-shadow: 0 8px 24px rgba(88, 166, 255, 0.2);
 }
-
 .item-card-image {
     width: 100%;
     height: 180px;
     object-fit: cover;
-    background-color: #1F2937; /* Darker fallback */
+    background-color: #0d1117;
 }
-
 .item-card-content {
     padding: 1rem;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
 }
-
 .item-card-header { margin-bottom: 1rem; }
-.item-name { font-weight: 600; font-size: 1.1rem; color: #F9FAFB; display: block; margin-bottom: 0.25rem; }
-
+.item-name { font-weight: 600; font-size: 1.1rem; color: #f0f6fc; display: block; margin-bottom: 0.25rem; }
 .item-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 0.8rem;
-    color: #9CA3AF; /* Lighter secondary text */
+    color: #8b949e;
     margin-top: 0.25rem;
 }
 .item-publisher { font-weight: 500; }
-
 .item-actions { margin-top: auto; display: flex; gap: 0.75rem; }
 .item-actions button {
-    width: 100%;
     padding: 0.6rem;
-    margin-left: 0;
-    background: #4B5563;
+    background: #21262d;
     font-weight: 500;
 }
-.item-actions button:hover { background: #6B7280; box-shadow: none; transform: none; }
-.delete-btn { background: #EF4444; color: white; }
-.delete-btn:hover { background: #DC2626; }
+.item-actions button:hover { background: #30363d; }
+.delete-btn { background: #da3633; } /* GitHub red */
+.delete-btn:hover { background: #f85149; }
 #cancel-edit-btn {
     background: none;
-    border: 1px solid #6B7280;
-    color: #E5E7EB;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
     margin-top: 10px;
 }
-#cancel-edit-btn:hover { background: #4B5563; }
-/* Add a separator line above the management section for better visual structure. */
-#management-container { margin-top: 2rem; border-top: 1px solid #4B5563; padding-top: 2rem; }
+#cancel-edit-btn:hover { background: #21262d; }
+#management-container { margin-top: 2rem; border-top: 1px solid #30363d; padding-top: 2rem; }
 
-.section-divider, .subsection-divider {
-    height: 1px;
-    background-color: #4B5563;
-    border: none;
-    margin: 2.5rem 0;
-}
+/* --- Update Button Style --- */
+.btn-update { background: #1f6feb; } /* GitHub blue */
+.btn-update:hover { background: #388bfd; }
 
-/* Class for the submit button when in 'update' mode */
-.btn-update { background: #16A34A; /* Green for update */ }
-.btn-update:hover { background: #15803D; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.2); }
-
-.error-message { color: #F87171; font-weight: 500; }
-
-/* Styles for Admin Search and Sort Controls */
+/* --- Search & Sort Controls --- */
 .admin-controls {
     display: flex;
     justify-content: space-between;
@@ -260,118 +271,113 @@ body.is-admin #nav-users-btn { display: inline-block; }
     gap: 1.5rem;
     flex-wrap: wrap;
 }
-
 .search-wrapper { flex-grow: 1; min-width: 250px; }
 .sort-buttons { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
-.sort-buttons span { color: #D1D5DB; font-size: 0.9rem; font-weight: 500; }
-
+.sort-buttons span { color: #8b949e; font-size: 0.9rem; font-weight: 500; }
 .sort-btn {
-    /* Override base button styles for a more compact look */
     width: auto;
     padding: 0.5rem 1rem;
-    background: #4B5563;
+    background: #21262d;
     font-weight: 500;
+    border: 1px solid #30363d;
 }
 .sort-btn:hover {
-    background: #6B7280;
-    /* Reset complex hover effects from base button */
+    background: #30363d;
     transform: none;
     box-shadow: none;
 }
 .sort-btn.active {
-    background: #3B82F6;
+    background: #1f6feb;
     color: white;
     font-weight: 600;
+    border-color: #58a6ff;
 }
 
-/* Styles for Toast Notifications */
+/* --- Toast Notifications --- */
 #toast-container {
     position: fixed;
-    top: 20px;
-    right: 20px; /* Move to top-right for a more standard feel */
-    left: auto;
-    transform: none;
+    bottom: 20px;
+    right: 20px;
     z-index: 1000;
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-
 .toast {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 8px;
-    background: #1F2937; /* Match container bg */
-    color: #F9FAFB;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     transform: translateX(calc(100% + 20px));
     opacity: 0;
     transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease;
 }
-
 .toast.show {
     transform: translateX(0);
     opacity: 1;
 }
-
-.toast-success svg { stroke: #34D399; }
-.toast-error svg { stroke: #F87171; }
-
+.toast-success svg { stroke: #3fb950; } /* GitHub green */
+.toast-error svg { stroke: #f85149; } /* GitHub red */
 .toast svg { width: 20px; height: 20px; flex-shrink: 0; }
 
-/* Styles for User Management List */
-.user-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
-
+/* --- User Management Layout --- */
+.user-management-layout {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 1rem;
+}
+.user-management-form {
+    flex: 1;
+    min-width: 280px;
+}
+.user-management-list {
+    flex: 1.5;
+}
+#user-list { margin-top: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 .user-list-item {
-    background: #374151;
+    background: #0d1117;
     padding: 1rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.2s;
-    border: 1px solid transparent;
+    border: 1px solid #30363d;
+    transition: background-color 0.2s, border-color 0.2s;
 }
-
-.user-list-item:hover { background-color: #4B5563; border-color: #6B7280; }
+.user-list-item:hover { background-color: #161b22; border-color: #8b949e; }
 .user-info { display: flex; flex-direction: column; gap: 0.25rem; }
-.user-username { font-weight: 600; color: #F9FAFB; }
+.user-username { font-weight: 600; color: #f0f6fc; }
 .user-role { font-size: 0.9rem; color: #9CA3AF; text-transform: capitalize; }
 .user-created { font-size: 0.8rem; color: #9CA3AF; }
-.user-actions button { width: auto; padding: 0.5rem 1rem; background: #EF4444; color: white; }
-.user-actions button:hover { background: #DC2626; transform: none; box-shadow: none; }
-.user-actions button:disabled { background: #4B5563; color: #9CA3AF; cursor: not-allowed; opacity: 1; }
+.user-actions button { width: auto; padding: 0.5rem 1rem; background: #da3633; }
+.user-actions button:hover { background: #f85149; }
+.user-actions button:disabled { background: #21262d; color: #8b949e; border-color: #30363d; }
 
-/* Media Queries for Mobile Responsiveness */
-@media (max-width: 850px) {
-    .container {
-        width: 95%;
-        padding: 1.5rem;
-    }
-
-    #item-list {
-        grid-template-columns: 1fr; /* Single column on smaller screens */
+/* --- Responsive Design --- */
+@media (max-width: 900px) {
+    .user-management-layout {
+        flex-direction: column;
+        gap: 2rem;
     }
 }
-
 @media (max-width: 600px) {
-    body { padding: 1rem 0.5rem; }
+    body { padding: 1rem 0; }
     .container {
         padding: 1.5rem 1rem;
         border-radius: 0;
         width: 100%;
         border-left: none;
         border-right: none;
+        box-shadow: none;
     }
     h2 { font-size: 1.5rem; }
-    .admin-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
+    .admin-controls { flex-direction: column; align-items: stretch; }
     #admin-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
     .logo-container span { display: none; } /* Hide "Admin Panel" text on mobile */
-    #toast-container { right: 10px; left: 10px; width: auto; }
+    #toast-container { right: 10px; left: 10px; bottom: 10px; width: auto; }
 }

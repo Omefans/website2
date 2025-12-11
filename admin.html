@@ -25,7 +25,7 @@
                 <input type="text" id="username" name="username" required>
             </div>
             <div>
-                <label for="password">Password:</label>
+                <label for="password">Password</label>
                 <input type="password" id="password" required>
             </div>
             <button type="submit">Login</button>
@@ -42,7 +42,7 @@
                 <h2>Add / Edit Content</h2>
                 <input type="hidden" id="edit-id" name="edit-id">
                 <div>
-                    <label for="name">Name:</label>
+                    <label for="name">Name</label>
                     <input type="text" id="name" name="name" required>
                 </div>
                 <div>
@@ -71,28 +71,33 @@
 
         <!-- User Management Section (for Admins only) -->
             <div id="user-management-container" class="admin-page">
-            <div class="section-divider"></div>
             <h2>User Management</h2>
-            <form id="add-user-form">
-                <div>
-                    <label for="new-username">Username</label>
-                    <input type="text" id="new-username" required>
+            <div class="user-management-layout">
+                <div class="user-management-form">
+                    <h3>Create New User</h3>
+                    <form id="add-user-form">
+                        <div>
+                            <label for="new-username">Username</label>
+                            <input type="text" id="new-username" required>
+                        </div>
+                        <div>
+                            <label for="new-password">Password</label>
+                            <input type="password" id="new-password" required>
+                        </div>
+                        <div>
+                            <label for="new-role">Role</label>
+                            <select id="new-role" required>
+                                <option value="manager" selected>Manager</option>
+                            </select>
+                        </div>
+                        <button type="submit">Create User</button>
+                    </form>
                 </div>
-                <div>
-                    <label for="new-password">Password</label>
-                    <input type="password" id="new-password" required>
+                <div class="user-management-list">
+                    <h3>Existing Users</h3>
+                    <div id="user-list"></div>
                 </div>
-                <div>
-                    <label for="new-role">Role</label>
-                    <select id="new-role" required>
-                        <option value="manager" selected>Manager</option>
-                    </select>
-                </div>
-                <button type="submit">Create User</button>
-            </form>
-            <div class="subsection-divider"></div>
-            <h3>Existing Users</h3>
-            <div id="user-list"></div>
+            </div>
         </div>
         </main>
     </div>
