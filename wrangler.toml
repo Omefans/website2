@@ -1,0 +1,11 @@
+# This is the configuration file for your Cloudflare Worker.
+
+name = "omefans-backend-api" # You can name this whatever you like.
+main = "index.js" # The entry point for your backend code.
+compatibility_date = "2024-05-01"
+
+# This section links your D1 database to your Worker.
+[[d1_databases]]
+binding = "DB" # The variable name for the database inside your code.
+database_name = "omefans-db"
+database_id = "<PASTE_YOUR_DATABASE_ID_HERE>" # We will get this in a later step.

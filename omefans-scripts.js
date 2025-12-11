@@ -1,6 +1,6 @@
 const AppConfig = {
     // This will be your Fly.io backend URL, e.g., https://your-app-name.fly.dev
-    backendUrl: '' // This will be your new backend URL
+    backendUrl: 'https://omefans-backend-api.your-username.workers.dev' // <-- PASTE YOUR WORKER URL HERE
 };
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -295,9 +295,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
         async function fetchAndDisplayGallery() {
             // Show a loading message while fetching data.
-            // Backend functionality has been removed.
-            galleryContainer.innerHTML = '<p class="gallery-message">Backend functionality is disabled. Gallery cannot be loaded.</p>';
-            paginationControls.style.display = 'none';
+            galleryContainer.innerHTML = '<p class="gallery-message">Loading gallery...</p>';
+
+            try {
+                const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                masterGalleryData = await response.json();
+                updateDisplay(); // Initial render with default sorting
+
+            } catch (error) {
+                console.error("Error fetching gallery:", error);
+                galleryContainer.innerHTML = '<p class="gallery-message">Failed to load gallery content.</p>';
+            }
         }
 
         fetchAndDisplayGallery();

@@ -1,0 +1,9 @@
+# Node.js dependencies - This folder can be huge and should always be ignored.
+node_modules
+
+# Wrangler local development files and logs
+.wrangler/
+*.log
+
+# Environment files which may contain secrets
+.env
