@@ -6,6 +6,24 @@ const app = new Hono();
 // Use CORS middleware to allow your frontend to call the API.
 app.use('/api/*', cors());
 
+/**
+ * A constant-time string comparison function.
+ * This is important to prevent timing attacks on the password.
+ * @param {string} a The user-provided password.
+ * @param {string} b The secret password from the environment.
+ * @returns {boolean} True if the strings are equal.
+ */
+const timingSafeEqual = (a, b) => {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+};
+
 // --- AUTHENTICATION MIDDLEWARE ---
 // This runs before any protected endpoint to check the password.
 const authMiddleware = async (c, next) => {
@@ -19,7 +37,8 @@ const authMiddleware = async (c, next) => {
     return c.json({ error: 'Server configuration error.' }, 500);
   }
 
-  if (password !== secret) {
+  // Use the timing-safe comparison function.
+  if (!timingSafeEqual(password || '', secret)) {
     return c.json({ error: 'Unauthorized: Invalid password.' }, 401);
   }
 
