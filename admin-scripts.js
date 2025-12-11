@@ -489,10 +489,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
         try {
             const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/${userId}`, { method: 'DELETE' });
+            
+            if (!response.ok) {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.error || 'Failed to delete user.');
+                }
+                throw new Error(`Server returned an unexpected response. Status: ${response.status}.`);
+            }
+
             const result = await response.json();
-    
-            if (!response.ok) throw new Error(result.error || 'Failed to delete user.');
-    
             showToast(result.message, 'success');
             loadUsers(); // Refresh the user list
         } catch (error) {

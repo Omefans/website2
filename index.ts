@@ -16,7 +16,8 @@ const app = new Hono<AppEnv>();
 // Use CORS middleware to allow your frontend to call the API.
 // Explicitly allow all origins for broader compatibility, especially for console commands.
 app.use('/api/*', cors({
-  origin: '*'
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 
 // --- Password Hashing Helpers ---
