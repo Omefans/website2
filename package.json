@@ -10,10 +10,10 @@
     "db:setup:local": "npx wrangler d1 execute omefans-db --file=./schema.sql"
   },
   "dependencies": {
-    "hono": "^4.4.6",
-    "@hono/jwt": "^1.0.0"
+    "hono": "^4.4.6"
   },
   "devDependencies": {
-    "wrangler": "^3.60.3"
+    "wrangler": "^3.60.3",
+    "typescript": "^5.4.5"
   }
 }

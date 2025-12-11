@@ -10,8 +10,13 @@
 </head>
 <body>
     <div class="container">
+        <button id="logout-btn" style="display: none; width: auto; position: absolute; top: 20px; right: 20px;">Logout</button>
         <form id="login-form">
             <h2>Admin Login</h2>
+            <div>
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
             <div>
                 <label for="password">Password:</label>
                 <input type="password" id="password" required>
@@ -48,6 +53,29 @@
             <div id="item-list">
                 <!-- Items will be loaded here -->
             </div>
+        </div>
+
+        <!-- User Management Section (for Admins only) -->
+        <div id="user-management-container" style="display: none;">
+            <div class="section-divider"></div>
+            <h2>User Management</h2>
+            <form id="add-user-form">
+                <div>
+                    <label for="new-username">Username</label>
+                    <input type="text" id="new-username" required>
+                </div>
+                <div>
+                    <label for="new-password">Password</label>
+                    <input type="password" id="new-password" required>
+                </div>
+                <div>
+                    <label for="new-role">Role</label>
+                    <select id="new-role" required>
+                        <option value="manager" selected>Manager</option>
+                    </select>
+                </div>
+                <button type="submit">Create User</button>
+            </form>
         </div>
     </div>
 

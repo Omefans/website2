@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env, MiddlewareHandler } from 'hono/types';
-import { jwt, sign } from '@hono/jwt'
+import { jwt, sign } from 'hono/jwt'
 
 // Define the environment variables for type safety. This improves
 // autocompletion and helps catch errors early.
