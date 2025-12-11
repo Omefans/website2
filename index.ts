@@ -108,6 +108,12 @@ app.post('/api/auth/register', async (c) => {
 
 app.post('/api/auth/login', async (c) => {
   try {
+    const secret = c.env.JWT_SECRET;
+    if (!secret) {
+      console.error('CRITICAL: JWT_SECRET is not defined in the worker environment.');
+      return c.json({ error: 'Server configuration error: JWT secret is missing.' }, 500);
+    }
+
     const { username, password } = await c.req.json<any>();
     if (!username || !password) {
       return c.json({ error: 'Username and password are required.' }, 400);
@@ -130,7 +136,7 @@ app.post('/api/auth/login', async (c) => {
     }
 
     const payload = { sub: user.id, username: user.username, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
-    const token = await sign(payload, c.env.JWT_SECRET);
+    const token = await sign(payload, secret);
 
     return c.json({ success: true, token });
   } catch (e: any) {
