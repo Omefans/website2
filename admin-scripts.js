@@ -1,6 +1,6 @@
 const AppConfig = {
     // This is the address of your local admin server
-    backendUrl: 'https://omefans-backend.fly.dev'
+    backendUrl: '' // This will be your new backend URL
 };
 
 document.addEventListener('DOMContentLoaded', () => {

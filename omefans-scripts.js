@@ -1,6 +1,6 @@
 const AppConfig = {
     // This will be your Fly.io backend URL, e.g., https://your-app-name.fly.dev
-    backendUrl: 'https://omefans-backend.fly.dev' 
+    backendUrl: '' // This will be your new backend URL
 };
 
 document.addEventListener("DOMContentLoaded", function() {
