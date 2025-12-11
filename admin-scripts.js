@@ -216,18 +216,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const itemEl = document.createElement('div');
+            itemEl.className = 'admin-item-card';
             itemEl.dataset.id = item.id;
             itemEl.innerHTML = `
-                <div class="item-details">
-                    <img src="${item.imageUrl}" alt="Preview" class="item-thumbnail" onerror="this.style.display='none'">
-                    <div>
+                <img src="${item.imageUrl}" alt="Preview" class="item-card-image" onerror="this.style.display='none'">
+                <div class="item-card-content">
+                    <div class="item-card-header">
                         <span class="item-name">${item.name || 'Untitled Item'}</span>
-                        <span class="item-date">Published: ${formattedDate}</span>
+                        <span class="item-date">${formattedDate}</span>
                     </div>
-                </div>
-                <div class="item-actions">
-                    <button type="button" class="edit-btn">Edit</button>
-                    <button type="button" class="delete-btn">Delete</button>
+                    <div class="item-actions">
+                        <button type="button" class="edit-btn">Edit</button>
+                        <button type="button" class="delete-btn">Delete</button>
+                    </div>
                 </div>
             `;
             itemListContainer.appendChild(itemEl);
