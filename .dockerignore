@@ -1,6 +1,12 @@
-/.git
-/node_modules
-.dockerignore
+# Ignore files not needed in the final Docker image to ensure a clean build.
+
+# Node build artifacts
+node_modules
+dist
+
+# Environment files and logs
 .env
-Dockerfile
-fly.toml
+npm-debug.log*
+
+# Git folder
+.git

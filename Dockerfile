@@ -1,20 +1,30 @@
-# Use an official Node.js runtime as a parent image
-FROM node:18-slim
-
-# Set the working directory in the container
+# ---- Builder Stage ----
+# This stage builds the TypeScript code into JavaScript.
+FROM node:20-slim AS builder
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package files and install all dependencies (including devDependencies).
 COPY package*.json ./
-
-# Install app dependencies
 RUN npm install
 
-# Copy the rest of your app's source code
+# Copy the rest of the source code.
 COPY . .
 
-# Make your app's port available to the outside world
-EXPOSE 3000
+# Compile TypeScript to JavaScript.
+RUN npx tsc
 
-# Define the command to run your app
-CMD [ "npm", "start" ]
+
+# ---- Production Stage ----
+# This stage creates the final, lean image for production.
+FROM node:20-slim AS production
+WORKDIR /app
+
+# Copy package files and install only production dependencies.
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copy the compiled JavaScript from the builder stage.
+COPY --from=builder /app/dist ./dist
+
+# The command to start your application.
+CMD [ "node", "dist/server.js" ]
