@@ -25,7 +25,7 @@ body {
     margin: 0;
     padding: 2rem;
     box-sizing: border-box;
-    overflow: hidden; /* Hide aurora overflow */
+    overflow-x: hidden; /* Hide horizontal overflow from aurora, allow vertical scroll */
     position: relative;
 }
 
@@ -380,4 +380,8 @@ body.is-admin #nav-users-btn { display: inline-block; }
     #admin-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
     .logo-container span { display: none; } /* Hide "Admin Panel" text on mobile */
     #toast-container { right: 10px; left: 10px; bottom: 10px; width: auto; }
+    #item-list {
+        /* Ensure a single column layout on small screens for content cards */
+        grid-template-columns: 1fr;
+    }
 }
