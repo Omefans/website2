@@ -107,7 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemEl = document.createElement('div');
                 itemEl.dataset.id = item.id;
                 itemEl.innerHTML = `
-                    <span>${item.name || 'Untitled Item'}</span>
+                    <div class="item-details">
+                        <img src="${item.imageUrl}" alt="Preview" class="item-thumbnail" onerror="this.style.display='none'">
+                        <span class="item-name">${item.name || 'Untitled Item'}</span>
+                    </div>
                     <div class="item-actions">
                         <button type="button" class="edit-btn">Edit</button>
                         <button type="button" class="delete-btn">Delete</button>
