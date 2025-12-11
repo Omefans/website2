@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "db:setup": "npx wrangler d1 execute omefans-db --file=./schema.sql"
   },
   "dependencies": {
     "hono": "^4.4.6"
