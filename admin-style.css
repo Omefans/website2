@@ -11,7 +11,7 @@ button { width: 100%; padding: 0.85rem 1rem; background: linear-gradient(145deg,
 button:hover { box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); transform: translateY(-2px); }
 button:active { transform: translateY(0); box-shadow: none; }
 button:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; }
-#upload-form, #management-container, #cancel-edit-btn, #user-management-container { display: none; }
+#admin-panel-main, #content-management-section, #user-management-container, #cancel-edit-btn, #nav-users-btn { display: none; }
 
 #logout-btn {
     display: none; /* Initially hidden */
@@ -24,6 +24,31 @@ button:disabled { background: #555; cursor: not-allowed; transform: none; box-sh
     font-weight: 500;
 }
 #logout-btn:hover { background: #5a6268; transform: none; box-shadow: none; }
+
+/* Styles for Page Navigation */
+#admin-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #444;
+}
+
+.nav-btn {
+    /* Override default button styles for a tab-like appearance */
+    width: auto;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    color: #ccc;
+    font-weight: 600;
+}
+
+.nav-btn.active {
+    color: #fff;
+    border-bottom-color: #007bff;
+}
 
 #item-list {
     display: grid;

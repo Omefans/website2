@@ -15,6 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelEditButton = document.getElementById('cancel-edit-btn');
     const logoutButton = document.getElementById('logout-btn');
 
+    // New UI elements for tabbed navigation
+    const adminPanelMain = document.getElementById('admin-panel-main');
+    const contentManagementSection = document.getElementById('content-management-section');
+    const userManagementContainer = document.getElementById('user-management-container');
+    const navContentBtn = document.getElementById('nav-content-btn');
+    const navUsersBtn = document.getElementById('nav-users-btn');
+
     const loginButton = loginForm.querySelector('button[type="submit"]');
 
     let galleryItemsCache = [];
@@ -161,15 +168,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLoggedInState() {
         loginForm.style.display = 'none';
-        uploadForm.style.display = 'block';
-        managementContainer.style.display = 'block';
+        adminPanelMain.style.display = 'block';
         logoutButton.style.display = 'block';
         showToast('Login successful!', 'success');
 
+        // Default to the content page view
+        showPage('content');
+
         if (userRole === 'admin') {
-            const userManagementContainer = document.getElementById('user-management-container');
-            if (userManagementContainer) userManagementContainer.style.display = 'block';
-            loadUsers();
+            navUsersBtn.style.display = 'inline-block';
+            loadUsers(); // Load user data in the background
         }
 
         // Inject search and sort controls if they don't exist
@@ -506,6 +514,28 @@ document.addEventListener('DOMContentLoaded', () => {
             loadUsers(); // Refresh the user list
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    /**
+     * Switches between the 'Content' and 'Users' pages in the admin panel.
+     * @param {'content' | 'users'} pageName The name of the page to display.
+     */
+    function showPage(pageName) {
+        // Hide all pages first
+        contentManagementSection.style.display = 'none';
+        userManagementContainer.style.display = 'none';
+
+        // Deactivate all navigation buttons
+        navContentBtn.classList.remove('active');
+        navUsersBtn.classList.remove('active');
+
+        if (pageName === 'content') {
+            contentManagementSection.style.display = 'block';
+            navContentBtn.classList.add('active');
+        } else if (pageName === 'users' && userRole === 'admin') {
+            userManagementContainer.style.display = 'block';
+            navUsersBtn.classList.add('active');
         }
     }
 

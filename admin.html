@@ -24,7 +24,13 @@
             <button type="submit">Login</button>
         </form>
 
-        <div id="content-management-section">
+        <div id="admin-panel-main">
+            <nav id="admin-nav">
+                <button id="nav-content-btn" class="nav-btn">Content</button>
+                <button id="nav-users-btn" class="nav-btn">Users</button>
+            </nav>
+
+            <div id="content-management-section" class="admin-page">
             <form id="upload-form">
                 <h2>Add / Edit Content</h2>
                 <input type="hidden" id="edit-id" name="edit-id">
@@ -57,7 +63,7 @@
         </div>
 
         <!-- User Management Section (for Admins only) -->
-        <div id="user-management-container">
+            <div id="user-management-container" class="admin-page">
             <div class="section-divider"></div>
             <h2>User Management</h2>
             <form id="add-user-form">
@@ -80,6 +86,7 @@
             <div class="subsection-divider"></div>
             <h3>Existing Users</h3>
             <div id="user-list"></div>
+        </div>
         </div>
     </div>
 
