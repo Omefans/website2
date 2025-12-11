@@ -295,18 +295,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
         async function fetchAndDisplayGallery() {
             // Show a loading message while fetching data.
-            galleryContainer.innerHTML = '<p class="gallery-message">Loading gallery...</p>';
-
-            try {
-                const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                masterGalleryData = await response.json();
-                updateDisplay(); // Initial render with default sorting
-
-            } catch (error) {
-                console.error("Error fetching gallery:", error);
-                galleryContainer.innerHTML = '<p class="gallery-message">Failed to load gallery content.</p>';
-            }
+            // Backend functionality has been removed.
+            galleryContainer.innerHTML = '<p class="gallery-message">Backend functionality is disabled. Gallery cannot be loaded.</p>';
+            paginationControls.style.display = 'none';
         }
 
         fetchAndDisplayGallery();

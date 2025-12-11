@@ -21,65 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         adminPassword = passwordInput.value;
         messageEl.textContent = 'Authenticating...';
-
-        try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/auth/check`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: adminPassword })
-            });
-
-            if (!response.ok) {
-                const errorResult = await response.json();
-                throw new Error(errorResult.error || 'Authentication failed.');
-            }
-
-            // If successful:
-            loginForm.style.display = 'none';
-            uploadForm.style.display = 'block';
-            managementContainer.style.display = 'block';
-            messageEl.textContent = 'Logged in. You can now add content.';
-            loadManageableItems();
-
-        } catch (error) {
-            messageEl.textContent = `Login failed: ${error.message}`;
-            adminPassword = ''; // Clear the invalid password
-        }
+        
+        // Backend functionality has been removed.
+        messageEl.textContent = 'Backend functionality is disabled.';
+        // You can re-enable the forms for UI testing if needed by uncommenting the lines below.
+        // loginForm.style.display = 'none';
+        // uploadForm.style.display = 'block';
+        // managementContainer.style.display = 'block';
     });
 
     async function loadManageableItems() {
-        try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/gallery`);
-            if (!response.ok) {
-                const errorText = await response.text();
-                let errorMessage = `Failed to fetch items. Status: ${response.status}`;
-                try { errorMessage += ` - ${JSON.parse(errorText).error}`; } catch (e) { /* ignore */ }
-                throw new Error(errorMessage);
-            }
-            galleryItemsCache = await response.json();
-
-            itemListContainer.innerHTML = ''; // Clear previous list
-            if (galleryItemsCache.length === 0) {
-                itemListContainer.innerHTML = '<p>No items to manage yet.</p>';
-                return;
-            }
-
-            galleryItemsCache.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.dataset.id = item.id;
-                itemEl.innerHTML = `
-                    <span>${item.name || 'Untitled Item'}</span>
-                    <div class="item-actions">
-                        <button class="edit-btn">Edit</button>
-                        <button class="delete-btn" style="background: #dc3545;">Delete</button>
-                    </div>
-                `;
-                itemListContainer.appendChild(itemEl);
-            });
-
-        } catch (error) {
-            itemListContainer.innerHTML = `<p>Error: ${error.message}</p>`;
-        }
+        // Backend functionality has been removed.
+        itemListContainer.innerHTML = '<p>Backend functionality is disabled. Cannot load items.</p>';
     }
 
     itemListContainer.addEventListener('click', (e) => {
@@ -96,26 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleDelete(itemId) {
         if (!confirm('Are you sure you want to delete this item?')) return;
 
-        try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: adminPassword })
-            });
-
-            if (!response.ok) {
-                if (response.headers.get('content-type')?.includes('application/json')) {
-                    const errorResult = await response.json();
-                    throw new Error(errorResult.error || `HTTP error! Status: ${response.status}`);
-                }
-                throw new Error(`Server returned an unexpected response. Status: ${response.status}.`);
-            }
-            const result = await response.json();
-            messageEl.textContent = result.message || 'Item deleted successfully!';
-            loadManageableItems(); // Refresh the list
-        } catch (error) {
-            messageEl.textContent = `Error: ${error.message}`;
-        }
+        // Backend functionality has been removed.
+        messageEl.textContent = 'Backend functionality is disabled. Cannot delete item.';
     }
 
     function handleEdit(itemId) {
@@ -164,32 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
-        const method = isEditing ? 'PUT' : 'POST';
-
-        try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-                const errorResult = await response.json();
-                throw new Error(errorResult.error || `HTTP error! Status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            messageEl.textContent = result.message;
-            if (isEditing) {
-                cancelEdit();
-            } else {
-                uploadForm.reset();
-            }
-            loadManageableItems(); // Refresh the list
-        } catch (error) {
-            messageEl.textContent = `Error: ${error.message}`;
-            console.error(error);
-        }
+        // Backend functionality has been removed.
+        messageEl.textContent = 'Backend functionality is disabled. Cannot add or update item.';
     });
 });
