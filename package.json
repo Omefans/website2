@@ -1,9 +1,8 @@
 {
-  "name": "website2-static",
+  "name": "omefans-backend",
   "version": "1.0.0",
   "description": "A static website for the gallery.",
   "private": true,
-  "type": "module",
   "scripts": {
     "start": "node dist/server.js",
     "build": "tsc"
