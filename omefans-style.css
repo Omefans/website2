@@ -458,6 +458,25 @@ body {
     cursor: none;
 }
 
+.gallery-item.featured {
+    box-shadow: 0 0 15px 3px var(--secondary), 0 0 5px 1px var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+.gallery-item.featured::before {
+    content: '★ FEATURED';
+    position: absolute;
+    top: 10px;
+    right: -30px;
+    background: var(--secondary);
+    color: #000;
+    padding: 4px 30px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transform: rotate(45deg);
+    z-index: 1;
+}
+
 .gallery-item:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 217, 255, 0.1);

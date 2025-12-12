@@ -196,6 +196,9 @@ document.addEventListener("DOMContentLoaded", function() {
             itemsToRender.forEach(data => {
                 const itemArticle = document.createElement('article');
                 itemArticle.className = 'gallery-item';
+                if (data.isFeatured) {
+                    itemArticle.classList.add('featured');
+                }
 
                 // Format the date for display
                 const releaseDate = new Date(data.createdAt).toLocaleDateString('en-US', {
@@ -295,20 +298,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
             }
 
-            // 3. Sort the data
-            if (currentSort === 'date') {
-                if (dateSortDirection === 'desc') {
-                    processedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Newest first
-                } else { // 'asc'
-                    processedData.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Oldest first
+            // 3. Sort the data (Featured items always come first)
+            processedData.sort((a, b) => {
+                // Primary sort: featured items first
+                if (a.isFeatured && !b.isFeatured) return -1;
+                if (!a.isFeatured && b.isFeatured) return 1;
+
+                // Secondary sort: user's choice
+                if (currentSort === 'date') {
+                    return dateSortDirection === 'desc'
+                        ? new Date(b.createdAt) - new Date(a.createdAt)
+                        : new Date(a.createdAt) - new Date(b.createdAt);
+                } else if (currentSort === 'name') {
+                    const nameA = a.name || '';
+                    const nameB = b.name || '';
+                    return nameSortDirection === 'asc'
+                        ? nameA.localeCompare(nameB)
+                        : nameB.localeCompare(nameA);
                 }
-            } else if (currentSort === 'name') {
-                if (nameSortDirection === 'asc') {
-                    processedData.sort((a, b) => (a.name || '').localeCompare(b.name || '')); // A-Z
-                } else { // 'desc'
-                    processedData.sort((a, b) => (b.name || '').localeCompare(a.name || '')); // Z-A
-                }
-            }
+                return 0;
+            });
 
             // 4. Render the processed data
             renderItems(processedData);

@@ -4,6 +4,7 @@ CREATE TABLE gallery_items (
   name TEXT NOT NULL,
   description TEXT,
   category TEXT,
+  isFeatured INTEGER DEFAULT 0, -- 0 for false, 1 for true
   "imageUrl" TEXT NOT NULL,
   "affiliateUrl" TEXT NOT NULL,
   "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

@@ -317,7 +317,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${item.imageUrl}" alt="Preview" class="item-card-image" onerror="this.style.display='none'">
                 <div class="item-card-content">
                     <div class="item-card-header">
-                        <span class="item-name">${item.name || 'Untitled Item'}</span>
+                        <div class="item-name-wrapper">
+                            <span class="item-name">${item.name || 'Untitled Item'}</span>
+                            ${item.isFeatured ? '<span class="featured-badge">Featured</span>' : ''}
+                        </div>
                         <div class="item-meta">
                             <span class="item-category" style="color: ${categoryColor}; text-transform: capitalize; font-weight: 600;">${item.category || 'Omegle'}</span>
                             <span class="item-date">${formattedDate}</span>
@@ -394,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('description').value = itemToEdit.description || '';
         document.getElementById('imageUrl').value = itemToEdit.imageUrl || '';
         document.getElementById('affiliateUrl').value = itemToEdit.affiliateUrl || '';
+        document.getElementById('isFeatured').checked = !!itemToEdit.isFeatured;
 
         formSubmitButton.textContent = 'Update Item';
         formSubmitButton.classList.add('btn-update');
@@ -406,6 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editIdInput.value = '';
         formSubmitButton.textContent = 'Add Item';
         formSubmitButton.classList.remove('btn-update');
+        document.getElementById('isFeatured').checked = false;
         cancelEditButton.style.display = 'none';
     }
 
@@ -425,7 +430,8 @@ document.addEventListener('DOMContentLoaded', () => {
             category: (categoryEl && categoryEl.value) ? categoryEl.value : 'omegle',
             description: document.getElementById('description').value,
             imageUrl: document.getElementById('imageUrl').value,
-            affiliateUrl: document.getElementById('affiliateUrl').value
+            affiliateUrl: document.getElementById('affiliateUrl').value,
+            isFeatured: document.getElementById('isFeatured').checked
         };
 
         // Revert to /api/upload for creating new items, as /api/gallery (POST) does not exist on the backend

@@ -122,6 +122,17 @@ input:focus, textarea:focus, select:focus {
 }
 textarea { resize: vertical; min-height: 100px; }
 
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+.checkbox-wrapper input[type="checkbox"] {
+    width: auto; /* Override default width */
+    margin: 0;
+}
+
 /* --- Buttons --- */
 button {
     position: relative;
@@ -258,6 +269,16 @@ body.is-admin #nav-users-btn { display: inline-block; }
     font-size: 0.8rem;
     color: #8b949e;
     margin-top: 0.25rem;
+}
+.item-name-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+.featured-badge {
+    background: #c99900; color: #fff; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; line-height: 1;
 }
 .item-publisher { font-weight: 500; }
 .item-actions { margin-top: auto; display: flex; gap: 0.75rem; }
