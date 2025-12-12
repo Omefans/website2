@@ -423,16 +423,22 @@ document.addEventListener('DOMContentLoaded', () => {
             affiliateUrl: document.getElementById('affiliateUrl').value
         };
 
-        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/gallery`;
+        // Revert to /api/upload for creating new items, as /api/gallery (POST) does not exist on the backend
+        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
             const response = await authenticatedFetch(url, { method, body: JSON.stringify(data) });
             
             if (!response.ok) {
-                const errorResult = await response.json();
-                const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
-                throw new Error(errorMessage || `HTTP error! Status: ${response.status}`);
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorResult = await response.json();
+                    const errorMessage = errorResult.details ? `${errorResult.error}: ${errorResult.details}` : errorResult.error;
+                    throw new Error(errorMessage || `HTTP error! Status: ${response.status}`);
+                } else {
+                    throw new Error(`Server error ${response.status}: ${await response.text()}`);
+                }
             }
 
             const result = await response.json();
