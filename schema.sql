@@ -3,6 +3,7 @@ CREATE TABLE gallery_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   description TEXT,
+  category TEXT,
   "imageUrl" TEXT NOT NULL,
   "affiliateUrl" TEXT NOT NULL,
   "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
