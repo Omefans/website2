@@ -21,8 +21,14 @@
     box-sizing: border-box;
 }
 
+/* Prevent images (like the Santa GIF) from overflowing and breaking the mobile layout */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 /* --- Base & Body Styles --- */
-body {
+html, body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #0d1117; /* GitHub dark background */
     color: #c9d1d9; /* GitHub dark text */
@@ -30,6 +36,8 @@ body {
     margin: 0;
     padding: 2rem;
     overflow-x: hidden; /* Prevent horizontal scroll from animations */
+    width: 100%;
+    max-width: 100%;
 }
 
 /* NEW: Animated Aurora Background Container */
@@ -293,6 +301,7 @@ body.is-admin #nav-users-btn { display: inline-block; }
     border: 1px solid #30363d;
     min-width: 110px; /* Prevent layout shift when text changes */
     text-align: center;
+    white-space: nowrap;
 }
 .sort-btn:hover {
     background: #30363d;
@@ -396,5 +405,13 @@ body.is-admin #nav-users-btn { display: inline-block; }
     #item-list {
         /* Ensure a single column layout on small screens for content cards */
         grid-template-columns: 1fr;
+    }
+    .sort-buttons {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    .sort-btn {
+        flex: 1;
+        min-width: 0; /* Allow buttons to shrink to fit */
     }
 }
