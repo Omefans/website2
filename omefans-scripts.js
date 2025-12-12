@@ -27,6 +27,18 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    /* --- CHRISTMAS ATMOSPHERE: FLYING SANTA --- */
+    const santa = document.createElement('img');
+    santa.className = 'santa-sleigh';
+    santa.src = 'images/santa_flying.gif'; // Make sure to add this image to your folder!
+    santa.alt = 'Flying Santa';
+    
+    // Append to main-wrapper so it scrolls with the page (like it's in the header)
+    const wrapper = document.querySelector('.main-wrapper');
+    if (wrapper) {
+        wrapper.appendChild(santa);
+    }
+
     /* --- NEW: MODAL SETUP --- */
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
