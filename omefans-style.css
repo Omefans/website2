@@ -50,6 +50,7 @@ body {
     gap: 15px;
     text-decoration: none;
     position: relative; /* Needed for the Santa Hat positioning */
+    z-index: 30; /* Ensure logo stays above the flying Santa */
 }
 
 .logo img {
@@ -293,6 +294,7 @@ body {
     .cta-container { flex-direction: column; align-items: center; }
     .cta-button { width: 80%; max-width: 280px; text-align: center; }
     .santa-sleigh {
+        width: 120px; /* Smaller size for mobile */
         animation-name: flySantaMobile;
     }
 }
