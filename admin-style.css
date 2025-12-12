@@ -16,6 +16,11 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* --- Global Reset --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 /* --- Base & Body Styles --- */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -24,7 +29,7 @@ body {
     min-height: 100vh;
     margin: 0;
     padding: 2rem;
-    box-sizing: border-box;
+    overflow-x: hidden; /* Prevent horizontal scroll from animations */
 }
 
 /* NEW: Animated Aurora Background Container */
@@ -98,7 +103,6 @@ input, textarea, select {
     border: 1px solid #30363d; /* GitHub border */
     background: #0d1117; /* Match body background */
     color: #c9d1d9;
-    box-sizing: border-box;
     font-size: 1rem;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -287,6 +291,8 @@ body.is-admin #nav-users-btn { display: inline-block; }
     background: #21262d;
     font-weight: 500;
     border: 1px solid #30363d;
+    min-width: 110px; /* Prevent layout shift when text changes */
+    text-align: center;
 }
 .sort-btn:hover {
     background: #30363d;
