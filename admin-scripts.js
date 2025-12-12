@@ -315,7 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="item-card-header">
                         <span class="item-name">${item.name || 'Untitled Item'}</span>
                         <div class="item-meta">
+                            <span class="item-category" style="color: #58a6ff; text-transform: capitalize; font-weight: 600;">${item.category || 'General'}</span>
                             <span class="item-date">${formattedDate}</span>
+                        </div>
+                        <div class="item-meta" style="margin-top: 2px;">
                             <span class="item-publisher">by ${item.publisherName || 'Unknown'}</span>
                         </div>
                     </div>
@@ -370,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         editIdInput.value = itemToEdit.id;
         document.getElementById('name').value = itemToEdit.name || '';
+        document.getElementById('category').value = itemToEdit.category || 'omegle';
         document.getElementById('description').value = itemToEdit.description || '';
         document.getElementById('imageUrl').value = itemToEdit.imageUrl || '';
         document.getElementById('affiliateUrl').value = itemToEdit.affiliateUrl || '';
@@ -399,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setButtonLoadingState(formSubmitButton, true, loadingText);
         const data = {
             name: document.getElementById('name').value,
+            category: document.getElementById('category').value,
             description: document.getElementById('description').value,
             imageUrl: document.getElementById('imageUrl').value,
             affiliateUrl: document.getElementById('affiliateUrl').value
