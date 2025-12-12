@@ -235,8 +235,8 @@ body {
 
 /* --- FLYING SANTA ANIMATION --- */
 .santa-sleigh {
-    position: fixed; /* Fixed prevents the animation from expanding the page width */
-    top: 30px; /* Position in header */
+    position: absolute; /* Absolute allows it to scroll with the header */
+    top: 10px; /* Adjusted position within header */
     left: 0;
     width: 200px; /* Adjust based on your image size */
     height: auto;
