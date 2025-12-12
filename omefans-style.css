@@ -646,3 +646,31 @@ body {
         grid-template-columns: 1fr;
     }
 }
+/* --- MOBILE LAYOUT FIXES --- */
+
+/* 1. Global Reset: Ensures padding doesn't increase element width */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* 2. Lock Viewport: Prevents horizontal scrolling and unwanted 'zoomed out' effect */
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden; /* Hides anything sticking out the side */
+    margin: 0;
+    padding: 0;
+}
+
+/* 3. Image Constraint: Forces all images (including Santa GIFs) to fit the screen */
+img, video, iframe, canvas {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Removes bottom gap on some images */
+}
+
+/* 4. Container Safety: Ensures your main wrappers don't overflow */
+.container, .wrapper, main, header, footer {
+    max-width: 100%;
+    overflow-x: hidden;
+}
