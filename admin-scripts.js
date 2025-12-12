@@ -372,9 +372,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         editIdInput.value = itemToEdit.id;
         document.getElementById('name').value = itemToEdit.name || '';
-        // Ensure category matches the lowercase values in the select dropdown
-        const categoryVal = itemToEdit.category ? itemToEdit.category.toLowerCase() : 'omegle';
-        document.getElementById('category').value = categoryVal;
+        
+        // Robust category selection: Normalize the value and check if it exists in the dropdown
+        let categoryToSelect = 'omegle'; // Default fallback
+        if (itemToEdit.category) {
+            const normalized = itemToEdit.category.toString().toLowerCase().trim();
+            const select = document.getElementById('category');
+            if (select) {
+                // Check if this value is actually a valid option
+                const optionExists = Array.from(select.options).some(opt => opt.value === normalized);
+                if (optionExists) categoryToSelect = normalized;
+            }
+        }
+        if (document.getElementById('category')) document.getElementById('category').value = categoryToSelect;
+        
         document.getElementById('description').value = itemToEdit.description || '';
         document.getElementById('imageUrl').value = itemToEdit.imageUrl || '';
         document.getElementById('affiliateUrl').value = itemToEdit.affiliateUrl || '';
@@ -402,15 +413,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const loadingText = isEditing ? 'Updating...' : 'Adding...';
         setButtonLoadingState(formSubmitButton, true, loadingText);
+        
+        const categoryEl = document.getElementById('category');
         const data = {
             name: document.getElementById('name').value,
-            category: document.getElementById('category').value,
+            category: categoryEl ? categoryEl.value : 'omegle',
             description: document.getElementById('description').value,
             imageUrl: document.getElementById('imageUrl').value,
             affiliateUrl: document.getElementById('affiliateUrl').value
         };
 
-        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
+        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/gallery`;
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
