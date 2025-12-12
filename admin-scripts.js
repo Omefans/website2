@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="item-card-header">
                         <span class="item-name">${item.name || 'Untitled Item'}</span>
                         <div class="item-meta">
-                            <span class="item-category" style="color: #58a6ff; text-transform: capitalize; font-weight: 600;">${item.category || 'General'}</span>
+                            <span class="item-category" style="color: #58a6ff; text-transform: capitalize; font-weight: 600;">${item.category || 'Omegle'}</span>
                             <span class="item-date">${formattedDate}</span>
                         </div>
                         <div class="item-meta" style="margin-top: 2px;">
@@ -373,18 +373,19 @@ document.addEventListener('DOMContentLoaded', () => {
         editIdInput.value = itemToEdit.id;
         document.getElementById('name').value = itemToEdit.name || '';
         
-        // Robust category selection: Normalize the value and check if it exists in the dropdown
-        let categoryToSelect = 'omegle'; // Default fallback
-        if (itemToEdit.category) {
-            const normalized = itemToEdit.category.toString().toLowerCase().trim();
-            const select = document.getElementById('category');
-            if (select) {
-                // Check if this value is actually a valid option
-                const optionExists = Array.from(select.options).some(opt => opt.value === normalized);
-                if (optionExists) categoryToSelect = normalized;
+        // Fix: Explicitly handle category selection
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+            // Default to 'omegle' if category is missing or invalid
+            let targetValue = 'omegle';
+            if (itemToEdit.category) {
+                targetValue = itemToEdit.category.toString().toLowerCase().trim();
             }
+            
+            // Try to set the value, if it fails (invalid option), default to index 0
+            categorySelect.value = targetValue;
+            if (categorySelect.value !== targetValue) categorySelect.selectedIndex = 0;
         }
-        if (document.getElementById('category')) document.getElementById('category').value = categoryToSelect;
         
         document.getElementById('description').value = itemToEdit.description || '';
         document.getElementById('imageUrl').value = itemToEdit.imageUrl || '';
@@ -417,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const categoryEl = document.getElementById('category');
         const data = {
             name: document.getElementById('name').value,
-            category: categoryEl ? categoryEl.value : 'omegle',
+            category: (categoryEl && categoryEl.value) ? categoryEl.value : 'omegle',
             description: document.getElementById('description').value,
             imageUrl: document.getElementById('imageUrl').value,
             affiliateUrl: document.getElementById('affiliateUrl').value
