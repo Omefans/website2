@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
     /* --- 1. STAR BACKGROUND --- */
     const starsContainer = document.getElementById('stars');
     if (starsContainer) {
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 40; i++) { // OPTIMIZATION: Reduced stars from 100 to 40
             const star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + '%';
@@ -82,9 +82,20 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     if (window.matchMedia("(pointer: fine)").matches && follower) {
+        // OPTIMIZATION: Use requestAnimationFrame for smoother performance
+        let mouseX = 0, mouseY = 0;
+        let rafId = null;
+
         document.addEventListener('mousemove', (e) => {
-            follower.style.left = e.clientX + 'px';
-            follower.style.top = e.clientY + 'px';
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            if (!rafId) {
+                rafId = requestAnimationFrame(() => {
+                    follower.style.left = mouseX + 'px';
+                    follower.style.top = mouseY + 'px';
+                    rafId = null;
+                });
+            }
         });
         applyMouseFollowerEffects(); // Initial call for static elements
     } else if (follower) {
@@ -382,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Generate Snowflakes
     function createSnowflakes() {
-        const snowflakeCount = 30; // Reduced count for less clutter
+        const snowflakeCount = 15; // OPTIMIZATION: Reduced snowflakes from 30 to 15
         for (let i = 0; i < snowflakeCount; i++) {
             const snowflake = document.createElement('div');
             snowflake.className = 'snowflake';
