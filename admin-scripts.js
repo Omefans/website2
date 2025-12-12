@@ -366,14 +366,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleEdit(itemId) {
-        // Use strict equality (===) and parseInt for robust type-safe comparison.
-        const numericItemId = parseInt(itemId, 10);
-        const itemToEdit = galleryItemsCache.find(item => item.id === numericItemId);
+        // Use loose equality to match string or number IDs
+        const itemToEdit = galleryItemsCache.find(item => item.id == itemId);
         if (!itemToEdit) return;
 
         editIdInput.value = itemToEdit.id;
         document.getElementById('name').value = itemToEdit.name || '';
-        document.getElementById('category').value = itemToEdit.category || 'omegle';
+        // Ensure category matches the lowercase values in the select dropdown
+        const categoryVal = itemToEdit.category ? itemToEdit.category.toLowerCase() : 'omegle';
+        document.getElementById('category').value = categoryVal;
         document.getElementById('description').value = itemToEdit.description || '';
         document.getElementById('imageUrl').value = itemToEdit.imageUrl || '';
         document.getElementById('affiliateUrl').value = itemToEdit.affiliateUrl || '';
