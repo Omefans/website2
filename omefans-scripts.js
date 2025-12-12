@@ -5,40 +5,6 @@ const AppConfig = {
 
 document.addEventListener("DOMContentLoaded", function() {
 
-    /* --- CHRISTMAS ATMOSPHERE: SNOWFLAKES --- */
-    const SNOWFLAKE_COUNT = 50; // Number of snowflakes
-    const body = document.querySelector('body');
-
-    if (body) {
-        for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
-            const snowflake = document.createElement('div');
-            const fallDuration = Math.random() * 10 + 5; // 5-15 seconds
-            const swayDuration = Math.random() * 4 + 2; // 2-6 seconds
-
-            snowflake.innerHTML = '❄';
-            snowflake.classList.add('snowflake');
-            snowflake.style.left = `${Math.random() * 100}vw`;
-            snowflake.style.fontSize = `${Math.random() * 1 + 0.5}rem`;
-            snowflake.style.opacity = Math.random() * 0.7 + 0.3;
-            snowflake.style.animationDuration = `${fallDuration}s, ${swayDuration}s`;
-            snowflake.style.animationDelay = `${Math.random() * 15}s`;
-
-            body.appendChild(snowflake);
-        }
-    }
-
-    /* --- CHRISTMAS ATMOSPHERE: FLYING SANTA --- */
-    const santa = document.createElement('img');
-    santa.className = 'santa-sleigh';
-    santa.src = 'images/santa_flying.gif'; // Make sure to add this image to your folder!
-    santa.alt = 'Flying Santa';
-    
-    // Append to main-wrapper so it scrolls with the page (like it's in the header)
-    const wrapper = document.querySelector('.main-wrapper');
-    if (wrapper) {
-        wrapper.appendChild(santa);
-    }
-
     /* --- NEW: MODAL SETUP --- */
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
@@ -384,4 +350,49 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     }
+});
+
+/* --- Snow Effect Toggle Logic --- */
+document.addEventListener('DOMContentLoaded', () => {
+    const snowToggle = document.getElementById('snowToggle');
+    const body = document.body;
+
+    // 1. Check saved preference on load
+    if (localStorage.getItem('snowEffect') === 'off') {
+        body.classList.add('no-snow');
+        if (snowToggle) snowToggle.textContent = '❄️ Off';
+    }
+
+    // 2. Handle button click
+    if (snowToggle) {
+        snowToggle.addEventListener('click', () => {
+            if (body.classList.contains('no-snow')) {
+                // Turn Snow ON
+                body.classList.remove('no-snow');
+                localStorage.setItem('snowEffect', 'on');
+                snowToggle.textContent = '❄️ On';
+            } else {
+                // Turn Snow OFF
+                body.classList.add('no-snow');
+                localStorage.setItem('snowEffect', 'off');
+                snowToggle.textContent = '❄️ Off';
+            }
+        });
+    }
+
+    // 3. Generate Snowflakes
+    function createSnowflakes() {
+        const snowflakeCount = 30; // Reduced count for less clutter
+        for (let i = 0; i < snowflakeCount; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.textContent = '❄';
+            snowflake.style.left = Math.random() * 95 + 'vw'; // Constrain width to prevent scrollbar
+            snowflake.style.animationDuration = Math.random() * 5 + 5 + 's'; // Slower: 5-10s
+            snowflake.style.opacity = Math.random() * 0.5 + 0.1; // More transparent: 0.1 - 0.6
+            snowflake.style.fontSize = Math.random() * 7 + 8 + 'px'; // Smaller: 8-15px
+            document.body.appendChild(snowflake);
+        }
+    }
+    createSnowflakes();
 });

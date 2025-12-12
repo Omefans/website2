@@ -41,6 +41,7 @@ body {
     padding: 30px 40px;
     width: 100%;
     animation: slideDown 1s ease-out forwards;
+    position: relative; /* Needed for positioning the toggle button */
 }
 
 .logo {
@@ -220,7 +221,7 @@ body {
 .snowflake {
     position: fixed;
     top: -10%;
-    z-index: 9999;
+    z-index: 2; /* Behind content (z-index 10) but above background */
     color: #fff;
     font-size: 1em;
     pointer-events: none;
@@ -233,7 +234,7 @@ body {
 
 /* --- FLYING SANTA ANIMATION --- */
 .santa-sleigh {
-    position: absolute;
+    position: fixed; /* Fixed prevents the animation from expanding the page width */
     top: 30px; /* Position in header */
     left: 0;
     width: 200px; /* Adjust based on your image size */
@@ -673,4 +674,31 @@ img, video, iframe, canvas {
 .container, .wrapper, main, header, footer {
     max-width: 100%;
     overflow-x: hidden;
+}
+
+/* --- SNOW TOGGLE BUTTON --- */
+.snow-toggle-btn {
+    position: absolute;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    z-index: 50;
+}
+.snow-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+/* Hide effects when disabled */
+body.no-snow .snowflake,
+body.no-snow .santa-sleigh {
+    display: none !important;
 }
