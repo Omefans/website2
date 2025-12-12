@@ -197,6 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // A class on the body will control UI visibility via CSS
             document.body.classList.add('is-admin');
             loadUsers(); // Load user data in the background
+            // Allow admins to create other admins
+            const roleSelect = document.getElementById('new-role');
+            if (roleSelect && !roleSelect.querySelector('option[value="admin"]')) {
+                const adminOption = document.createElement('option');
+                adminOption.value = 'admin';
+                adminOption.textContent = 'Admin';
+                roleSelect.appendChild(adminOption);
+            }
         }
 
         // Inject search and sort controls if they don't exist
