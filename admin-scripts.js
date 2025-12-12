@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="item-card-header">
                         <span class="item-name">${item.name || 'Untitled Item'}</span>
                         <div class="item-meta">
-                            <span class="item-category" style="color: #58a6ff; text-transform: capitalize; font-weight: 600;">${item.category || 'Omegle'}</span>
+                            <span class="item-category" style="color: #58a6ff; text-transform: capitalize; font-weight: 600;">${item.category || 'General'}</span>
                             <span class="item-date">${formattedDate}</span>
                         </div>
                         <div class="item-meta" style="margin-top: 2px;">
