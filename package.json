@@ -12,10 +12,11 @@
     "db:migrate:local": "npx wrangler d1 execute omefans-db --file=./0001_add_userid_to_gallery.sql"
   },
   "dependencies": {
-    "hono": "^4.4.6"
+    "hono": "^4.4.6",
+    "itty-router": "^5.0.22"
   },
   "devDependencies": {
-    "wrangler": "^3.60.3",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "wrangler": "^3.60.3"
   }
 }
