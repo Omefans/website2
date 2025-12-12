@@ -123,11 +123,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const searchBar = document.getElementById('search-bar');
     const sortDateBtn = document.getElementById('sort-date-btn');
     const sortNameBtn = document.getElementById('sort-name-btn');
+    const filterBtns = document.querySelectorAll('.filter-btn');
 
     let masterGalleryData = []; // Holds the original full list of items from the server
     let currentSort = 'date'; // 'date' or 'name'
     let dateSortDirection = 'desc'; // 'desc' for recent, 'asc' for older
     let nameSortDirection = 'asc'; // 'asc' for A-Z, 'desc' for Z-A
+    let currentCategory = 'all';
 
     function debounce(func, delay) {
         let timeout;
@@ -285,7 +287,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 );
             }
 
-            // 2. Sort the data
+            // 2. Filter by Category
+            if (currentCategory !== 'all') {
+                processedData = processedData.filter(item => 
+                    item.category && item.category.toLowerCase() === currentCategory
+                );
+            }
+
+            // 3. Sort the data
             if (currentSort === 'date') {
                 if (dateSortDirection === 'desc') {
                     processedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Newest first
@@ -300,7 +309,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
 
-            // 3. Render the processed data
+            // 4. Render the processed data
             renderItems(processedData);
         }
 
@@ -358,6 +367,18 @@ document.addEventListener("DOMContentLoaded", function() {
                 sortNameBtn.classList.add('active');
                 sortDateBtn.classList.remove('active');
                 updateDisplay();
+            });
+
+            // Category Filter Listeners
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update active state
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // Update filter
+                    currentCategory = btn.dataset.category;
+                    updateDisplay();
+                });
             });
         }
     }

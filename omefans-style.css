@@ -367,6 +367,30 @@ body {
     pointer-events: none; /* Allows clicking through the icon */
 }
 
+.category-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filter-btn {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: none; /* Matches your custom cursor style */
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover, .filter-btn.active {
+    background: #00d9ff;
+    color: #000;
+    border-color: #00d9ff;
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+}
+
 .sort-buttons {
     display: flex;
     align-items: center;
