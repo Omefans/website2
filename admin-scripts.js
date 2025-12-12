@@ -309,13 +309,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemEl = document.createElement('div');
             itemEl.className = 'admin-item-card';
             itemEl.dataset.id = item.id;
+            
+            // Visual polish: Different color for OnlyFans category
+            const categoryColor = (item.category && item.category.toLowerCase() === 'onlyfans') ? '#FF8800' : '#58a6ff';
+
             itemEl.innerHTML = `
                 <img src="${item.imageUrl}" alt="Preview" class="item-card-image" onerror="this.style.display='none'">
                 <div class="item-card-content">
                     <div class="item-card-header">
                         <span class="item-name">${item.name || 'Untitled Item'}</span>
                         <div class="item-meta">
-                            <span class="item-category" style="color: #58a6ff; text-transform: capitalize; font-weight: 600;">${item.category || 'General'}</span>
+                            <span class="item-category" style="color: ${categoryColor}; text-transform: capitalize; font-weight: 600;">${item.category || 'Omegle'}</span>
                             <span class="item-date">${formattedDate}</span>
                         </div>
                         <div class="item-meta" style="margin-top: 2px;">

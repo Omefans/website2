@@ -289,9 +289,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // 2. Filter by Category
             if (currentCategory !== 'all') {
-                processedData = processedData.filter(item => 
-                    item.category && item.category.toLowerCase() === currentCategory
-                );
+                processedData = processedData.filter(item => {
+                    const cat = (item.category || 'omegle').toLowerCase();
+                    return cat === currentCategory;
+                });
             }
 
             // 3. Sort the data
