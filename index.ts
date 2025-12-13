@@ -109,8 +109,8 @@ app.post('/api/upload', authMiddleware, async (c) => {
 	}
 
 	const { results } = await c.env.DB.prepare(
-		'INSERT INTO gallery_items (name, description, category, isFeatured, imageUrl, affiliateUrl, userId, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-	).bind(name, description, category, isFeatured ? 1 : 0, imageUrl, affiliateUrl, c.get('userId'), new Date().toISOString()).run();
+		'INSERT INTO gallery_items (name, description, category, isFeatured, imageUrl, affiliateUrl, userId) VALUES (?, ?, ?, ?, ?, ?, ?)'
+	).bind(name, description, category, isFeatured ? 1 : 0, imageUrl, affiliateUrl, c.get('userId')).run();
 
 	return c.json({ message: 'Item added successfully!', item: results }, 201);
 });
@@ -167,8 +167,8 @@ adminRoutes.post('/api/users', async (c) => {
 	const passwordHash = password; // Placeholder
 
 	try {
-		await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role, createdAt) VALUES (?, ?, ?, ?)')
-			.bind(username, passwordHash, role, new Date().toISOString()).run();
+		await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role) VALUES (?, ?, ?)')
+			.bind(username, passwordHash, role).run();
 		return c.json({ message: 'User created successfully' }, 201);
 	} catch (e: any) {
 		if (e.message.includes('UNIQUE constraint failed')) {
