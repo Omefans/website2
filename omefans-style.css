@@ -171,9 +171,7 @@ body {
     margin-top: auto;
     position: relative;
     z-index: 20;
-    animation: fadeIn 2s ease forwards;
-    animation-delay: 1s;
-    opacity: 0;
+    opacity: 1; /* Make footer visible by default */
 }
 
 .footer-links { display: flex; justify-content: center; gap: 30px; margin-bottom: 25px; }
