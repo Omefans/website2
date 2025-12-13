@@ -128,14 +128,37 @@
                     </div>
                 </div>
                 <div class="profile-actions">
-                    <button id="change-password-btn" disabled>Change Password (Coming Soon)</button>
+                    <button id="change-password-btn">Change Password</button>
                 </div>
             </div>
         </div>
         </main>
     </div>
 
+    <!-- Change Password Modal -->
+    <div id="password-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h2>Change Password</h2>
+            <form id="change-password-form">
+                <div>
+                    <label for="current-password">Current Password</label>
+                    <input type="password" id="current-password" required>
+                </div>
+                <div>
+                    <label for="new-password-modal">New Password</label>
+                    <input type="password" id="new-password-modal" required minlength="6">
+                </div>
+                <div>
+                    <label for="confirm-password">Confirm New Password</label>
+                    <input type="password" id="confirm-password" required minlength="6">
+                </div>
+                <button type="submit">Update Password</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Make sure this path is correct for your project structure -->
-    <script src="admin-scripts.js?v=1.0.10"></script>
+    <script src="admin-scripts.js?v=1.0.11"></script>
 </body>
 </html>

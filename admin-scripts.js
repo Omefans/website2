@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileRoleEl = document.getElementById('profile-role');
     const addUserForm = document.getElementById('add-user-form');
     const userList = document.getElementById('user-list');
+    const changePasswordBtn = document.getElementById('change-password-btn');
+    const passwordModal = document.getElementById('password-modal');
+    const closePasswordModalBtn = passwordModal.querySelector('.modal-close-btn');
+    const changePasswordForm = document.getElementById('change-password-form');
 
     const loginButton = loginForm.querySelector('button[type="submit"]');
 
@@ -192,6 +196,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (userId) handleDeleteUser(userId);
             }
         });
+    }
+
+    // Event listeners for password change modal
+    if (changePasswordBtn && passwordModal && closePasswordModalBtn && changePasswordForm) {
+        changePasswordBtn.addEventListener('click', () => {
+            passwordModal.classList.add('show');
+        });
+
+        const closeModal = () => {
+            passwordModal.classList.remove('show');
+            changePasswordForm.reset();
+        };
+
+        closePasswordModalBtn.addEventListener('click', closeModal);
+        passwordModal.addEventListener('click', (e) => {
+            if (e.target === passwordModal) closeModal();
+        });
+
+        changePasswordForm.addEventListener('submit', handleChangePassword);
     }
 
     function showLoggedInState() {
@@ -569,6 +592,44 @@ document.addEventListener('DOMContentLoaded', () => {
             loadUsers(); // Refresh the user list
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        const button = changePasswordForm.querySelector('button[type="submit"]');
+        const oldPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password-modal').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (newPassword !== confirmPassword) {
+            showToast('New passwords do not match.', 'error');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            showToast('New password must be at least 6 characters long.', 'error');
+            return;
+        }
+
+        setButtonLoadingState(button, true, 'Updating...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/profile/password`, {
+                method: 'PUT',
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to update password.');
+
+            showToast(result.message, 'success');
+            showToast('For security, you will be logged out.', 'success');
+            setTimeout(logout, 2000); // Force logout after password change
+
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
         }
     }
 

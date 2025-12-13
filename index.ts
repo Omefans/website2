@@ -15,6 +15,15 @@ type Variables = {
 
 const app = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
+// --- API Root Route ---
+app.get('/api', (c) => {
+	return c.json({
+		message: 'Welcome to the Omefans API!',
+		version: '1.0.0',
+		status: 'operational'
+	});
+});
+
 // --- Middleware ---
 
 // 1. CORS Middleware
@@ -142,6 +151,41 @@ app.delete('/api/gallery/:id', authMiddleware, async (c) => {
 		return c.json({ error: 'Item not found' }, 404);
 	}
 	return c.json({ message: 'Item deleted successfully!' });
+});
+
+// Change user password
+app.put('/api/profile/password', authMiddleware, async (c) => {
+	const { oldPassword, newPassword } = await c.req.json();
+	const userId = c.get('userId');
+
+	if (!oldPassword || !newPassword) {
+		return c.json({ error: 'Old and new passwords are required' }, 400);
+	}
+
+	if (newPassword.length < 6) {
+		return c.json({ error: 'New password must be at least 6 characters long' }, 400);
+	}
+
+	// Get the current user's stored password hash
+	const user = await c.env.DB.prepare('SELECT passwordHash FROM users WHERE id = ?').bind(userId).first();
+
+	if (!user) {
+		return c.json({ error: 'User not found' }, 404);
+	}
+
+	// IMPORTANT: This is an insecure password check, matching the login logic.
+	// In a real app, use a library like bcrypt to compare hashes.
+	if (user.passwordHash !== oldPassword) {
+		return c.json({ error: 'Incorrect current password' }, 403);
+	}
+
+	// In a real app, you MUST hash the new password.
+	const newPasswordHash = newPassword; // Placeholder
+
+	await c.env.DB.prepare('UPDATE users SET passwordHash = ? WHERE id = ?')
+		.bind(newPasswordHash, userId).run();
+
+	return c.json({ message: 'Password updated successfully!' });
 });
 
 
