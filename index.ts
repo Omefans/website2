@@ -68,7 +68,7 @@ app.post('/api/auth/login', async (c) => {
 		return c.json({ error: 'Username and password are required' }, 400);
 	}
 
-	const user = await c.env.DB.prepare('SELECT id, passwordHash, role FROM users WHERE username = ?').bind(username).first();
+	const user = await c.env.DB.prepare('SELECT id, username, passwordHash, role FROM users WHERE username = ?').bind(username).first();
 
 	// IMPORTANT: This is an insecure password check. In a real app, you must use a library
 	// like bcrypt to compare the hashed password.
@@ -76,7 +76,7 @@ app.post('/api/auth/login', async (c) => {
 		return c.json({ error: 'Invalid credentials' }, 401);
 	}
 
-	const payload = { sub: user.id, role: user.role, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
+	const payload = { sub: user.id, role: user.role, username: user.username, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
 	const header = { alg: 'HS256', typ: 'JWT' };
 	const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 	const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');

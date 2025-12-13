@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const userManagementContainer = document.getElementById('user-management-container');
     const navContentBtn = document.getElementById('nav-content-btn');
     const navUsersBtn = document.getElementById('nav-users-btn');
+    const navProfileBtn = document.getElementById('nav-profile-btn');
+    const profileSection = document.getElementById('profile-section');
+    const profileUsernameEl = document.getElementById('profile-username');
+    const profileRoleEl = document.getElementById('profile-role');
     const addUserForm = document.getElementById('add-user-form');
     const userList = document.getElementById('user-list');
 
@@ -36,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let authToken = localStorage.getItem('authToken');
     let userRole = '';
     let currentUserId = null;
+    let currentUsername = '';
 
     /**
      * Sets the loading state for a button to prevent double-clicks and provide user feedback.
@@ -122,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add listeners for the new page navigation
     navContentBtn.addEventListener('click', () => showPage('content'));
     navUsersBtn.addEventListener('click', () => showPage('users'));
+    navProfileBtn.addEventListener('click', () => showPage('profile'));
 
     // Check if a token exists on page load
     if (authToken) {
@@ -132,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             userRole = payload.role;
             currentUserId = payload.sub;
+            currentUsername = payload.username;
             showLoggedInState();
         } catch (e) {
             console.error("Invalid or expired token found:", e.message);
@@ -162,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const payload = decodeJwt(token);
             userRole = payload.role;
             currentUserId = payload.sub;
+            currentUsername = payload.username;
 
             showLoggedInState();
 
@@ -574,6 +582,8 @@ document.addEventListener('DOMContentLoaded', () => {
         userManagementContainer.classList.remove('active');
         navContentBtn.classList.remove('active');
         navUsersBtn.classList.remove('active');
+        profileSection.classList.remove('active');
+        navProfileBtn.classList.remove('active');
 
         // Show the selected page and activate its nav button
         if (pageName === 'content') {
@@ -582,6 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'users' && userRole === 'admin') {
             userManagementContainer.classList.add('active');
             navUsersBtn.classList.add('active');
+        } else if (pageName === 'profile') {
+            profileSection.classList.add('active');
+            navProfileBtn.classList.add('active');
+            if (profileUsernameEl) profileUsernameEl.textContent = currentUsername;
+            if (profileRoleEl) profileRoleEl.textContent = userRole;
         }
     }
 

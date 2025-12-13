@@ -402,6 +402,42 @@ body.is-admin #nav-users-btn { display: inline-block; }
 .user-actions button:hover { background: #f85149; }
 .user-actions button:disabled { background: #21262d; color: #8b949e; border-color: #30363d; }
 
+/* --- Profile Section --- */
+.profile-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 1rem auto;
+}
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.profile-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #30363d;
+}
+.profile-label {
+    font-weight: 500;
+    color: #8b949e;
+}
+.profile-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #f0f6fc;
+    background-color: #0d1117;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+}
+.profile-value#profile-role { text-transform: capitalize; }
+
 /* --- Responsive Design --- */
 @media (max-width: 900px) {
     .user-management-layout {

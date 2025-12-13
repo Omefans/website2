@@ -36,6 +36,7 @@
             <nav id="admin-nav">
                 <button id="nav-content-btn" class="nav-btn">Content</button>
                 <button id="nav-users-btn" class="nav-btn">Users</button>
+                <button id="nav-profile-btn" class="nav-btn">Profile</button>
             </nav>
 
             <div id="content-management-section" class="admin-page">
@@ -108,6 +109,26 @@
                 <div class="user-management-list">
                     <h3>Existing Users</h3>
                     <div id="user-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profile-section" class="admin-page">
+            <h2>Admin Profile</h2>
+            <div class="profile-card">
+                <div class="profile-info">
+                    <div class="profile-info-item">
+                        <span class="profile-label">Username</span>
+                        <span id="profile-username" class="profile-value"></span>
+                    </div>
+                    <div class="profile-info-item">
+                        <span class="profile-label">Role</span>
+                        <span id="profile-role" class="profile-value"></span>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button id="change-password-btn" disabled>Change Password (Coming Soon)</button>
                 </div>
             </div>
         </div>
