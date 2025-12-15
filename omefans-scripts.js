@@ -392,10 +392,8 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     }
-});
 
-/* --- Snow Effect Toggle Logic --- */
-document.addEventListener('DOMContentLoaded', () => {
+    /* --- Snow Effect Toggle Logic --- */
     const snowToggle = document.getElementById('snowToggle');
     const body = document.body;
 
