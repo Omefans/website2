@@ -27,6 +27,19 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+/* --- CUSTOM SELECTION HIGHLIGHT --- */
+/* This overrides the default browser selection color (often blue or purple) */
+::selection {
+    background-color: var(--primary); /* Neon Cyan background */
+    color: var(--dark); /* Dark text for contrast */
+    text-shadow: none; /* Remove any text shadow on selection */
+}
+::-moz-selection { /* Firefox */
+    background-color: var(--primary);
+    color: var(--dark);
+    text-shadow: none;
+}
+
 /* --- 2. LAYOUT STRUCTURE --- */
 .main-wrapper {
     min-height: 100vh;
@@ -82,7 +95,6 @@ body {
     font-size: clamp(2rem, 5vw, 3rem);
     text-align: center;
     margin-bottom: 10px;
-    text-shadow: 0 0 20px var(--primary);
 }
 
 .lead {
@@ -115,14 +127,9 @@ body {
     text-transform: uppercase;
     margin-bottom: 40px;
     opacity: 0;
-
-    /* Surprise 2.0: Animated Gradient Text */
-    background: linear-gradient(90deg, var(--primary), var(--light), var(--secondary), var(--primary));
-    background-size: 200% auto;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: fadeIn 1.5s ease forwards 0.5s, animated-text-gradient 6s linear infinite 2s;
+    /* Reverted from gradient to solid color for clarity */
+    color: var(--light);
+    animation: fadeIn 1.5s ease forwards 0.5s;
 }
 
 /* --- 3. BUTTONS --- */
@@ -583,72 +590,75 @@ body {
     text-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Add depth */
 }
 
+.item-name-link {
+    text-decoration: none; /* Removes the underline from the title link */
+    color: inherit; /* Ensures the title color is not the default link blue/purple */
+    /* NEW: Add a fixed line below the title, as requested */
+    display: block; /* Ensure the link behaves like a block for layout */
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .item-name-link:hover .item-name {
     color: #00d9ff;
 }
 
 .item-text-content {
-    flex-grow: 1; /* This new container will expand, pushing the footer down. */
+    /* The footer is now aligned using a more robust method. */
 }
 
 .item-desc {
-    font-size: 0.85rem;
-    color: #ccc;
+    font-size: 0.9rem;
+    color: #aab0b7; /* Softer color for description */
     margin: 0 0 12px 0;
     line-height: 1.4;
     word-break: break-all;
-    max-height: 1.4em; /* Approx. 1 line */
+    /* Clamp description to 2 lines for a clean, uniform look */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    position: relative;
-    transition: max-height 0.4s ease-in-out;
-}
-
-.item-desc.expanded {
-    max-height: 500px; /* A large value to allow full expansion */
-}
-
-.item-desc.is-expandable {
-    cursor: pointer;
-}
-
-.item-desc:not(.expanded)::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1.5em;
-    background: linear-gradient(to top, #1a1a1a 10%, transparent);
 }
 
 .item-footer {
-    /* margin-top: auto; is no longer needed due to the new flex-grow wrapper. */
+    /* Enhanced footer with separator */
+    margin-top: auto; /* The definitive fix: Pushes the footer to the bottom of the card. */
+    padding-top: 1rem; /* Provides space above the button and date. */
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .item-date {
-    font-size: 0.8rem;
-    color: #ddd;
+    /* Styled as a metadata tag */
+    font-size: 0.75rem;
+    color: #aab0b7;
     font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-view {
-    background: #00d9ff;
-    color: #111;
-    padding: 8px 16px;
-    border-radius: 5px;
+    /* Restored and enhanced "View Content" button */
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 8px 20px;
+    border-radius: 50px; /* Pill shape */
     text-decoration: none;
     font-weight: bold;
     font-size: 0.9rem;
-    transition: background-color 0.3s;
-    border: none;
+    transition: all 0.3s ease;
     cursor: none;
 }
 
 .btn-view:hover {
-    background: #fff;
+    background: var(--primary);
+    color: var(--dark);
+    box-shadow: 0 0 15px var(--primary);
 }
 
 .gallery-message { color: white; text-align: center; width: 100%; }
