@@ -55,6 +55,7 @@ body {
     width: 100%;
     animation: slideDown 1s ease-out forwards;
     position: relative; /* Needed for positioning the toggle button */
+    overflow-x: hidden; /* The definitive fix for the Santa animation causing a horizontal scrollbar */
 }
 
 .logo {
@@ -64,6 +65,11 @@ body {
     text-decoration: none;
     position: relative; /* Needed for the Santa Hat positioning */
     z-index: 30; /* Ensure logo stays above the flying Santa */
+}
+
+/* Hide logo on homepage but keep its space for layout */
+.home-page .logo {
+    visibility: hidden;
 }
 
 .logo img {
