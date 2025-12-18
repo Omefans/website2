@@ -572,10 +572,11 @@ body {
 }
 
 .gallery-item-details {
-    padding: 20px; /* Increased padding for more breathing room */
+    padding: 20px;
+    /* Using Flexbox for a robust layout that fixes the footer alignment bug. */
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex-grow: 1; /* Ensures this container fills the card's vertical space */
     box-sizing: border-box;
     color: #fff;
     /* Add a subtle gradient to ensure text is readable over complex backgrounds */
@@ -593,11 +594,10 @@ body {
 .item-name-link {
     text-decoration: none; /* Removes the underline from the title link */
     color: inherit; /* Ensures the title color is not the default link blue/purple */
-    /* NEW: Add a fixed line below the title, as requested */
     display: block; /* Ensure the link behaves like a block for layout */
     padding-bottom: 10px;
     margin-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Separator line */
 }
 
 .item-name-link:hover .item-name {
@@ -605,7 +605,9 @@ body {
 }
 
 .item-text-content {
-    /* The footer is now aligned using a more robust method. */
+    /* This makes the content area grow, pushing the footer to the bottom. */
+    /* This is the definitive fix for the card alignment bug. */
+    flex-grow: 1;
 }
 
 .item-desc {
@@ -614,17 +616,38 @@ body {
     margin: 0 0 12px 0;
     line-height: 1.4;
     word-break: break-all;
-    /* Clamp description to 2 lines for a clean, uniform look */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    /* NEW: Expandable description styles */
+    max-height: 4.2em; /* Approx. 3 lines (1.4 * 3) */
     overflow: hidden;
+    position: relative;
+    transition: max-height 0.4s ease-in-out;
+}
+
+.item-desc.expanded {
+    max-height: 500px; /* A large value to allow full expansion */
+}
+
+.item-desc.is-expandable {
+    cursor: pointer;
+}
+
+/* Fade-out effect with "view more" text for truncated descriptions */
+.item-desc.is-expandable:not(.expanded)::after {
+    content: '... view more';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 0.85rem;
+    padding-left: 20px;
+    background: linear-gradient(to right, transparent, rgba(10, 10, 15, 1) 40%);
 }
 
 .item-footer {
-    /* Enhanced footer with separator */
-    margin-top: auto; /* The definitive fix: Pushes the footer to the bottom of the card. */
-    padding-top: 1rem; /* Provides space above the button and date. */
+    /* Flex-grow on item-text-content handles the alignment. */
+    margin-top: 1rem;
+    padding-top: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;

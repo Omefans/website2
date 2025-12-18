@@ -217,14 +217,9 @@ document.addEventListener("DOMContentLoaded", function() {
                                 <h3 class="item-name">${data.name}</h3>
                             </a>
                             ${
-                                (() => {
-                                    if (!data.description) return '';
-                                    if (data.description.length > 40) {
-                                        const truncated = data.description.substring(0, 40) + '...';
-                                        return `<p class="item-desc is-expandable" data-full="${data.description.replace(/"/g, '&quot;')}" data-truncated="${truncated}">${truncated}</p>`;
-                                    }
-                                    return `<p class="item-desc">${data.description}</p>`;
-                                })()
+                                data.description 
+                                ? `<p class="item-desc">${data.description}</p>` 
+                                : ''
                             }
                         </div>
                         <div class="item-footer">
@@ -249,21 +244,22 @@ document.addEventListener("DOMContentLoaded", function() {
             // Use a short timeout to ensure the browser has rendered the elements before we check their height.
             // This reliably fixes the race condition with font loading and layout reflow.
             setTimeout(() => {
-                galleryContainer.querySelectorAll('.item-desc.is-expandable').forEach(desc => {
-                    const toggleExpand = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const p = e.currentTarget;
-                        p.classList.toggle('expanded');
-                        if (p.classList.contains('expanded')) {
-                            p.textContent = p.dataset.full;
-                        } else {
-                            p.textContent = p.dataset.truncated;
+                galleryContainer.querySelectorAll('.item-desc').forEach(desc => {
+                    // Check if the description is overflowing its container
+                    if (desc.scrollHeight > desc.clientHeight) {
+                        desc.classList.add('is-expandable');
+                        
+                        const toggleExpand = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.currentTarget.classList.toggle('expanded');
+                        };
+
+                        // Prevent adding multiple listeners
+                        if (!desc.dataset.expandListener) {
+                            desc.addEventListener('click', toggleExpand);
+                            desc.dataset.expandListener = 'true';
                         }
-                    };
-                    if (!desc.dataset.expandListener) {
-                        desc.addEventListener('click', toggleExpand);
-                        desc.dataset.expandListener = 'true';
                     }
                 });
 
@@ -392,8 +388,10 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     }
+});
 
-    /* --- Snow Effect Toggle Logic --- */
+/* --- Snow Effect Toggle Logic --- */
+document.addEventListener('DOMContentLoaded', () => {
     const snowToggle = document.getElementById('snowToggle');
     const body = document.body;
 
