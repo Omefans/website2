@@ -17,7 +17,6 @@ body {
     font-family: var(--font-body);
     background: var(--dark);
     color: var(--light);
-    overflow-x: hidden;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -40,6 +39,22 @@ body {
     text-shadow: none;
 }
 
+/* --- CUSTOM SCROLLBAR --- */
+::-webkit-scrollbar {
+    width: 12px;
+}
+::-webkit-scrollbar-track {
+    background: var(--dark);
+}
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    border-radius: 10px;
+    border: 3px solid var(--dark);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--secondary), var(--primary));
+}
+
 /* --- 2. LAYOUT STRUCTURE --- */
 .main-wrapper {
     min-height: 100vh;
@@ -47,6 +62,7 @@ body {
     flex-direction: column;
     position: relative;
     z-index: 10;
+    width: 100%; /* Ensure wrapper takes full width to prevent layout shifts */
     /* overflow-x is now handled by the specific overflowing container */
 }
 
@@ -66,6 +82,7 @@ body {
     text-decoration: none;
     position: relative; /* Needed for the Santa Hat positioning */
     z-index: 30; /* Ensure logo stays above the flying Santa */
+    max-width: 100%; /* Safety: Ensures logo container never overflows on mobile */
 }
 
 /* Hide logo on homepage but keep its space for layout */
@@ -76,6 +93,7 @@ body {
 .logo img {
     height: 60px; /* Adjusted for text-logo */
     width: auto;
+    max-width: 100%; /* Safety: Prevents logo from forcing width on small screens */
     filter: drop-shadow(0 0 10px rgba(255, 136, 0, 0.3)); /* Orange glow */
 }
 
@@ -97,11 +115,27 @@ body {
     margin-top: -40px;
 }
 
+/* Ambient Glow behind Hero Content */
+.hero-content::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    max-width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(0, 217, 255, 0.08) 0%, transparent 70%);
+    z-index: -1;
+    pointer-events: none;
+}
+
 .section-title {
     font-family: var(--font-display);
     font-size: clamp(2rem, 5vw, 3rem);
     text-align: center;
     margin-bottom: 10px;
+    text-shadow: 0 0 30px rgba(0, 217, 255, 0.3); /* Neon Glow */
 }
 
 .lead {
@@ -811,7 +845,6 @@ body {
 html, body {
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden; /* Hides anything sticking out the side */
     margin: 0;
     padding: 0;
 }
@@ -824,7 +857,7 @@ img, video, iframe, canvas {
 }
 
 /* 4. Container Safety: Ensures your main wrappers don't overflow */
-.container, .wrapper, main, footer {
+.container, .wrapper, footer {
     max-width: 100%;
     overflow-x: hidden;
 }
