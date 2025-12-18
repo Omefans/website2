@@ -47,6 +47,7 @@ body {
     flex-direction: column;
     position: relative;
     z-index: 10;
+    /* overflow-x is now handled by the specific overflowing container */
 }
 
 /* --- HEADER AREA --- */
@@ -55,7 +56,7 @@ body {
     width: 100%;
     animation: slideDown 1s ease-out forwards;
     position: relative; /* Needed for positioning the toggle button */
-    overflow-x: hidden; /* The definitive fix for the Santa animation causing a horizontal scrollbar */
+    overflow: hidden; /* The definitive fix: This clips the flying Santa animation and removes the horizontal scrollbar. */
 }
 
 .logo {
@@ -133,9 +134,13 @@ body {
     text-transform: uppercase;
     margin-bottom: 40px;
     opacity: 0;
-    /* Reverted from gradient to solid color for clarity */
-    color: var(--light);
-    animation: fadeIn 1.5s ease forwards 0.5s;
+    /* Dynamic Gradient Text Effect */
+    background: linear-gradient(90deg, var(--primary), var(--light), var(--secondary), var(--primary));
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: fadeIn 1.5s ease forwards 0.5s, animated-text-gradient 6s linear infinite 2s;
 }
 
 /* --- 3. BUTTONS --- */
@@ -819,7 +824,7 @@ img, video, iframe, canvas {
 }
 
 /* 4. Container Safety: Ensures your main wrappers don't overflow */
-.container, .wrapper, main, header, footer {
+.container, .wrapper, main, footer {
     max-width: 100%;
     overflow-x: hidden;
 }
