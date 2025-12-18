@@ -113,11 +113,16 @@ body {
     font-weight: 700;
     text-align: center;
     text-transform: uppercase;
-    text-shadow: 0 0 15px var(--primary);
     margin-bottom: 40px;
-    animation: fadeIn 1.5s ease forwards;
-    animation-delay: 0.5s;
     opacity: 0;
+
+    /* Surprise 2.0: Animated Gradient Text */
+    background: linear-gradient(90deg, var(--primary), var(--light), var(--secondary), var(--primary));
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: fadeIn 1.5s ease forwards 0.5s, animated-text-gradient 6s linear infinite 2s;
 }
 
 /* --- 3. BUTTONS --- */
@@ -146,6 +151,26 @@ body {
     cursor: none;
     position: relative;
     overflow: hidden;
+    z-index: 1; /* Create stacking context for glare */
+}
+
+/* Keep button content (text, icons) above the glare effect */
+.cta-button > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* Surprise 2.0: Button Glare Effect */
+.cta-button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 120%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: skewX(-25deg);
+    transition: left 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .cta-button:first-child {
@@ -160,6 +185,10 @@ body {
 .cta-button:hover { 
     transform: translateY(-5px); 
     box-shadow: 0 0 20px var(--primary); 
+}
+
+.cta-button:hover::after {
+    left: 150%;
 }
 
 /* --- 4. FOOTER --- */
@@ -214,6 +243,9 @@ body {
 @keyframes slideUp { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes ripple { to { width: 300px; height: 300px; opacity: 0; } }
+@keyframes animated-text-gradient {
+    to { background-position: -200% center; }
+}
 @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(0, 217, 255, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(0, 217, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 217, 255, 0); } }
 
 /* --- CHRISTMAS SNOWFLAKES --- */
@@ -447,37 +479,70 @@ body {
 
 .gallery-item {
     position: relative;
-    border-radius: 8px;
     overflow: hidden;
-    background-color: #1a1a1a;
+    /* Enhanced Glassmorphism Effect */
+    border-radius: 12px;
+    background: rgba(26, 26, 26, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    display: flex; /* Use flexbox for column layout */
+    display: flex;
     flex-direction: column;
     cursor: none;
+    z-index: 1;
+}
+
+/* Animated Gradient Border on Hover */
+.gallery-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px; /* Border thickness */
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
 }
 
 .gallery-item.featured {
     box-shadow: 0 0 15px 3px var(--secondary), 0 0 5px 1px var(--secondary);
-    border: 1px solid var(--secondary);
 }
 
-.gallery-item.featured::before {
-    content: '★ FEATURED';
+/* New circular "Featured" badge on the image */
+.gallery-item.featured .gallery-item-image-link::after {
+    content: '★';
     position: absolute;
-    top: 10px;
-    right: -30px;
+    top: 12px;
+    right: 12px;
     background: var(--secondary);
     color: #000;
-    padding: 4px 30px;
-    font-size: 0.8rem;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
     font-weight: bold;
-    transform: rotate(45deg);
-    z-index: 1;
+    box-shadow: 0 0 10px var(--secondary);
+    border: 1px solid rgba(0,0,0,0.2);
+    z-index: 2;
 }
 
 .gallery-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 217, 255, 0.1);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-item:hover::before {
+    opacity: 1;
 }
 
 .gallery-item-image-link {
@@ -500,24 +565,22 @@ body {
 }
 
 .gallery-item-details {
-    padding: 10px 15px 15px; /* Tighter top padding */
+    padding: 20px; /* Increased padding for more breathing room */
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Make this section fill the card height */
+    flex-grow: 1;
     box-sizing: border-box;
     color: #fff;
+    /* Add a subtle gradient to ensure text is readable over complex backgrounds */
+    background: linear-gradient(to top, rgba(10, 10, 15, 0.8) 0%, rgba(10, 10, 15, 0.5) 50%, transparent 100%);
 }
 
 .item-name {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.1rem;
-    margin: 0 0 8px 0;
+    font-size: 1.25rem; /* Larger font size */
+    margin: 0 0 10px 0;
     color: #fff;
-}
-
-.item-name-link {
-    text-decoration: none;
-    color: inherit;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Add depth */
 }
 
 .item-name-link:hover .item-name {
