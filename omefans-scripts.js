@@ -117,6 +117,25 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
+    /* --- 5. BACK TO TOP BUTTON --- */
+    const backToTopBtn = document.createElement('button');
+    backToTopBtn.id = 'backToTopBtn';
+    backToTopBtn.innerHTML = '&#8679;'; // Up Arrow
+    backToTopBtn.ariaLabel = "Back to Top";
+    document.body.appendChild(backToTopBtn);
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
     /* --- 4. PAGINATION --- */
     const galleryContainer = document.getElementById('gallery-container');
     const paginationControls = document.getElementById('pagination-controls');
