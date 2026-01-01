@@ -102,6 +102,16 @@ body {
     display: none; 
 }
 
+/* --- HAPPY NEW YEAR TEXT ANIMATION --- */
+.logo-container > span {
+    display: inline-block;
+    animation: newYearGlow 2s ease-in-out infinite alternate;
+}
+@keyframes newYearGlow {
+    from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); transform: scale(1); }
+    to { text-shadow: 0 0 25px rgba(255, 215, 0, 0.9), 0 0 15px rgba(255, 140, 0, 0.6); transform: scale(1.05); }
+}
+
 /* --- MAIN HERO CONTENT --- */
 .hero-content {
     flex: 1; 

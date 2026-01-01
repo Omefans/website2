@@ -136,6 +136,118 @@ document.addEventListener("DOMContentLoaded", function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
+    /* --- 6. NEW YEAR FIREWORKS --- */
+    const fwCanvas = document.createElement('canvas');
+    fwCanvas.style.position = 'fixed';
+    fwCanvas.style.top = '0';
+    fwCanvas.style.left = '0';
+    fwCanvas.style.width = '100%';
+    fwCanvas.style.height = '100%';
+    fwCanvas.style.pointerEvents = 'none';
+    fwCanvas.style.zIndex = '5'; // Behind content (10) but above background
+    document.body.appendChild(fwCanvas);
+
+    const ctx = fwCanvas.getContext('2d');
+    let fwWidth = fwCanvas.width = window.innerWidth;
+    let fwHeight = fwCanvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        fwWidth = fwCanvas.width = window.innerWidth;
+        fwHeight = fwCanvas.height = window.innerHeight;
+    });
+
+    class Firework {
+        constructor() {
+            this.x = Math.random() * fwWidth;
+            this.y = fwHeight;
+            this.sx = Math.random() * 4 - 2; // Horizontal speed
+            this.sy = -(Math.random() * 5 + 8); // Vertical speed (upwards)
+            this.size = Math.random() * 2 + 1;
+            this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            this.age = 0;
+            this.maxAge = Math.random() * 20 + 50; // Explode height
+            this.exploded = false;
+        }
+        update() {
+            if (this.exploded) return;
+            this.x += this.sx;
+            this.y += this.sy;
+            this.sy += 0.15; // Gravity
+            this.age++;
+            if (this.sy >= 0 || this.age > this.maxAge) {
+                this.exploded = true;
+                createParticles(this.x, this.y, this.color);
+            }
+        }
+        draw() {
+            if (this.exploded) return;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    const particles = [];
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x;
+            this.y = y;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 3 + 1;
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            this.color = color;
+            this.alpha = 1;
+            this.decay = Math.random() * 0.02 + 0.01;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += 0.1; // Gravity
+            this.alpha -= this.decay;
+        }
+        draw() {
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    function createParticles(x, y, color) {
+        for (let i = 0; i < 40; i++) {
+            particles.push(new Particle(x, y, color));
+        }
+    }
+
+    const fireworks = [];
+    function animateFireworks() {
+        ctx.clearRect(0, 0, fwWidth, fwHeight);
+        
+        // Randomly launch fireworks (approx every 60 frames / 1 sec if 0.015)
+        if (Math.random() < 0.015) { 
+            fireworks.push(new Firework());
+        }
+
+        for (let i = fireworks.length - 1; i >= 0; i--) {
+            fireworks[i].update();
+            fireworks[i].draw();
+            if (fireworks[i].exploded) fireworks.splice(i, 1);
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            particles[i].update();
+            particles[i].draw();
+            if (particles[i].alpha <= 0) particles.splice(i, 1);
+        }
+        
+        requestAnimationFrame(animateFireworks);
+    }
+    animateFireworks();
+
     /* --- 4. PAGINATION --- */
     const galleryContainer = document.getElementById('gallery-container');
     const paginationControls = document.getElementById('pagination-controls');
