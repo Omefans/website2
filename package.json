@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "hono": "^4.4.6",
-    "itty-router": "^5.0.22"
   },
   "devDependencies": {
     "typescript": "^5.4.5",

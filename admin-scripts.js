@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const managementContainer = document.getElementById('management-container');
     const itemListContainer = document.getElementById('item-list');
     const editIdInput = document.getElementById('edit-id');
-    const formSubmitButton = uploadForm.querySelector('button[type="submit"]');
+    const formSubmitButton = uploadForm ? uploadForm.querySelector('button[type="submit"]') : null;
     const cancelEditButton = document.getElementById('cancel-edit-btn');
     const logoutButton = document.getElementById('logout-btn');
 
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closePasswordModalBtn = passwordModal.querySelector('.modal-close-btn');
     const changePasswordForm = document.getElementById('change-password-form');
 
-    const loginButton = loginForm.querySelector('button[type="submit"]');
+    const loginButton = loginForm ? loginForm.querySelector('button[type="submit"]') : null;
 
     let galleryItemsCache = [];
     let currentSearchTerm = '';
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    loginForm.addEventListener('submit', async (e) => {
+    if (loginForm) loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = usernameInput.value;
         const password = passwordInput.value;
@@ -453,9 +453,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelEditButton.style.display = 'none';
     }
 
-    cancelEditButton.addEventListener('click', cancelEdit);
+    if (cancelEditButton) cancelEditButton.addEventListener('click', cancelEdit);
 
-    uploadForm.addEventListener('submit', async (e) => {
+    if (uploadForm) uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const editingId = editIdInput.value;
         const isEditing = !!editingId;
@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.reload();
     }
 
-    logoutButton.addEventListener('click', logout);
+    if (logoutButton) logoutButton.addEventListener('click', logout);
 
     function decodeJwt(token) {
         try {
