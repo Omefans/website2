@@ -198,6 +198,13 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }, 200));
 
+    // OPTIMIZATION: Unified function for toggling descriptions
+    function toggleDescription(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.currentTarget.classList.toggle('expanded');
+    }
+
     if (galleryContainer && paginationControls) {
         const limit = 9;
         let currentFilteredItems = []; // Holds the data objects for the current view
@@ -206,18 +213,28 @@ document.addEventListener("DOMContentLoaded", function() {
             paginationControls.innerHTML = '';
             if (totalPages > 1) {
                 paginationControls.style.display = '';
+                const fragment = document.createDocumentFragment();
                 for (let i = 1; i <= totalPages; i++) {
                     const btn = document.createElement('button');
                     btn.innerText = i;
                     btn.className = 'pagination-btn';
+                    btn.dataset.page = i; // Store page number in data attribute
                     if (i === 1) btn.classList.add('active');
-                    btn.addEventListener('click', () => { renderPage(i); });
-                    paginationControls.appendChild(btn);
+                    fragment.appendChild(btn);
                 }
+                paginationControls.appendChild(fragment);
             } else {
                 paginationControls.style.display = 'none';
             }
         }
+
+        // OPTIMIZATION: Event Delegation for Pagination (One listener for all buttons)
+        paginationControls.addEventListener('click', (e) => {
+            if (e.target.classList.contains('pagination-btn')) {
+                const page = parseInt(e.target.dataset.page);
+                if (!isNaN(page)) renderPage(page);
+            }
+        });
 
         function renderPage(pageNumber) {
             galleryContainer.innerHTML = ''; // Clear previous content
@@ -281,17 +298,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     if (desc.scrollHeight > desc.clientHeight) {
                         desc.classList.add('is-expandable');
                         
-                        const toggleExpand = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.currentTarget.classList.toggle('expanded');
-                        };
-
-                        // Prevent adding multiple listeners
-                        if (!desc.dataset.expandListener) {
-                            desc.addEventListener('click', toggleExpand);
-                            desc.dataset.expandListener = 'true';
-                        }
+                        // Remove existing listener to be safe, then add the unified one
+                        desc.removeEventListener('click', toggleDescription);
+                        desc.addEventListener('click', toggleDescription);
                     }
                 });
 
