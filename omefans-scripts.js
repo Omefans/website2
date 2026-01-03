@@ -302,6 +302,7 @@ document.addEventListener("DOMContentLoaded", function() {
         function createPaginationButtons(totalPages) {
             paginationControls.innerHTML = '';
             if (totalPages > 1) {
+                paginationControls.style.display = '';
                 for (let i = 1; i <= totalPages; i++) {
                     const btn = document.createElement('button');
                     btn.innerText = i;
