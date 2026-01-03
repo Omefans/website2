@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
     /* --- 1. STAR BACKGROUND --- */
     const starsContainer = document.getElementById('stars');
     if (starsContainer) {
+        const fragment = document.createDocumentFragment();
         for (let i = 0; i < 40; i++) { // OPTIMIZATION: Reduced stars from 100 to 40
             const star = document.createElement('div');
             star.className = 'star';
@@ -51,8 +52,9 @@ document.addEventListener("DOMContentLoaded", function() {
             star.style.top = Math.random() * 100 + '%';
             star.style.animationDelay = Math.random() * 3 + 's';
             star.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            starsContainer.appendChild(star);
+            fragment.appendChild(star);
         }
+        starsContainer.appendChild(fragment);
     }
 
     /* --- 2. MOUSE FOLLOWER --- */
@@ -124,11 +126,15 @@ document.addEventListener("DOMContentLoaded", function() {
     backToTopBtn.ariaLabel = "Back to Top";
     document.body.appendChild(backToTopBtn);
 
+    let isScrolling = false;
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) {
-            backToTopBtn.classList.add('show');
-        } else {
-            backToTopBtn.classList.remove('show');
+        if (!isScrolling) {
+            window.requestAnimationFrame(() => {
+                if (window.scrollY > 300) backToTopBtn.classList.add('show');
+                else backToTopBtn.classList.remove('show');
+                isScrolling = false;
+            });
+            isScrolling = true;
         }
     });
 
@@ -160,32 +166,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (galleryContainer && paginationControls) {
         const limit = 9;
-        let allItems = []; // To hold all items fetched from the server
-
-        function showPage(pageNumber) {
-            // Hide all items first
-            allItems.forEach(item => item.style.display = 'none');
-
-            // Calculate start and end index
-            const start = (pageNumber - 1) * limit;
-            const end = pageNumber * limit;
-            const pageItems = allItems.slice(start, end);
-
-            // Show items for the current page
-            pageItems.forEach(item => {
-                item.style.display = 'block';
-                item.style.animation = 'fadeIn 0.5s ease forwards';
-            });
-
-            // Update active button state
-            const btns = paginationControls.querySelectorAll('.pagination-btn');
-            btns.forEach(btn => {
-                btn.classList.remove('active');
-                if (parseInt(btn.innerText) === pageNumber) {
-                    btn.classList.add('active');
-                }
-            });
-        }
+        let currentFilteredItems = []; // Holds the data objects for the current view
 
         function createPaginationButtons(totalPages) {
             paginationControls.innerHTML = '';
@@ -196,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     btn.innerText = i;
                     btn.className = 'pagination-btn';
                     if (i === 1) btn.classList.add('active');
-                    btn.addEventListener('click', () => { showPage(i); });
+                    btn.addEventListener('click', () => { renderPage(i); });
                     paginationControls.appendChild(btn);
                 }
             } else {
@@ -204,16 +185,21 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        function renderItems(itemsToRender) {
+        function renderPage(pageNumber) {
             galleryContainer.innerHTML = ''; // Clear previous content
 
-            if (itemsToRender.length === 0) {
-                galleryContainer.innerHTML = '<p class="gallery-message">No items match your search.</p>';
-                paginationControls.style.display = 'none';
+            const start = (pageNumber - 1) * limit;
+            const end = pageNumber * limit;
+            const pageItems = currentFilteredItems.slice(start, end);
+
+            if (pageItems.length === 0 && currentFilteredItems.length === 0) {
+                 galleryContainer.innerHTML = '<p class="gallery-message">No items match your search.</p>';
                 return;
             }
 
-            itemsToRender.forEach(data => {
+            const fragment = document.createDocumentFragment();
+
+            pageItems.forEach(data => {
                 const itemArticle = document.createElement('article');
                 itemArticle.className = 'gallery-item';
                 if (data.isFeatured) {
@@ -258,12 +244,13 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
                 }
 
-                galleryContainer.appendChild(itemArticle);
+                fragment.appendChild(itemArticle);
             });
 
-            // Use a short timeout to ensure the browser has rendered the elements before we check their height.
-            // This reliably fixes the race condition with font loading and layout reflow.
-            setTimeout(() => {
+            galleryContainer.appendChild(fragment);
+
+            // Check for expandable descriptions after render
+            requestAnimationFrame(() => {
                 galleryContainer.querySelectorAll('.item-desc').forEach(desc => {
                     // Check if the description is overflowing its container
                     if (desc.scrollHeight > desc.clientHeight) {
@@ -286,13 +273,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Re-apply mouse follower effects AFTER the .is-expandable class has been added.
                 applyMouseFollowerEffects();
 
-            }, 100); // 100ms delay is a safe value.
+            });
 
-            // Setup pagination for the newly created items
-            allItems = Array.from(galleryContainer.querySelectorAll('.gallery-item'));
-            const totalPages = Math.ceil(allItems.length / limit);
-            createPaginationButtons(totalPages);
-            if (totalPages > 0) showPage(1);
+            // Update active button state
+            const btns = paginationControls.querySelectorAll('.pagination-btn');
+            btns.forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.innerText) === pageNumber) btn.classList.add('active');
+            });
         }
 
         function updateDisplay() {
@@ -335,8 +323,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 return 0;
             });
 
-            // 4. Render the processed data
-            renderItems(processedData);
+            // 4. Update state and render
+            currentFilteredItems = processedData;
+            const totalPages = Math.ceil(currentFilteredItems.length / limit);
+            createPaginationButtons(totalPages);
+            
+            if (totalPages > 0) {
+                renderPage(1);
+            } else {
+                galleryContainer.innerHTML = '<p class="gallery-message">No items match your search.</p>';
+                paginationControls.style.display = 'none';
+            }
         }
 
         async function fetchAndDisplayGallery() {
