@@ -220,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function showLoggedInState() {
         document.body.classList.add('logged-in');
         showToast('Login successful!', 'success');
-        setTimeout(() => showToast('Happy New Year 2026! 🎆', 'success'), 750);
 
         // Default to the content page view
         showPage('content');
