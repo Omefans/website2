@@ -260,9 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addControlListeners() {
+        let searchTimeout;
         document.getElementById('admin-search-bar').addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value.toLowerCase();
-            renderItems();
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentSearchTerm = e.target.value.toLowerCase();
+                renderItems();
+            }, 300);
         });
 
         document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('createdAt'));
@@ -339,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const fragment = document.createDocumentFragment();
         itemsToDisplay.forEach(item => {
             const createdAt = new Date(item.createdAt);
             const formattedDate = createdAt.toLocaleDateString('en-US', {
@@ -374,8 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            itemListContainer.appendChild(itemEl);
+            fragment.appendChild(itemEl);
         });
+        itemListContainer.appendChild(fragment);
     }
 
     itemListContainer.addEventListener('click', (e) => {
@@ -543,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
     
+            const fragment = document.createDocumentFragment();
             users.forEach(user => {
                 const userEl = document.createElement('div');
                 userEl.className = 'user-list-item';
@@ -565,8 +572,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${deleteButtonHtml}
                     </div>
                 `;
-                userList.appendChild(userEl);
+                fragment.appendChild(userEl);
             });
+            userList.appendChild(fragment);
     
         } catch (error) {
             userList.innerHTML = `<p class="error-message">Error loading users: ${error.message}</p>`;

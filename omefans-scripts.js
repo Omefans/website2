@@ -164,6 +164,40 @@ document.addEventListener("DOMContentLoaded", function() {
         };
     }
 
+    // OPTIMIZATION: Event Delegation for Modal (Single listener instead of one per image)
+    if (galleryContainer && modal && modalImg) {
+        galleryContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('gallery-item-img')) {
+                modal.style.display = "block";
+                modalImg.src = e.target.src;
+            }
+        });
+    }
+
+    // OPTIMIZATION: Handle resize for expandable text
+    window.addEventListener('resize', debounce(() => {
+        if (!galleryContainer) return;
+        const descriptions = galleryContainer.querySelectorAll('.item-desc');
+        descriptions.forEach(desc => {
+            // If already expanded, skip to prevent collapsing
+            if (desc.classList.contains('expanded')) return;
+
+            if (desc.scrollHeight > desc.clientHeight) {
+                desc.classList.add('is-expandable');
+                if (!desc.dataset.expandListener) {
+                    desc.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.classList.toggle('expanded');
+                    });
+                    desc.dataset.expandListener = 'true';
+                }
+            } else {
+                desc.classList.remove('is-expandable');
+            }
+        });
+    }, 200));
+
     if (galleryContainer && paginationControls) {
         const limit = 9;
         let currentFilteredItems = []; // Holds the data objects for the current view
@@ -234,15 +268,6 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                     </div>
                 `;
-
-                // NEW: Add click listener for the modal popup
-                const img = itemArticle.querySelector('.gallery-item-img');
-                if (img && modal && modalImg) {
-                    img.addEventListener('click', () => {
-                        modal.style.display = "block";
-                        modalImg.src = img.src;
-                    });
-                }
 
                 fragment.appendChild(itemArticle);
             });
