@@ -166,10 +166,44 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // OPTIMIZATION: Event Delegation for Modal (Single listener instead of one per image)
     if (galleryContainer && modal && modalImg) {
-        galleryContainer.addEventListener('click', (e) => {
+        galleryContainer.addEventListener('click', async (e) => {
             if (e.target.classList.contains('gallery-item-img')) {
                 modal.style.display = "block";
                 modalImg.src = e.target.src;
+            }
+
+            // Report Button Logic (Direct to Webhook)
+            const reportBtn = e.target.closest('.report-link-btn');
+            if (reportBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const itemName = reportBtn.dataset.itemName;
+
+                if (confirm(`Report broken link for "${itemName}"?`)) {
+                    reportBtn.style.opacity = '0.5';
+                    reportBtn.style.pointerEvents = 'none';
+
+                    try {
+                        const response = await fetch(`${AppConfig.backendUrl}/api/contact`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: 'Gallery Visitor',
+                                category: 'Report Broken Link',
+                                message: `Automated Report: User reported broken link/video for gallery item "${itemName}".`
+                            })
+                        });
+
+                        if (response.ok) alert('Report sent successfully. We will check it soon.');
+                        else alert('Failed to send report. Please try again.');
+                    } catch (error) {
+                        console.error('Report error:', error);
+                        alert('Error sending report.');
+                    } finally {
+                        reportBtn.style.opacity = '0.8';
+                        reportBtn.style.pointerEvents = 'auto';
+                    }
+                }
             }
         });
     }
@@ -282,9 +316,9 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <a href="contact?category=report&item=${encodeURIComponent(data.name)}" title="Report Broken Link" style="color: #ff4444; display: flex; align-items: center; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+                                <button class="report-link-btn" data-item-name="${data.name}" title="Report Broken Link" style="background: none; border: none; padding: 0; cursor: pointer; color: #ff4444; display: flex; align-items: center; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                </a>
+                                </button>
                                 <a href="${data.affiliateUrl}" class="btn-view" target="_blank" rel="noopener noreferrer">View</a>
                             </div>
                         </div>
