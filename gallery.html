@@ -139,6 +139,23 @@
       <span class="close-modal">&times;</span>
       <img class="modal-content" id="modalImage">
     </div>
+
+    <!-- Report Reason Modal -->
+    <div id="reportModal" class="modal" style="background-color: rgba(0,0,0,0.85); z-index: 10001;">
+        <div class="modal-content" style="background: #161b22; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; margin: 15% auto; position: relative; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+            <span class="close-report" style="position: absolute; top: 10px; right: 15px; color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h3 style="margin-top: 0; color: #fff; font-family: 'Orbitron', sans-serif; margin-bottom: 15px;">Report Issue</h3>
+            <p id="reportItemName" style="color: #ccc; margin-bottom: 25px; font-size: 0.9rem;"></p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btn-report-link" class="cta-button" style="width: 100%; justify-content: center; border: none; cursor: pointer; background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3);">
+                    <span>Link Broken</span>
+                </button>
+                <button id="btn-report-video" class="cta-button" style="width: 100%; justify-content: center; border: none; cursor: pointer; background: rgba(255, 136, 0, 0.1); color: #ff8800; border: 1px solid rgba(255, 136, 0, 0.3);">
+                    <span>Video Removed</span>
+                </button>
+            </div>
+        </div>
+    </div>
     
     <script src="omefans-scripts.js" defer></script>
 </body>

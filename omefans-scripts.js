@@ -28,6 +28,62 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    /* --- REPORT MODAL SETUP --- */
+    const reportModal = document.getElementById('reportModal');
+    const closeReportBtn = document.querySelector('.close-report');
+    const reportItemNameEl = document.getElementById('reportItemName');
+    const btnReportLink = document.getElementById('btn-report-link');
+    const btnReportVideo = document.getElementById('btn-report-video');
+    let currentReportItem = '';
+
+    if (reportModal && closeReportBtn) {
+        const closeReport = () => {
+            reportModal.style.display = "none";
+            currentReportItem = '';
+        };
+        closeReportBtn.addEventListener('click', closeReport);
+        reportModal.addEventListener('click', (e) => {
+            if (e.target === reportModal) closeReport();
+        });
+        
+        // Helper to send report
+        const sendReport = async (category) => {
+            if (!currentReportItem) return;
+            const btn = category === 'Link Broken' ? btnReportLink : btnReportVideo;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span>Sending...</span>';
+            btn.style.pointerEvents = 'none';
+            
+            try {
+                const response = await fetch(`${AppConfig.backendUrl}/api/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Gallery Visitor',
+                        category: category,
+                        message: `Automated Report: User reported "${category}" for gallery item "${currentReportItem}".`
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Report sent successfully. Thank you!');
+                    closeReport();
+                } else {
+                    alert('Failed to send report. Please try again.');
+                }
+            } catch (error) {
+                console.error('Report error:', error);
+                alert('Error sending report.');
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.style.pointerEvents = 'auto';
+            }
+        };
+
+        if (btnReportLink) btnReportLink.addEventListener('click', () => sendReport('Link Broken'));
+        if (btnReportVideo) btnReportVideo.addEventListener('click', () => sendReport('Video Removed'));
+    }
+
     /* --- NEW: DISABLE RIGHT-CLICK AND CTRL+U --- */
     // Disable right-click
     document.addEventListener('contextmenu', (e) => {
@@ -179,30 +235,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 e.stopPropagation();
                 const itemName = reportBtn.dataset.itemName;
 
-                if (confirm(`Report broken link for "${itemName}"?`)) {
-                    reportBtn.style.opacity = '0.5';
-                    reportBtn.style.pointerEvents = 'none';
-
-                    try {
-                        const response = await fetch(`${AppConfig.backendUrl}/api/contact`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                name: 'Gallery Visitor',
-                                category: 'Report Broken Link',
-                                message: `Automated Report: User reported broken link/video for gallery item "${itemName}".`
-                            })
-                        });
-
-                        if (response.ok) alert('Report sent successfully. We will check it soon.');
-                        else alert('Failed to send report. Please try again.');
-                    } catch (error) {
-                        console.error('Report error:', error);
-                        alert('Error sending report.');
-                    } finally {
-                        reportBtn.style.opacity = '0.8';
-                        reportBtn.style.pointerEvents = 'auto';
-                    }
+                if (reportModal && reportItemNameEl) {
+                    currentReportItem = itemName;
+                    reportItemNameEl.textContent = `Reporting: ${itemName}`;
+                    reportModal.style.display = "block";
                 }
             }
         });
