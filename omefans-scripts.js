@@ -439,4 +439,50 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     }
+
+    /* --- 6. CONTACT FORM HANDLING --- */
+    const contactForm = document.getElementById('contact-form');
+    const formStatus = document.getElementById('form-status');
+
+    if (contactForm && formStatus) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').innerText = 'Sending...';
+            formStatus.style.display = 'none';
+
+            const formData = {
+                name: document.getElementById('name').value,
+                message: document.getElementById('request').value
+            };
+
+            try {
+                const response = await fetch(`${AppConfig.backendUrl}/api/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    formStatus.innerText = 'Request sent successfully!';
+                    formStatus.style.color = '#4caf50';
+                    formStatus.style.display = 'block';
+                    contactForm.reset();
+                } else {
+                    throw new Error('Failed to send');
+                }
+            } catch (error) {
+                console.error('Contact form error:', error);
+                formStatus.innerText = 'Error sending request. Please try again later.';
+                formStatus.style.color = '#ff4444';
+                formStatus.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('span').innerText = originalBtnText;
+            }
+        });
+    }
 });

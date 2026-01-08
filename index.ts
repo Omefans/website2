@@ -94,6 +94,45 @@ app.post('/api/auth/login', async (c) => {
 	return c.json({ token });
 });
 
+// Contact route
+app.post('/api/contact', async (c) => {
+	try {
+		const { name, message } = await c.req.json();
+
+		if (!name || !message) {
+			return c.json({ error: 'Missing required fields' }, 400);
+		}
+
+		const res = await fetch('https://api.resend.com/emails', {
+			method: 'POST',
+			headers: {
+				'Authorization': 'Bearer re_Athay7fz_NNighyJ3wxRLsmMYWWLJMFxL',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				from: 'Omefans Contact <onboarding@resend.dev>',
+				to: ['admin@omefans.com', 'manager@omefans.com'],
+				subject: `New Model Request from ${name}`,
+				html: `
+          <h3>New Request Received</h3>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Message:</strong></p>
+          <p style="background: #f4f4f4; padding: 10px; border-radius: 5px; color: #333;">${message}</p>
+        `
+			})
+		});
+
+		if (!res.ok) {
+			return c.json({ error: 'Failed to send email via provider' }, 500);
+		}
+
+		return c.json({ message: 'Request sent successfully' });
+	} catch (error) {
+		console.error('Contact endpoint error:', error);
+		return c.json({ error: 'Internal Server Error' }, 500);
+	}
+});
+
 // Get all gallery items
 app.get('/api/gallery', async (c) => {
 	const { sort, order } = c.req.query();

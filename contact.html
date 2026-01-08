@@ -53,6 +53,22 @@
                   <span>Join Discord</span>
               </a>
           </div>
+
+          <div class="contact-container" style="max-width: 600px; margin: 40px auto 0; padding: 20px;">
+              <form id="contact-form">
+                  <div style="margin-bottom: 20px;">
+                      <label for="name" style="display: block; margin-bottom: 8px; color: #fff; font-family: 'Space Grotesk', sans-serif;">Name</label>
+                      <input type="text" id="name" name="name" required style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px;">
+                  </div>
+                  <div style="margin-bottom: 20px;">
+                      <label for="request" style="display: block; margin-bottom: 8px; color: #fff; font-family: 'Space Grotesk', sans-serif;">Message / Model Request</label>
+                      <textarea id="request" name="request" rows="5" required style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px;"></textarea>
+                  </div>
+                  <button type="submit" class="cta-button" style="width: 100%; justify-content: center; border: none; cursor: pointer;"><span>Send Request</span></button>
+                  <p id="form-status" style="margin-top: 15px; text-align: center; display: none; font-size: 0.9rem;"></p>
+              </form>
+          </div>
+
           <div style="text-align: center; margin: 20px 0;">
               <script>
                   atOptions = {
