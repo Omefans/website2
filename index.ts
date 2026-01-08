@@ -97,7 +97,7 @@ app.post('/api/auth/login', async (c) => {
 // Contact route
 app.post('/api/contact', async (c) => {
 	try {
-		const { name, message } = await c.req.json();
+		const { name, message, category } = await c.req.json();
 
 		if (!name || !message) {
 			return c.json({ error: 'Missing required fields' }, 400);
@@ -111,7 +111,7 @@ app.post('/api/contact', async (c) => {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				content: `**New Model Request**\n**Name:** ${name}\n**Message:**\n${message}`
+				content: `**New Contact Submission**\n**Topic:** ${category || 'General'}\n**Name:** ${name}\n**Message:**\n${message}`
 			})
 		});
 
