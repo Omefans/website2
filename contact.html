@@ -19,6 +19,55 @@
     <link href="omefans-style.css?v=1.0.13" rel="stylesheet">
     <script async type="text/javascript" src="https://pl28265411.effectivegatecpm.com/de/d9/a3/ded9a33258379397f07fd47280a8dee7.js"></script>
     <script src="https://sonsstoop.com/de/d9/a3/ded9a33258379397f07fd47280a8dee7.js"></script>
+    <style>
+        .contact-form-group {
+            margin-bottom: 24px;
+        }
+        .contact-label {
+            display: block;
+            margin-bottom: 10px;
+            color: #e6edf3;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        .contact-input {
+            width: 100%;
+            padding: 16px;
+            background: rgba(13, 17, 23, 0.6);
+            border: 1px solid rgba(48, 54, 61, 0.8);
+            color: #fff;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            box-sizing: border-box;
+            backdrop-filter: blur(5px);
+        }
+        .contact-input:focus {
+            border-color: #00d9ff;
+            background: rgba(13, 17, 23, 0.9);
+            box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.1);
+        }
+        select.contact-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2em;
+        }
+        textarea.contact-input {
+            min-height: 150px;
+            resize: vertical;
+        }
+        @media (min-width: 768px) {
+            textarea.contact-input {
+                min-height: 250px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -54,24 +103,24 @@
               </a>
           </div>
 
-          <div class="contact-container" style="max-width: 600px; margin: 40px auto 0; padding: 20px;">
+          <div class="contact-container" style="width: 100%; max-width: 1200px; margin: 40px auto 0; padding: 20px;">
               <form id="contact-form">
-                  <div style="margin-bottom: 20px;">
-                      <label for="name" style="display: block; margin-bottom: 8px; color: #fff; font-family: 'Space Grotesk', sans-serif;">Name</label>
-                      <input type="text" id="name" name="name" required style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px;">
+                  <div class="contact-form-group">
+                      <label for="name" class="contact-label">Name</label>
+                      <input type="text" id="name" name="name" class="contact-input" placeholder="Your Name" required>
                   </div>
-                  <div style="margin-bottom: 20px;">
-                      <label for="category" style="display: block; margin-bottom: 8px; color: #fff; font-family: 'Space Grotesk', sans-serif;">Topic</label>
-                      <select id="category" name="category" style="width: 100%; padding: 12px; background: #161b22; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px;">
+                  <div class="contact-form-group">
+                      <label for="category" class="contact-label">Topic</label>
+                      <select id="category" name="category" class="contact-input">
                           <option value="request">Request a Model</option>
                           <option value="link_broken">Link Broken</option>
                           <option value="video_removed">Video Removed</option>
                           <option value="other">Other</option>
                       </select>
                   </div>
-                  <div style="margin-bottom: 20px;">
-                      <label for="request" style="display: block; margin-bottom: 8px; color: #fff; font-family: 'Space Grotesk', sans-serif;">Message / Model Request</label>
-                      <textarea id="request" name="request" rows="5" required style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px;"></textarea>
+                  <div class="contact-form-group">
+                      <label for="request" class="contact-label">Message / Model Request</label>
+                      <textarea id="request" name="request" rows="5" class="contact-input" placeholder="Type your message here..." required></textarea>
                   </div>
                   <button type="submit" class="cta-button" style="width: 100%; justify-content: center; border: none; cursor: pointer;"><span>Send Request</span></button>
                   <p id="form-status" style="margin-top: 15px; text-align: center; display: none; font-size: 0.9rem;"></p>
