@@ -155,6 +155,40 @@ app.post('/api/upload', authMiddleware, async (c) => {
 		'INSERT INTO gallery_items (name, description, category, isFeatured, imageUrl, affiliateUrl, userId) VALUES (?, ?, ?, ?, ?, ?, ?)'
 	).bind(name, description, category, isFeatured ? 1 : 0, imageUrl, affiliateUrl, c.get('userId')).run();
 
+	// --- Discord Notification Logic ---
+	try {
+		let webhookUrl = '';
+
+		// 1. SELECT WEBHOOK BASED ON CATEGORY
+		// PASTE YOUR ACTUAL WEBHOOK URLS BELOW
+		if (category === 'onlyfans') {
+			webhookUrl = 'https://discord.com/api/webhooks/1458916380031324311/10PpL3zXdfJ4-_WHIm9aba2Tu2s9ikWxeR5bYj2r_ckeTyH2CR6abnpMbAyE4nmqOZAZ';
+		} else {
+			// Default to Omegle (or check for 'omegle')
+			webhookUrl = 'https://discord.com/api/webhooks/1458916103957909678/vzi_wvIzkhfLTB19BUPlCxJ8LgQozGagxQ1kRYuf9vWIL_AZ9SOQ1s7jMDaVHpMzKDRB';
+		}
+
+		// 2. SEND NOTIFICATION
+		if (webhookUrl && !webhookUrl.includes('YOUR_')) {
+			await fetch(webhookUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					content: `**New Content Added!** 🚀`,
+					embeds: [{
+						title: name,
+						description: `${description || ''}\n\n🌐 **Website** - https://omefans.com/gallery\n\n🔁 **BACKUP CHANNEL** - https://t.me/+gQnXEKZqVGIxZDY5\n\n📲 **Discord Server** - https://discord.gg/WaXnU5c5V8\n\n📥 **Share CHANNEL with UR Friends** - https://t.me/OmeFans`,
+						color: category === 'onlyfans' ? 0x00AFF0 : 0xFF8800, // Blue for OnlyFans, Orange for Omegle
+						image: { url: imageUrl },
+						footer: { text: "Omefans Updates" }
+					}]
+				})
+			});
+		}
+	} catch (e) {
+		console.error('Failed to send Discord notification', e);
+	}
+
 	return c.json({ message: 'Item added successfully!', item: results }, 201);
 });
 
