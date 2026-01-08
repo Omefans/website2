@@ -147,6 +147,8 @@
               document.addEventListener('DOMContentLoaded', function() {
                   const categorySelect = document.getElementById('category');
                   const requestFields = document.getElementById('model-request-fields');
+                  const contactForm = document.getElementById('contact-form');
+                  const formStatus = document.getElementById('form-status');
                   
                   function toggleFields() {
                       requestFields.style.display = (categorySelect.value === 'request') ? 'block' : 'none';
@@ -154,6 +156,52 @@
                   
                   categorySelect.addEventListener('change', toggleFields);
                   toggleFields(); // Run on load
+
+                  if (contactForm) {
+                      contactForm.addEventListener('submit', async function(e) {
+                          e.preventDefault();
+                          e.stopImmediatePropagation(); // Prevent other scripts from handling this
+                          
+                          const submitBtn = contactForm.querySelector('button[type="submit"]');
+                          const originalBtnText = submitBtn.innerHTML;
+                          submitBtn.disabled = true;
+                          submitBtn.innerHTML = '<span>Sending...</span>';
+                          formStatus.style.display = 'none';
+
+                          const formData = {
+                              name: document.getElementById('name').value,
+                              category: document.getElementById('category').value,
+                              message: document.getElementById('request').value,
+                              platform: document.getElementById('platform').value,
+                              modelImage: document.getElementById('modelImage').value
+                          };
+
+                          try {
+                              const response = await fetch('/api/contact', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(formData)
+                              });
+
+                              if (response.ok) {
+                                  formStatus.textContent = 'Request sent successfully!';
+                                  formStatus.style.color = '#4ade80';
+                                  contactForm.reset();
+                                  toggleFields();
+                              } else {
+                                  formStatus.textContent = 'Failed to send request.';
+                                  formStatus.style.color = '#f87171';
+                              }
+                          } catch (error) {
+                              formStatus.textContent = 'Error sending request.';
+                              formStatus.style.color = '#f87171';
+                          } finally {
+                              formStatus.style.display = 'block';
+                              submitBtn.disabled = false;
+                              submitBtn.innerHTML = originalBtnText;
+                          }
+                      });
+                  }
               });
           </script>
 
