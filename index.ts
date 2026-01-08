@@ -203,7 +203,7 @@ app.post('/api/upload', authMiddleware, async (c) => {
 				body: JSON.stringify({
 					chat_id: telegramChatId,
 					photo: imageUrl,
-					caption: `NEW EXCLUSIVE🆕️🔥🔥\n🆕️CHECK OUR NEW EXCLUSIVE CONTENT ON OUR WEBSITE🔥🔥❤️\n\n<b>${name}</b>\n${description || ''}`,
+					caption: `NEW EXCLUSIVE🆕️🔥🔥\n🆕️CHECK OUR NEW EXCLUSIVE CONTENT ON OUR WEBSITE🔥🔥❤️\n\n<b>${category.toUpperCase()}</b>\n<b>${name}</b>\n${description || ''}`,
 					parse_mode: 'HTML',
 					reply_markup: {
 						inline_keyboard: [
