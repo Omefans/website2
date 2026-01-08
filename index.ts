@@ -189,6 +189,37 @@ app.post('/api/upload', authMiddleware, async (c) => {
 		console.error('Failed to send Discord notification', e);
 	}
 
+	// --- Telegram Notification Logic ---
+	try {
+		// TODO: Replace with your actual Bot Token from @BotFather
+		const telegramBotToken = '8391311327:AAH99DgfdBdaq_NK3v7Qw73eWgXtI549QxI'; 
+		// TODO: Replace with your Channel Username (e.g. @OmeFans) or Numeric Chat ID
+		const telegramChatId = '@OmeFans'; 
+
+		if (telegramBotToken !== 'YOUR_TELEGRAM_BOT_TOKEN') {
+			await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					chat_id: telegramChatId,
+					photo: imageUrl,
+					caption: `NEW EXCLUSIVE🆕️🔥🔥\n🆕️CHECK OUR NEW EXCLUSIVE CONTENT ON OUR WEBSITE🔥🔥❤️\n\n<b>${name}</b>\n${description || ''}`,
+					parse_mode: 'HTML',
+					reply_markup: {
+						inline_keyboard: [
+							[{ text: '🌐 Website', url: 'https://omefans.com/gallery' }],
+							[{ text: '🔁 BACKUP CHANNEL', url: 'https://t.me/+gQnXEKZqVGIxZDY5' }],
+							[{ text: '📲 Discord Server', url: 'https://discord.gg/WaXnU5c5V8' }],
+							[{ text: '📥 Share CHANNEL with UR Friends', url: 'https://t.me/OmeFans' }]
+						]
+					}
+				})
+			});
+		}
+	} catch (e) {
+		console.error('Failed to send Telegram notification', e);
+	}
+
 	return c.json({ message: 'Item added successfully!', item: results }, 201);
 });
 
