@@ -103,27 +103,22 @@ app.post('/api/contact', async (c) => {
 			return c.json({ error: 'Missing required fields' }, 400);
 		}
 
-		const res = await fetch('https://api.resend.com/emails', {
+		const discordWebhookUrl = 'https://discord.com/api/webhooks/1458903642877722849/tH83RK1v6lg6qudKks03xaZqskLZe5LQLVdXZIG6Q_uvZ9BtkY8eA4NI_582RMYLgZ4g';
+
+		const res = await fetch(discordWebhookUrl, {
 			method: 'POST',
 			headers: {
-				'Authorization': 'Bearer re_Athay7fz_NNighyJ3wxRLsmMYWWLJMFxL',
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				from: 'Omefans Contact <onboarding@resend.dev>',
-				to: ['admin@omefans.com', 'manager@omefans.com'],
-				subject: `New Model Request from ${name}`,
-				html: `
-          <h3>New Request Received</h3>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Message:</strong></p>
-          <p style="background: #f4f4f4; padding: 10px; border-radius: 5px; color: #333;">${message}</p>
-        `
+				content: `**New Model Request**\n**Name:** ${name}\n**Message:**\n${message}`
 			})
 		});
 
 		if (!res.ok) {
-			return c.json({ error: 'Failed to send email via provider' }, 500);
+			const err = await res.text();
+			console.error('Discord Webhook Error:', err);
+			return c.json({ error: 'Failed to send request' }, 500);
 		}
 
 		return c.json({ message: 'Request sent successfully' });
