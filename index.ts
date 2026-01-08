@@ -5,6 +5,10 @@ import { cors } from 'hono/cors';
 type Bindings = {
 	DB: D1Database;
 	JWT_SECRET: string; // Secret for signing JWTs, must be set in Cloudflare dashboard
+	TELEGRAM_BOT_TOKEN: string;
+	DISCORD_WEBHOOK_OMEGLE: string;
+	DISCORD_WEBHOOK_ONLYFANS: string;
+	DISCORD_WEBHOOK_CONTACT: string;
 };
 
 // Define custom variables for our context
@@ -103,7 +107,7 @@ app.post('/api/contact', async (c) => {
 			return c.json({ error: 'Missing required fields' }, 400);
 		}
 
-		const discordWebhookUrl = 'https://discord.com/api/webhooks/1458903642877722849/tH83RK1v6lg6qudKks03xaZqskLZe5LQLVdXZIG6Q_uvZ9BtkY8eA4NI_582RMYLgZ4g';
+		const discordWebhookUrl = c.env.DISCORD_WEBHOOK_CONTACT;
 
 		const res = await fetch(discordWebhookUrl, {
 			method: 'POST',
@@ -162,10 +166,10 @@ app.post('/api/upload', authMiddleware, async (c) => {
 		// 1. SELECT WEBHOOK BASED ON CATEGORY
 		// PASTE YOUR ACTUAL WEBHOOK URLS BELOW
 		if (category === 'onlyfans') {
-			webhookUrl = 'https://discord.com/api/webhooks/1458916380031324311/10PpL3zXdfJ4-_WHIm9aba2Tu2s9ikWxeR5bYj2r_ckeTyH2CR6abnpMbAyE4nmqOZAZ';
+			webhookUrl = c.env.DISCORD_WEBHOOK_ONLYFANS;
 		} else {
 			// Default to Omegle (or check for 'omegle')
-			webhookUrl = 'https://discord.com/api/webhooks/1458916103957909678/vzi_wvIzkhfLTB19BUPlCxJ8LgQozGagxQ1kRYuf9vWIL_AZ9SOQ1s7jMDaVHpMzKDRB';
+			webhookUrl = c.env.DISCORD_WEBHOOK_OMEGLE;
 		}
 
 		// 2. SEND NOTIFICATION
@@ -192,11 +196,11 @@ app.post('/api/upload', authMiddleware, async (c) => {
 	// --- Telegram Notification Logic ---
 	try {
 		// TODO: Replace with your actual Bot Token from @BotFather
-		const telegramBotToken = '8391311327:AAH99DgfdBdaq_NK3v7Qw73eWgXtI549QxI'; 
+		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN; 
 		// TODO: Replace with your Channel Username (e.g. @OmeFans) or Numeric Chat ID
 		const telegramChatId = '@OmeFans'; 
 
-		if (telegramBotToken !== 'YOUR_TELEGRAM_BOT_TOKEN') {
+		if (telegramBotToken) {
 			await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
