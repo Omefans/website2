@@ -206,21 +206,25 @@ body.is-admin #nav-users-btn { display: inline-block; }
 #logout-btn:hover { background: #30363d; }
 
 #admin-nav {
+    margin-bottom: 2rem;
+}
+
+.nav-mobile-header {
+    display: none; /* Hidden on desktop */
+}
+
+#nav-links {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 2rem;
-    /* Modern Scrollable Nav */
-    overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-    -webkit-overflow-scrolling: touch; /* iOS */
+    border-bottom: 2px solid #30363d;
 }
-#admin-nav::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
 
 .nav-btn {
     flex: 0 0 auto; /* Don't shrink, don't grow excessively */
     background: none;
     border: none;
-    border-bottom: 2px solid #30363d;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px; /* Overlap the container border */
     border-radius: 0;
     padding: 0.75rem 1rem;
     color: #8b949e;
@@ -531,21 +535,62 @@ body.is-admin #nav-users-btn { display: inline-block; }
         grid-template-columns: 1fr;
     }
 
-    /* Modern Scrollable Nav for Mobile */
-    #admin-nav {
-        margin: 0 -1rem 1.5rem -1rem; /* Bleed to edges */
-        padding: 0 1rem 0.5rem 1rem;
-        border-bottom: 1px solid #30363d;
+    /* Mobile Navigation Menu */
+    .nav-mobile-header {
+        display: flex;
+        align-items: center;
         gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #30363d;
+        margin-bottom: 1rem;
     }
+
+    #nav-toggle-btn {
+        background: none;
+        border: none;
+        color: #c9d1d9;
+        padding: 0.5rem;
+        width: auto;
+        cursor: pointer;
+    }
+
+    #mobile-page-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #f0f6fc;
+    }
+
+    #nav-links {
+        display: none; /* Hidden by default on mobile */
+        flex-direction: column;
+        gap: 0;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        background: #161b22;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    #nav-links.show {
+        display: flex;
+        animation: fadeIn 0.2s ease-out;
+    }
+
     .nav-btn {
-        padding: 0.5rem 0.25rem;
-        border-bottom-width: 3px;
-        font-size: 0.95rem;
+        text-align: left;
+        border-bottom: 1px solid #30363d;
+        margin-bottom: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+    .nav-btn:last-child {
+        border-bottom: none;
     }
     .nav-btn.active {
-        background: transparent; /* Remove background highlight on mobile */
-        color: #58a6ff;
+        background: rgba(56, 139, 253, 0.15);
+        border-bottom-color: #30363d;
+        border-left: 3px solid #58a6ff;
+        color: #f0f6fc;
     }
 
     /* Fix Cut-off Buttons */
