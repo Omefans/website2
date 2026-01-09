@@ -172,6 +172,12 @@ app.post('/api/webhook/telegram', async (c) => {
 		// Check if it's a message and contains text
 		if (update.message && update.message.text === '/start') {
 			const chatId = update.message.chat.id;
+			const adminChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+			const isAuthorized = adminChatIds.some(id => id.trim() === chatId.toString());
+
+			const messageText = isAuthorized
+				? `Connected! You are authorized to receive notifications.`
+				: `Your Chat ID is: <code>${chatId}</code>\n\nAdd this ID to Cloudflare to receive notifications.`;
 			
 			if (telegramBotToken) {
 				await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
@@ -179,7 +185,7 @@ app.post('/api/webhook/telegram', async (c) => {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						chat_id: chatId,
-						text: `Connected! Your Chat ID is: <code>${chatId}</code>\n\nSend this ID to the admin to receive notifications.`,
+						text: messageText,
 						parse_mode: 'HTML'
 					})
 				});
