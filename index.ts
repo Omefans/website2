@@ -505,7 +505,10 @@ app.post('/api/webhook/telegram', async (c) => {
 					const helpText = `<b>🤖 Admin Bot Commands</b>\n\n` +
 						`/stats - View website statistics\n` +
 						`/latest - Show most recent gallery item\n` +
+						`/search [term] - Search gallery items\n` +
 						`/users - List recent users\n` +
+						`/admins - List authorized Telegram admins\n` +
+						`/maintenance [on/off] - Toggle maintenance mode\n` +
 						`/delete_user [username] - Delete a user\n` +
 						`/delete_item [id] - Delete an item by ID\n` +
 						`/broadcast [msg] - Message all admins`;
@@ -589,6 +592,78 @@ app.post('/api/webhook/telegram', async (c) => {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
 							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching latest item.' })
+						});
+					}
+				} else if (command === '/search') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Usage: /search [term]' })
+						});
+					} else {
+						try {
+							const { results } = await c.env.DB.prepare('SELECT id, name, category, affiliateUrl FROM gallery_items WHERE name LIKE ? OR description LIKE ? LIMIT 5').bind(`%${args}%`, `%${args}%`).all();
+							let msg = `<b>🔍 Search Results for "${args}"</b>\n\n`;
+							if (results && results.length > 0) {
+								results.forEach((item: any) => {
+									msg += `• <b>${item.name}</b> (${item.category})\n  ID: <code>${item.id}</code>\n  <a href="${item.affiliateUrl}">Link</a>\n\n`;
+								});
+							} else {
+								msg += 'No items found.';
+							}
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML', disable_web_page_preview: true })
+							});
+						} catch (e) {
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ chat_id: chatId, text: 'Error searching items.' })
+							});
+						}
+					}
+				} else if (command === '/maintenance') {
+					const status = args.trim().toLowerCase();
+					if (status === 'on' || status === 'off') {
+						await c.env.DB.prepare("INSERT INTO configurations (key, value) VALUES ('maintenance_mode', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(status === 'on' ? 'true' : 'false').run();
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: `✅ Maintenance mode turned <b>${status.toUpperCase()}</b>.`, parse_mode: 'HTML' })
+						});
+					} else {
+						const current = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'maintenance_mode'").first('value');
+						const isMaintenance = current === 'true';
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: `Maintenance mode is currently: <b>${isMaintenance ? 'ON' : 'OFF'}</b>\nUsage: /maintenance [on/off]`, parse_mode: 'HTML' })
+						});
+					}
+				} else if (command === '/admins') {
+					try {
+						const { results } = await c.env.DB.prepare('SELECT name, chat_id FROM telegram_admins').all();
+						let msg = '<b>🛡️ Telegram Admins</b>\n\n';
+						if (results && results.length > 0) {
+							results.forEach((a: any) => {
+								msg += `• <b>${a.name || 'Unknown'}</b> (<code>${a.chat_id}</code>)\n`;
+							});
+						} else {
+							msg += 'No admins in database (only env vars).';
+						}
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' })
+						});
+					} catch (e) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching admins.' })
 						});
 					}
 				} else if (command === '/users') {
@@ -691,6 +766,14 @@ app.get('/api/gallery', async (c) => {
 	const { sort, order } = c.req.query();
     const validSort = ['createdAt', 'name'].includes(sort) ? sort : 'createdAt';
     const validOrder = ['asc', 'desc'].includes(order) ? order.toUpperCase() : 'DESC';
+
+	// --- Check Maintenance Mode ---
+	try {
+		const maintenance = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'maintenance_mode'").first('value');
+		if (maintenance === 'true') {
+			return c.json({ error: 'Site is currently in maintenance mode.' }, 503);
+		}
+	} catch (e) {}
 
 	// --- Visitor Tracking ---
 	const country = c.req.header('cf-ipcountry') || 'Unknown';
