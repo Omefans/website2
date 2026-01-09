@@ -327,6 +327,87 @@ app.post('/api/webhook/telegram', async (c) => {
 		const update = await c.req.json();
 		const telegramBotToken = await getTelegramToken(c.env);
 
+		// --- Handle Callback Queries (Buttons) ---
+		if (update.callback_query) {
+			const callbackQuery = update.callback_query;
+			const chatId = callbackQuery.message.chat.id;
+			const messageId = callbackQuery.message.message_id;
+			const data = callbackQuery.data;
+
+			// Check authorization
+			const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+			let dbChatIds: string[] = [];
+			try {
+				const { results } = await c.env.DB.prepare('SELECT chat_id FROM telegram_admins').all();
+				dbChatIds = results.map((r: any) => r.chat_id);
+			} catch (e) { }
+			const isAuthorized = [...envChatIds, ...dbChatIds].some(id => id.trim() === chatId.toString());
+
+			if (isAuthorized) {
+				const items = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items').first('count');
+				const users = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first('count');
+				
+				let topCountryText = 'N/A';
+				let periodLabel = '';
+
+				if (data === 'stats_daily') {
+					periodLabel = 'Today';
+					const today = new Date().toISOString().split('T')[0];
+					try {
+						const top = await c.env.DB.prepare('SELECT country_code, visits FROM daily_visits WHERE date = ? ORDER BY visits DESC LIMIT 1').bind(today).first();
+						// @ts-ignore
+						if (top) topCountryText = `${top.country_code} (${top.visits})`;
+					} catch(e) {}
+				} else if (data === 'stats_monthly') {
+					periodLabel = 'This Month';
+					const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+					try {
+						const top = await c.env.DB.prepare('SELECT country_code, SUM(visits) as total_visits FROM daily_visits WHERE date LIKE ? GROUP BY country_code ORDER BY total_visits DESC LIMIT 1').bind(`${month}%`).first();
+						// @ts-ignore
+						if (top) topCountryText = `${top.country_code} (${top.total_visits})`;
+					} catch(e) {}
+				} else if (data === 'stats_all_time') {
+					periodLabel = 'All Time';
+					try {
+						const top = await c.env.DB.prepare('SELECT country_code, visits FROM country_stats ORDER BY visits DESC LIMIT 1').first();
+						// @ts-ignore
+						if (top) topCountryText = `${top.country_code} (${top.visits})`;
+					} catch(e) {}
+				}
+
+				if (periodLabel) {
+					await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							chat_id: chatId,
+							message_id: messageId,
+							text: `📊 <b>Website Statistics</b>\n\n🖼️ <b>Gallery Items:</b> ${items}\n👥 <b>Users:</b> ${users}\n\n🌍 <b>Top Country (${periodLabel}):</b> ${topCountryText}`,
+							parse_mode: 'HTML',
+							reply_markup: {
+								inline_keyboard: [
+									[
+										{ text: 'Today', callback_data: 'stats_daily' },
+										{ text: 'Month', callback_data: 'stats_monthly' },
+										{ text: 'All Time', callback_data: 'stats_all_time' }
+									]
+								]
+							}
+						})
+					});
+				}
+			}
+
+			// Answer callback query to stop loading state
+			await fetch(`https://api.telegram.org/bot${telegramBotToken}/answerCallbackQuery`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ callback_query_id: callbackQuery.id })
+			});
+			
+			return c.json({ ok: true });
+		}
+
 		// Check if it's a message and contains text
 		if (update.message && update.message.text) {
 			const chatId = update.message.chat.id;
@@ -362,6 +443,17 @@ app.post('/api/webhook/telegram', async (c) => {
 			} else if (text === '/stats' && isAuthorized) {
 				const items = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items').first('count');
 				const users = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first('count');
+				
+				let topCountryText = 'N/A';
+				try {
+					const topCountry = await c.env.DB.prepare('SELECT country_code, visits FROM country_stats ORDER BY visits DESC LIMIT 1').first();
+					if (topCountry) {
+						// @ts-ignore
+						topCountryText = `${topCountry.country_code} (${topCountry.visits})`;
+					}
+				} catch (e) {
+					// Table might not exist yet
+				}
 
 				if (telegramBotToken) {
 					await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
@@ -369,8 +461,17 @@ app.post('/api/webhook/telegram', async (c) => {
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							chat_id: chatId,
-							text: `📊 <b>Website Statistics</b>\n\n🖼️ <b>Gallery Items:</b> ${items}\n👥 <b>Users:</b> ${users}`,
-							parse_mode: 'HTML'
+							text: `📊 <b>Website Statistics</b>\n\n🖼️ <b>Gallery Items:</b> ${items}\n👥 <b>Users:</b> ${users}\n\n🌍 <b>Top Country (All Time):</b> ${topCountryText}\n\n<i>Select a period below to view specific stats:</i>`,
+							parse_mode: 'HTML',
+							reply_markup: {
+								inline_keyboard: [
+									[
+										{ text: 'Today', callback_data: 'stats_daily' },
+										{ text: 'Month', callback_data: 'stats_monthly' },
+										{ text: 'All Time', callback_data: 'stats_all_time' }
+									]
+								]
+							}
 						})
 					});
 				}
@@ -388,6 +489,40 @@ app.get('/api/gallery', async (c) => {
 	const { sort, order } = c.req.query();
     const validSort = ['createdAt', 'name'].includes(sort) ? sort : 'createdAt';
     const validOrder = ['asc', 'desc'].includes(order) ? order.toUpperCase() : 'DESC';
+
+	// --- Visitor Tracking ---
+	const country = c.req.header('cf-ipcountry') || 'Unknown';
+	c.executionCtx.waitUntil((async () => {
+		try {
+			// Ensure table exists (lazy migration)
+			await c.env.DB.prepare(`
+				CREATE TABLE IF NOT EXISTS country_stats (
+					country_code TEXT PRIMARY KEY,
+					visits INTEGER DEFAULT 0
+				)
+			`).run();
+			// Increment visit count for this country
+			await c.env.DB.prepare(`
+				INSERT INTO country_stats (country_code, visits) VALUES (?, 1)
+				ON CONFLICT(country_code) DO UPDATE SET visits = visits + 1
+			`).bind(country).run();
+
+			// --- Daily stats tracking ---
+			await c.env.DB.prepare(`
+				CREATE TABLE IF NOT EXISTS daily_visits (
+					date TEXT,
+					country_code TEXT,
+					visits INTEGER DEFAULT 0,
+					PRIMARY KEY (date, country_code)
+				)
+			`).run();
+			const today = new Date().toISOString().split('T')[0];
+			await c.env.DB.prepare(`
+				INSERT INTO daily_visits (date, country_code, visits) VALUES (?, ?, 1)
+				ON CONFLICT(date, country_code) DO UPDATE SET visits = visits + 1
+			`).bind(today, country).run();
+		} catch (e) { console.error('Stats error:', e); }
+	})());
 
 	const stmt = c.env.DB.prepare(
 		`SELECT gi.*, u.username as publisherName FROM gallery_items gi LEFT JOIN users u ON gi.userId = u.id ORDER BY ${validSort} ${validOrder}`
@@ -620,6 +755,113 @@ adminRoutes.post('/api/users/telegram', async (c) => {
 		await c.env.DB.prepare('INSERT INTO telegram_admins (chat_id, name) VALUES (?, ?)').bind(chat_id, name).run();
 		return c.json({ message: 'Chat ID added successfully' });
 	} catch (e: any) {
+		if (e.message.includes('UNIQUE')) {
+			 return c.json({ error: 'Chat ID already exists' }, 409);
+		}
+		return c.json({ error: 'Failed to add Chat ID' }, 500);
+	}
+});
+
+adminRoutes.delete('/api/users/telegram/:id', async (c) => {
+	const id = c.req.param('id');
+	await c.env.DB.prepare('DELETE FROM telegram_admins WHERE id = ?').bind(id).run();
+	return c.json({ message: 'Chat ID removed' });
+});
+
+// --- Discord Webhook Management Routes ---
+
+adminRoutes.get('/api/users/discord', async (c) => {
+	try {
+		const { results } = await c.env.DB.prepare('SELECT * FROM discord_webhooks ORDER BY created_at DESC').all();
+		return c.json(results);
+	} catch (e) {
+		return c.json([]); // Return empty if table doesn't exist
+	}
+});
+
+adminRoutes.post('/api/users/discord', async (c) => {
+	const { url, name } = await c.req.json();
+	if (!url) return c.json({ error: 'Webhook URL is required' }, 400);
+
+	// Ensure table exists (lazy migration)
+	await c.env.DB.prepare(`
+		CREATE TABLE IF NOT EXISTS discord_webhooks (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			url TEXT NOT NULL UNIQUE,
+			name TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)
+	`).run();
+
+	try {
+		await c.env.DB.prepare('INSERT INTO discord_webhooks (url, name) VALUES (?, ?)').bind(url, name).run();
+		return c.json({ message: 'Webhook added successfully' });
+	} catch (e: any) {
+		if (e.message.includes('UNIQUE')) {
+			 return c.json({ error: 'Webhook URL already exists' }, 409);
+		}
+		return c.json({ error: 'Failed to add Webhook' }, 500);
+	}
+});
+
+adminRoutes.delete('/api/users/discord/:id', async (c) => {
+	const id = c.req.param('id');
+	await c.env.DB.prepare('DELETE FROM discord_webhooks WHERE id = ?').bind(id).run();
+	return c.json({ message: 'Webhook removed' });
+});
+
+// --- Configuration Management Routes ---
+
+app.use('/api/config/*', authMiddleware, adminMiddleware);
+
+app.get('/api/config/telegram', async (c) => {
+	try {
+		// Only return the DB override if it exists
+		const result = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'telegram_bot_token'").first('value');
+		return c.json({ token: result || '' });
+	} catch (e) {
+		return c.json({ token: '' });
+	}
+});
+
+app.post('/api/config/telegram', async (c) => {
+	const { token } = await c.req.json();
+	
+	// Ensure table exists
+	await c.env.DB.prepare(`
+		CREATE TABLE IF NOT EXISTS configurations (
+			key TEXT PRIMARY KEY,
+			value TEXT
+		)
+	`).run();
+
+	if (token && token.trim() !== '') {
+		await c.env.DB.prepare("INSERT INTO configurations (key, value) VALUES ('telegram_bot_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token.trim()).run();
+
+		// Automatically register the webhook for the new token
+		try {
+			const url = new URL(c.req.url);
+			const webhookUrl = `${url.protocol}//${url.host}/api/webhook/telegram`;
+			const response = await fetch(`https://api.telegram.org/bot${token.trim()}/setWebhook?url=${webhookUrl}`);
+			const data: any = await response.json();
+			
+			if (!data.ok) {
+				return c.json({ message: `Token saved, but Webhook error: ${data.description}` });
+			}
+		} catch (e) {
+			console.error('Webhook registration failed:', e);
+			return c.json({ message: 'Token saved, but failed to register Webhook.' });
+		}
+
+		return c.json({ message: 'Telegram settings updated and Webhook registered' });
+	} else {
+		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'telegram_bot_token'").run();
+		return c.json({ message: 'Telegram settings cleared' });
+	}
+});
+
+// --- Export the Hono app ---
+export default app;
 		if (e.message.includes('UNIQUE')) {
 			 return c.json({ error: 'Chat ID already exists' }, 409);
 		}
