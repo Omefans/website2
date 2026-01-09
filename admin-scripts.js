@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navUsersBtn = document.getElementById('nav-users-btn');
     const navAutomationBtn = document.getElementById('nav-automation-btn');
     const automationSection = document.getElementById('automation-management-section');
+    const updateTelegramTokenForm = document.getElementById('update-telegram-token-form');
     const addTelegramForm = document.getElementById('add-telegram-form');
     const telegramList = document.getElementById('telegram-list');
     const addDiscordForm = document.getElementById('add-discord-form');
@@ -205,6 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (updateTelegramTokenForm) {
+        updateTelegramTokenForm.addEventListener('submit', handleUpdateTelegramToken);
+    }
+
     // Event listeners for Telegram management
     if (addTelegramForm) {
         addTelegramForm.addEventListener('submit', handleAddTelegram);
@@ -262,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('is-admin');
             loadUsers(); // Load user data in the background
             loadTelegramAdmins(); // Load telegram data
+            loadTelegramToken(); // Load telegram token
             loadDiscordWebhooks(); // Load discord data
             // Allow admins to create other admins
             const roleSelect = document.getElementById('new-role');
@@ -636,6 +642,45 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         }
+    }
+
+    async function handleUpdateTelegramToken(e) {
+        e.preventDefault();
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const token = document.getElementById('tg-bot-token').value;
+
+        setButtonLoadingState(button, true, 'Updating...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/telegram`, {
+                method: 'POST',
+                body: JSON.stringify({ token })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to update token.');
+
+            showToast(result.message, 'success');
+            // Don't reset form so user can see what they typed if they want, or clear it? 
+            // Usually better to clear password fields or leave them if they are masked.
+            // Let's reload the value to confirm it saved.
+            loadTelegramToken();
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
+        }
+    }
+
+    async function loadTelegramToken() {
+        const input = document.getElementById('tg-bot-token');
+        if (!input) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/telegram`);
+            if (response.ok) {
+                const data = await response.json();
+                input.value = data.token || '';
+            }
+        } catch (e) { console.error(e); }
     }
 
     async function handleAddTelegram(e) {

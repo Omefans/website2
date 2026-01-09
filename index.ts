@@ -20,6 +20,18 @@ type Variables = {
 
 const app = new Hono<{ Bindings: Bindings, Variables: Variables }>();
 
+// --- Helper Functions ---
+async function getTelegramToken(env: Bindings): Promise<string> {
+	let token = env.TELEGRAM_BOT_TOKEN;
+	try {
+		const dbToken = await env.DB.prepare("SELECT value FROM configurations WHERE key = 'telegram_bot_token'").first('value');
+		if (dbToken) token = dbToken as string;
+	} catch (e) {
+		// Table might not exist yet or other error, fallback to env var
+	}
+	return token;
+}
+
 // --- API Root Route ---
 app.get('/api', (c) => {
 	return c.json({
@@ -164,7 +176,7 @@ app.post('/api/contact', async (c) => {
 		} catch (e) { /* Ignore if table doesn't exist */ }
 
 		// --- Telegram Notification for Admins ---
-		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+		const telegramBotToken = await getTelegramToken(c.env);
 		// Use the secret if available, otherwise fallback to your hardcoded ID
 		const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
 		
@@ -279,7 +291,7 @@ app.post('/api/report', async (c) => {
 		} catch (e) { }
 
 		// Send to Telegram Admins
-		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+		const telegramBotToken = await getTelegramToken(c.env);
 		const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
 		let dbChatIds: string[] = [];
 		try {
@@ -313,7 +325,7 @@ app.post('/api/report', async (c) => {
 app.post('/api/webhook/telegram', async (c) => {
 	try {
 		const update = await c.req.json();
-		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+		const telegramBotToken = await getTelegramToken(c.env);
 
 		// Check if it's a message and contains text
 		if (update.message && update.message.text) {
@@ -435,7 +447,7 @@ app.post('/api/upload', authMiddleware, async (c) => {
 	// --- Telegram Notification Logic ---
 	try {
 		// TODO: Replace with your actual Bot Token from @BotFather
-		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN; 
+		const telegramBotToken = await getTelegramToken(c.env); 
 		// TODO: Replace with your Channel Username (e.g. @OmeFans) or Numeric Chat ID
 		const telegramChatId = '@OmeFans'; 
 
@@ -661,6 +673,39 @@ adminRoutes.delete('/api/users/discord/:id', async (c) => {
 	const id = c.req.param('id');
 	await c.env.DB.prepare('DELETE FROM discord_webhooks WHERE id = ?').bind(id).run();
 	return c.json({ message: 'Webhook removed' });
+});
+
+// --- Configuration Management Routes ---
+
+app.use('/api/config/*', authMiddleware, adminMiddleware);
+
+app.get('/api/config/telegram', async (c) => {
+	try {
+		// Only return the DB override if it exists
+		const result = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'telegram_bot_token'").first('value');
+		return c.json({ token: result || '' });
+	} catch (e) {
+		return c.json({ token: '' });
+	}
+});
+
+app.post('/api/config/telegram', async (c) => {
+	const { token } = await c.req.json();
+	
+	// Ensure table exists
+	await c.env.DB.prepare(`
+		CREATE TABLE IF NOT EXISTS configurations (
+			key TEXT PRIMARY KEY,
+			value TEXT
+		)
+	`).run();
+
+	if (token && token.trim() !== '') {
+		await c.env.DB.prepare("INSERT INTO configurations (key, value) VALUES ('telegram_bot_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token.trim()).run();
+	} else {
+		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'telegram_bot_token'").run();
+	}
+	return c.json({ message: 'Telegram settings updated' });
 });
 
 // --- Export the Hono app ---

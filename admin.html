@@ -118,6 +118,21 @@
         <div id="automation-management-section" class="admin-page">
             <h2>Automation Settings</h2>
             
+            <!-- Bot Settings Subsection -->
+            <div class="user-management-layout" style="margin-bottom: 3rem; border-bottom: 1px solid #30363d; padding-bottom: 2rem;">
+                <div class="user-management-form">
+                    <h3>Bot Settings</h3>
+                    <form id="update-telegram-token-form">
+                        <div>
+                            <label for="tg-bot-token">Telegram Bot Token</label>
+                            <input type="password" id="tg-bot-token" placeholder="123456:ABC-..." autocomplete="off">
+                            <p style="font-size: 0.8rem; color: #8b949e; margin-top: 0.5rem;">Leave empty to use the default environment variable.</p>
+                        </div>
+                        <button type="submit">Update Token</button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Telegram Subsection -->
             <div class="user-management-layout" style="margin-bottom: 3rem; border-bottom: 1px solid #30363d; padding-bottom: 2rem;">
                 <div class="user-management-form">
