@@ -179,8 +179,10 @@ app.post('/api/webhook/telegram', async (c) => {
 		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
 
 		// Check if it's a message and contains text
-		if (update.message && update.message.text === '/start') {
+		if (update.message && update.message.text) {
 			const chatId = update.message.chat.id;
+			const text = update.message.text;
+
 			const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
 
 			// Check DB for authorized IDs as well
@@ -192,20 +194,37 @@ app.post('/api/webhook/telegram', async (c) => {
 
 			const isAuthorized = [...envChatIds, ...dbChatIds].some(id => id.trim() === chatId.toString());
 
-			const messageText = isAuthorized
-				? `Connected! You are authorized to receive notifications.`
-				: `Your Chat ID is: <code>${chatId}</code>\n\nAdd this ID to Cloudflare to receive notifications.`;
-			
-			if (telegramBotToken) {
-				await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						chat_id: chatId,
-						text: messageText,
-						parse_mode: 'HTML'
-					})
-				});
+			if (text === '/start') {
+				const messageText = isAuthorized
+					? `Connected! You are authorized to receive notifications.\nTry /stats to see website statistics.`
+					: `Your Chat ID is: <code>${chatId}</code>\n\nAdd this ID to Cloudflare to receive notifications.`;
+				
+				if (telegramBotToken) {
+					await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							chat_id: chatId,
+							text: messageText,
+							parse_mode: 'HTML'
+						})
+					});
+				}
+			} else if (text === '/stats' && isAuthorized) {
+				const items = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items').first('count');
+				const users = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first('count');
+
+				if (telegramBotToken) {
+					await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							chat_id: chatId,
+							text: `📊 <b>Website Statistics</b>\n\n🖼️ <b>Gallery Items:</b> ${items}\n👥 <b>Users:</b> ${users}`,
+							parse_mode: 'HTML'
+						})
+					});
+				}
 			}
 		}
 		return c.json({ ok: true });
