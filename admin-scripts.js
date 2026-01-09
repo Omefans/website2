@@ -21,12 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const userManagementContainer = document.getElementById('user-management-container');
     const navContentBtn = document.getElementById('nav-content-btn');
     const navUsersBtn = document.getElementById('nav-users-btn');
-    const navTelegramBtn = document.getElementById('nav-telegram-btn');
-    const telegramSection = document.getElementById('telegram-management-section');
+    const navAutomationBtn = document.getElementById('nav-automation-btn');
+    const automationSection = document.getElementById('automation-management-section');
     const addTelegramForm = document.getElementById('add-telegram-form');
     const telegramList = document.getElementById('telegram-list');
-    const navDiscordBtn = document.getElementById('nav-discord-btn');
-    const discordSection = document.getElementById('discord-management-section');
     const addDiscordForm = document.getElementById('add-discord-form');
     const discordList = document.getElementById('discord-list');
     const navProfileBtn = document.getElementById('nav-profile-btn');
@@ -139,8 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add listeners for the new page navigation
     navContentBtn.addEventListener('click', () => showPage('content'));
     navUsersBtn.addEventListener('click', () => showPage('users'));
-    navTelegramBtn.addEventListener('click', () => showPage('telegram'));
-    navDiscordBtn.addEventListener('click', () => showPage('discord'));
+    navAutomationBtn.addEventListener('click', () => showPage('automation'));
     navProfileBtn.addEventListener('click', () => showPage('profile'));
 
     // Check if a token exists on page load
@@ -831,10 +828,8 @@ document.addEventListener('DOMContentLoaded', () => {
         userManagementContainer.classList.remove('active');
         navContentBtn.classList.remove('active');
         navUsersBtn.classList.remove('active');
-        telegramSection.classList.remove('active');
-        navTelegramBtn.classList.remove('active');
-        discordSection.classList.remove('active');
-        navDiscordBtn.classList.remove('active');
+        automationSection.classList.remove('active');
+        navAutomationBtn.classList.remove('active');
         profileSection.classList.remove('active');
         navProfileBtn.classList.remove('active');
 
@@ -845,12 +840,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'users' && userRole === 'admin') {
             userManagementContainer.classList.add('active');
             navUsersBtn.classList.add('active');
-        } else if (pageName === 'telegram' && userRole === 'admin') {
-            telegramSection.classList.add('active');
-            navTelegramBtn.classList.add('active');
-        } else if (pageName === 'discord' && userRole === 'admin') {
-            discordSection.classList.add('active');
-            navDiscordBtn.classList.add('active');
+        } else if (pageName === 'automation' && userRole === 'admin') {
+            automationSection.classList.add('active');
+            navAutomationBtn.classList.add('active');
         } else if (pageName === 'profile') {
             profileSection.classList.add('active');
             navProfileBtn.classList.add('active');
