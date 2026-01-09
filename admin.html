@@ -36,6 +36,7 @@
             <nav id="admin-nav">
                 <button id="nav-content-btn" class="nav-btn">Content</button>
                 <button id="nav-users-btn" class="nav-btn">Users</button>
+                <button id="nav-telegram-btn" class="nav-btn">Telegram</button>
                 <button id="nav-profile-btn" class="nav-btn">Profile</button>
             </nav>
 
@@ -109,6 +110,31 @@
                 <div class="user-management-list">
                     <h3>Existing Users</h3>
                     <div id="user-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telegram Management Section -->
+        <div id="telegram-management-section" class="admin-page">
+            <h2>Telegram Notifications</h2>
+            <div class="user-management-layout">
+                <div class="user-management-form">
+                    <h3>Add Chat ID</h3>
+                    <form id="add-telegram-form">
+                        <div>
+                            <label for="tg-chat-id">Chat ID</label>
+                            <input type="text" id="tg-chat-id" required placeholder="e.g. 123456789">
+                        </div>
+                        <div>
+                            <label for="tg-name">Name (Optional)</label>
+                            <input type="text" id="tg-name" placeholder="e.g. John Doe">
+                        </div>
+                        <button type="submit">Add ID</button>
+                    </form>
+                </div>
+                <div class="user-management-list">
+                    <h3>Authorized Chat IDs</h3>
+                    <div id="telegram-list"></div>
                 </div>
             </div>
         </div>

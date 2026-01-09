@@ -123,7 +123,16 @@ app.post('/api/contact', async (c) => {
 		// --- Telegram Notification for Admins ---
 		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
 		// Use the secret if available, otherwise fallback to your hardcoded ID
-		const adminChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+		const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+		
+		// Fetch additional IDs from DB
+		let dbChatIds: string[] = [];
+		try {
+			const { results } = await c.env.DB.prepare('SELECT chat_id FROM telegram_admins').all();
+			dbChatIds = results.map((r: any) => r.chat_id);
+		} catch (e) { /* Table might not exist yet */ }
+
+		const adminChatIds = [...new Set([...envChatIds, ...dbChatIds])];
 
 		if (telegramBotToken && adminChatIds.length > 0) {
 			const telegramText = `<b>New Contact Submission</b>\n` +
@@ -406,6 +415,47 @@ adminRoutes.delete('/api/users/:id', async (c) => {
 	return c.json({ message: 'User deleted successfully!' });
 });
 
+// --- Telegram Admin Management Routes ---
+
+adminRoutes.get('/telegram', async (c) => {
+	try {
+		const { results } = await c.env.DB.prepare('SELECT * FROM telegram_admins ORDER BY created_at DESC').all();
+		return c.json(results);
+	} catch (e) {
+		return c.json([]); // Return empty if table doesn't exist
+	}
+});
+
+adminRoutes.post('/telegram', async (c) => {
+	const { chat_id, name } = await c.req.json();
+	if (!chat_id) return c.json({ error: 'Chat ID is required' }, 400);
+
+	// Ensure table exists (lazy migration)
+	await c.env.DB.prepare(`
+		CREATE TABLE IF NOT EXISTS telegram_admins (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			chat_id TEXT NOT NULL UNIQUE,
+			name TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)
+	`).run();
+
+	try {
+		await c.env.DB.prepare('INSERT INTO telegram_admins (chat_id, name) VALUES (?, ?)').bind(chat_id, name).run();
+		return c.json({ message: 'Chat ID added successfully' });
+	} catch (e: any) {
+		if (e.message.includes('UNIQUE')) {
+			 return c.json({ error: 'Chat ID already exists' }, 409);
+		}
+		return c.json({ error: 'Failed to add Chat ID' }, 500);
+	}
+});
+
+adminRoutes.delete('/telegram/:id', async (c) => {
+	const id = c.req.param('id');
+	await c.env.DB.prepare('DELETE FROM telegram_admins WHERE id = ?').bind(id).run();
+	return c.json({ message: 'Chat ID removed' });
+});
 
 // --- Export the Hono app ---
 export default app;

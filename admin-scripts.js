@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const userManagementContainer = document.getElementById('user-management-container');
     const navContentBtn = document.getElementById('nav-content-btn');
     const navUsersBtn = document.getElementById('nav-users-btn');
+    const navTelegramBtn = document.getElementById('nav-telegram-btn');
+    const telegramSection = document.getElementById('telegram-management-section');
+    const addTelegramForm = document.getElementById('add-telegram-form');
+    const telegramList = document.getElementById('telegram-list');
     const navProfileBtn = document.getElementById('nav-profile-btn');
     const profileSection = document.getElementById('profile-section');
     const profileUsernameEl = document.getElementById('profile-username');
@@ -131,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add listeners for the new page navigation
     navContentBtn.addEventListener('click', () => showPage('content'));
     navUsersBtn.addEventListener('click', () => showPage('users'));
+    navTelegramBtn.addEventListener('click', () => showPage('telegram'));
     navProfileBtn.addEventListener('click', () => showPage('profile'));
 
     // Check if a token exists on page load
@@ -198,6 +203,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Event listeners for Telegram management
+    if (addTelegramForm) {
+        addTelegramForm.addEventListener('submit', handleAddTelegram);
+    }
+    if (telegramList) {
+        telegramList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-tg-btn')) {
+                const id = e.target.dataset.id;
+                if (id) handleDeleteTelegram(id);
+            }
+        });
+    }
+
     // Event listeners for password change modal
     if (changePasswordBtn && passwordModal && closePasswordModalBtn && changePasswordForm) {
         changePasswordBtn.addEventListener('click', () => {
@@ -228,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // A class on the body will control UI visibility via CSS
             document.body.classList.add('is-admin');
             loadUsers(); // Load user data in the background
+            loadTelegramAdmins(); // Load telegram data
             // Allow admins to create other admins
             const roleSelect = document.getElementById('new-role');
             if (roleSelect && !roleSelect.querySelector('option[value="admin"]')) {
@@ -603,6 +622,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function handleAddTelegram(e) {
+        e.preventDefault();
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const chatId = document.getElementById('tg-chat-id').value;
+        const name = document.getElementById('tg-name').value;
+
+        setButtonLoadingState(button, true, 'Adding...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/telegram`, {
+                method: 'POST',
+                body: JSON.stringify({ chat_id: chatId, name })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to add Chat ID.');
+
+            showToast(result.message, 'success');
+            form.reset();
+            loadTelegramAdmins();
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
+        }
+    }
+
+    async function loadTelegramAdmins() {
+        if (!telegramList) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/telegram`);
+            if (!response.ok) return; // Fail silently or handle error
+            const items = await response.json();
+            telegramList.innerHTML = '';
+            
+            if (items.length === 0) {
+                telegramList.innerHTML = '<p>No Chat IDs found.</p>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'user-list-item';
+                el.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-username">${item.chat_id}</span>
+                        <span class="user-role">${item.name || 'No Name'}</span>
+                    </div>
+                    <div class="user-actions">
+                        <button class="delete-tg-btn" data-id="${item.id}" style="background: #da3633;">Delete</button>
+                    </div>
+                `;
+                fragment.appendChild(el);
+            });
+            telegramList.appendChild(fragment);
+        } catch (e) { console.error(e); }
+    }
+
+    async function handleDeleteTelegram(id) {
+        if (!confirm('Remove this Chat ID?')) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/telegram/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                showToast('Chat ID removed', 'success');
+                loadTelegramAdmins();
+            } else {
+                showToast('Failed to remove ID', 'error');
+            }
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+
     async function handleChangePassword(e) {
         e.preventDefault();
         const button = changePasswordForm.querySelector('button[type="submit"]');
@@ -651,6 +741,8 @@ document.addEventListener('DOMContentLoaded', () => {
         userManagementContainer.classList.remove('active');
         navContentBtn.classList.remove('active');
         navUsersBtn.classList.remove('active');
+        telegramSection.classList.remove('active');
+        navTelegramBtn.classList.remove('active');
         profileSection.classList.remove('active');
         navProfileBtn.classList.remove('active');
 
@@ -661,6 +753,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'users' && userRole === 'admin') {
             userManagementContainer.classList.add('active');
             navUsersBtn.classList.add('active');
+        } else if (pageName === 'telegram' && userRole === 'admin') {
+            telegramSection.classList.add('active');
+            navTelegramBtn.classList.add('active');
         } else if (pageName === 'profile') {
             profileSection.classList.add('active');
             navProfileBtn.classList.add('active');
