@@ -181,8 +181,16 @@ app.post('/api/webhook/telegram', async (c) => {
 		// Check if it's a message and contains text
 		if (update.message && update.message.text === '/start') {
 			const chatId = update.message.chat.id;
-			const adminChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
-			const isAuthorized = adminChatIds.some(id => id.trim() === chatId.toString());
+			const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+
+			// Check DB for authorized IDs as well
+			let dbChatIds: string[] = [];
+			try {
+				const { results } = await c.env.DB.prepare('SELECT chat_id FROM telegram_admins').all();
+				dbChatIds = results.map((r: any) => r.chat_id);
+			} catch (e) { /* Table might not exist yet */ }
+
+			const isAuthorized = [...envChatIds, ...dbChatIds].some(id => id.trim() === chatId.toString());
 
 			const messageText = isAuthorized
 				? `Connected! You are authorized to receive notifications.`
