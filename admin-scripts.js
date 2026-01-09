@@ -19,8 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminPanelMain = document.getElementById('admin-panel-main');
     const contentManagementSection = document.getElementById('content-management-section');
     const userManagementContainer = document.getElementById('user-management-container');
-    const navToggleBtn = document.getElementById('nav-toggle-btn');
-    const navLinks = document.getElementById('nav-links');
     const navContentBtn = document.getElementById('nav-content-btn');
     const navUsersBtn = document.getElementById('nav-users-btn');
     const navAutomationBtn = document.getElementById('nav-automation-btn');
@@ -142,13 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     navUsersBtn.addEventListener('click', () => showPage('users'));
     navAutomationBtn.addEventListener('click', () => showPage('automation'));
     navProfileBtn.addEventListener('click', () => showPage('profile'));
-
-    // Mobile menu toggle
-    if (navToggleBtn && navLinks) {
-        navToggleBtn.addEventListener('click', () => {
-            navLinks.classList.toggle('show');
-        });
-    }
 
     // Check if a token exists on page load
     if (authToken) {
@@ -903,15 +894,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profileUsernameEl) profileUsernameEl.textContent = currentUsername;
             if (profileRoleEl) profileRoleEl.textContent = userRole;
         }
-
-        // Update mobile title
-        const mobileTitle = document.getElementById('mobile-page-title');
-        if (mobileTitle) {
-            mobileTitle.textContent = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-        }
-
-        // Close mobile menu if open
-        if (navLinks) navLinks.classList.remove('show');
     }
 
     function logout() {
