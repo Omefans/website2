@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const navUsersBtn = document.getElementById('nav-users-btn');
     const navAutomationBtn = document.getElementById('nav-automation-btn');
     const automationSection = document.getElementById('automation-management-section');
+    const navSecurityBtn = document.getElementById('nav-security-btn');
+    const securitySection = document.getElementById('security-section');
+    const banIpForm = document.getElementById('ban-ip-form');
+    const bannedIpsList = document.getElementById('banned-ips-list');
+    const systemLogsList = document.getElementById('system-logs-list');
     const updateTelegramTokenForm = document.getElementById('update-telegram-token-form');
     const addTelegramForm = document.getElementById('add-telegram-form');
     const telegramList = document.getElementById('telegram-list');
@@ -139,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navContentBtn.addEventListener('click', () => showPage('content'));
     navUsersBtn.addEventListener('click', () => showPage('users'));
     navAutomationBtn.addEventListener('click', () => showPage('automation'));
+    navSecurityBtn.addEventListener('click', () => showPage('security'));
     navProfileBtn.addEventListener('click', () => showPage('profile'));
 
     // Check if a token exists on page load
@@ -210,6 +216,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTelegramTokenForm.addEventListener('submit', handleUpdateTelegramToken);
     }
 
+    if (banIpForm) {
+        banIpForm.addEventListener('submit', handleBanIp);
+    }
+    if (bannedIpsList) {
+        bannedIpsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('unban-btn')) {
+                handleUnbanIp(e.target.dataset.ip);
+            }
+        });
+    }
+
     // Event listeners for Telegram management
     if (addTelegramForm) {
         addTelegramForm.addEventListener('submit', handleAddTelegram);
@@ -268,6 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadUsers(); // Load user data in the background
             loadTelegramAdmins(); // Load telegram data
             loadTelegramToken(); // Load telegram token
+            loadBannedIps(); // Load bans
+            loadSystemLogs(); // Load logs
             loadDiscordWebhooks(); // Load discord data
             // Allow admins to create other admins
             const roleSelect = document.getElementById('new-role');
@@ -644,6 +663,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function handleBanIp(e) {
+        e.preventDefault();
+        const form = e.target;
+        const ip = document.getElementById('ban-ip-input').value;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/security/bans`, {
+                method: 'POST',
+                body: JSON.stringify({ ip, reason: 'Admin Panel Ban' })
+            });
+            if (response.ok) {
+                showToast('IP Banned', 'success');
+                form.reset();
+                loadBannedIps();
+                loadSystemLogs();
+            } else { showToast('Failed to ban IP', 'error'); }
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function handleUnbanIp(ip) {
+        if (!confirm(`Unban ${ip}?`)) return;
+        try {
+            await authenticatedFetch(`${AppConfig.backendUrl}/api/security/bans/${ip}`, { method: 'DELETE' });
+            showToast('IP Unbanned', 'success');
+            loadBannedIps();
+            loadSystemLogs();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function loadBannedIps() {
+        if (!bannedIpsList) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/security/bans`);
+            const items = await response.json();
+            bannedIpsList.innerHTML = '';
+            if (items.length === 0) { bannedIpsList.innerHTML = '<p>No bans.</p>'; return; }
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'user-list-item';
+                el.innerHTML = `
+                    <div class="user-info"><span class="user-username">${item.ip}</span><span class="user-role">${item.reason}</span></div>
+                    <div class="user-actions"><button class="unban-btn" data-ip="${item.ip}">Unban</button></div>
+                `;
+                bannedIpsList.appendChild(el);
+            });
+        } catch (e) {}
+    }
+
+    async function loadSystemLogs() {
+        if (!systemLogsList) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/logs`);
+            const logs = await response.json();
+            systemLogsList.innerHTML = '';
+            if (logs.length === 0) { systemLogsList.innerHTML = '<p>No logs.</p>'; return; }
+            logs.forEach(log => {
+                systemLogsList.innerHTML += `<div style="margin-bottom: 8px; border-bottom: 1px solid #30363d; padding-bottom: 4px;"><span style="color: ${log.level === 'WARN' ? '#e3b341' : (log.level === 'ERROR' ? '#f85149' : '#3fb950')}">[${log.level}]</span> <span style="color: #8b949e;">${new Date(log.created_at).toLocaleString()}</span><br>${log.message}</div>`;
+            });
+        } catch (e) {}
+    }
+
     async function handleUpdateTelegramToken(e) {
         e.preventDefault();
         const form = e.target;
@@ -875,6 +954,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navUsersBtn.classList.remove('active');
         automationSection.classList.remove('active');
         navAutomationBtn.classList.remove('active');
+        securitySection.classList.remove('active');
+        navSecurityBtn.classList.remove('active');
         profileSection.classList.remove('active');
         navProfileBtn.classList.remove('active');
 
@@ -888,6 +969,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'automation' && userRole === 'admin') {
             automationSection.classList.add('active');
             navAutomationBtn.classList.add('active');
+        } else if (pageName === 'security' && userRole === 'admin') {
+            securitySection.classList.add('active');
+            navSecurityBtn.classList.add('active');
         } else if (pageName === 'profile') {
             profileSection.classList.add('active');
             navProfileBtn.classList.add('active');

@@ -32,6 +32,21 @@ async function getTelegramToken(env: Bindings): Promise<string> {
 	return token;
 }
 
+// --- Helper: System Logging ---
+async function logEvent(db: D1Database, level: string, message: string) {
+	try {
+		await db.prepare(`
+			CREATE TABLE IF NOT EXISTS system_logs (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				level TEXT,
+				message TEXT,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			)
+		`).run();
+		await db.prepare('INSERT INTO system_logs (level, message) VALUES (?, ?)').bind(level, message).run();
+	} catch (e) { console.error('Logging failed:', e); }
+}
+
 // --- API Root Route ---
 app.get('/api', (c) => {
 	return c.json({
@@ -42,6 +57,19 @@ app.get('/api', (c) => {
 });
 
 // --- Middleware ---
+
+// 0. IP Ban Middleware
+app.use('*', async (c, next) => {
+	const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+	try {
+		// Lazy check for table existence to prevent crash on first run
+		const banned = await c.env.DB.prepare("SELECT ip FROM banned_ips WHERE ip = ?").bind(ip).first();
+		if (banned) {
+			return c.text('Access Denied', 403);
+		}
+	} catch (e) { /* Table might not exist yet */ }
+	await next();
+});
 
 // 1. CORS Middleware
 app.use('/api/*', cors({
@@ -108,6 +136,7 @@ app.post('/api/auth/login', async (c) => {
 	const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 	const token = `${encodedHeader}.${encodedPayload}.`; // No signature, matching frontend
 
+	c.executionCtx.waitUntil(logEvent(c.env.DB, 'INFO', `User ${username} logged in`));
 	return c.json({ token });
 });
 
@@ -509,6 +538,11 @@ app.post('/api/webhook/telegram', async (c) => {
 						`/search [term] - Search gallery items\n` +
 						`/users - List recent users\n` +
 						`/admins - List authorized Telegram admins\n` +
+						`/add_admin [id] [name] - Add new admin\n` +
+						`/remove_admin [id] - Remove admin\n` +
+						`/ban_ip [ip] - Ban an IP address\n` +
+						`/logs - View recent system logs\n` +
+						`/status - Check system health\n` +
 						`/maintenance [on/off] - Toggle maintenance mode\n` +
 						`/delete_user [username] - Delete a user\n` +
 						`/delete_item [id] - Delete an item by ID\n` +
@@ -854,6 +888,7 @@ app.post('/api/upload', authMiddleware, async (c) => {
 	const { results } = await c.env.DB.prepare(
 		'INSERT INTO gallery_items (name, description, category, isFeatured, imageUrl, affiliateUrl, userId) VALUES (?, ?, ?, ?, ?, ?, ?)'
 	).bind(name, description, category, isFeatured ? 1 : 0, imageUrl, affiliateUrl, c.get('userId')).run();
+	c.executionCtx.waitUntil(logEvent(c.env.DB, 'INFO', `Item added: ${name}`));
 
 	// --- Discord Notification Logic ---
 	try {
@@ -939,6 +974,7 @@ app.put('/api/gallery/:id', authMiddleware, async (c) => {
 		return c.json({ error: 'Item not found or no changes made' }, 404);
 	}
 
+	c.executionCtx.waitUntil(logEvent(c.env.DB, 'INFO', `Item updated: ${itemId}`));
 	return c.json({ message: 'Item updated successfully!', item: info });
 });
 
@@ -949,6 +985,7 @@ app.delete('/api/gallery/:id', authMiddleware, async (c) => {
 	if (info.changes === 0) {
 		return c.json({ error: 'Item not found' }, 404);
 	}
+	c.executionCtx.waitUntil(logEvent(c.env.DB, 'INFO', `Item deleted: ${itemId}`));
 	return c.json({ message: 'Item deleted successfully!' });
 });
 
@@ -984,6 +1021,7 @@ app.put('/api/profile/password', authMiddleware, async (c) => {
 	await c.env.DB.prepare('UPDATE users SET passwordHash = ? WHERE id = ?')
 		.bind(newPasswordHash, userId).run();
 
+	c.executionCtx.waitUntil(logEvent(c.env.DB, 'WARN', `User ${userId} changed password`));
 	return c.json({ message: 'Password updated successfully!' });
 });
 
@@ -1012,6 +1050,7 @@ adminRoutes.post('/api/users', async (c) => {
 	try {
 		await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role) VALUES (?, ?, ?)')
 			.bind(username, passwordHash, role).run();
+		c.executionCtx.waitUntil(logEvent(c.env.DB, 'WARN', `New user created: ${username}`));
 		return c.json({ message: 'User created successfully' }, 201);
 	} catch (e: any) {
 		if (e.message.includes('UNIQUE constraint failed')) {
@@ -1033,6 +1072,7 @@ adminRoutes.delete('/api/users/:id', async (c) => {
 		return c.json({ error: 'User not found' }, 404);
 	}
 
+	c.executionCtx.waitUntil(logEvent(c.env.DB, 'WARN', `User deleted: ${userIdToDelete}`));
 	return c.json({ message: 'User deleted successfully!' });
 });
 
@@ -1170,29 +1210,40 @@ app.post('/api/config/telegram', async (c) => {
 	}
 });
 
-// --- Export the Hono app ---
-export default app;epare("INSERT INTO configurations (key, value) VALUES ('telegram_bot_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token.trim()).run();
+// --- Security & Logs Routes ---
 
-		// Automatically register the webhook for the new token
-		try {
-			const url = new URL(c.req.url);
-			const webhookUrl = `${url.protocol}//${url.host}/api/webhook/telegram`;
-			const response = await fetch(`https://api.telegram.org/bot${token.trim()}/setWebhook?url=${webhookUrl}`);
-			const data: any = await response.json();
-			
-			if (!data.ok) {
-				return c.json({ message: `Token saved, but Webhook error: ${data.description}` });
-			}
-		} catch (e) {
-			console.error('Webhook registration failed:', e);
-			return c.json({ message: 'Token saved, but failed to register Webhook.' });
-		}
+adminRoutes.get('/api/logs', async (c) => {
+	try {
+		const { results } = await c.env.DB.prepare('SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 50').all();
+		return c.json(results);
+	} catch (e) { return c.json([]); }
+});
 
-		return c.json({ message: 'Telegram settings updated and Webhook registered' });
-	} else {
-		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'telegram_bot_token'").run();
-		return c.json({ message: 'Telegram settings cleared' });
-	}
+adminRoutes.get('/api/security/bans', async (c) => {
+	try {
+		const { results } = await c.env.DB.prepare('SELECT * FROM banned_ips ORDER BY created_at DESC').all();
+		return c.json(results);
+	} catch (e) { return c.json([]); }
+});
+
+adminRoutes.post('/api/security/bans', async (c) => {
+	const { ip, reason } = await c.req.json();
+	if (!ip) return c.json({ error: 'IP is required' }, 400);
+	
+	await c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS banned_ips (ip TEXT PRIMARY KEY, reason TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+	
+	try {
+		await c.env.DB.prepare('INSERT INTO banned_ips (ip, reason) VALUES (?, ?)').bind(ip, reason || 'Manual Ban').run();
+		await logEvent(c.env.DB, 'WARN', `IP Banned: ${ip}`);
+		return c.json({ message: 'IP Banned' });
+	} catch (e) { return c.json({ error: 'IP already banned' }, 409); }
+});
+
+adminRoutes.delete('/api/security/bans/:ip', async (c) => {
+	const ip = c.req.param('ip');
+	await c.env.DB.prepare('DELETE FROM banned_ips WHERE ip = ?').bind(ip).run();
+	await logEvent(c.env.DB, 'INFO', `IP Unbanned: ${ip}`);
+	return c.json({ message: 'IP Unbanned' });
 });
 
 // --- Export the Hono app ---

@@ -38,6 +38,7 @@
                     <button id="nav-content-btn" class="nav-btn">Content</button>
                     <button id="nav-users-btn" class="nav-btn">Users</button>
                     <button id="nav-automation-btn" class="nav-btn">Automation</button>
+                    <button id="nav-security-btn" class="nav-btn">Security</button>
                     <button id="nav-profile-btn" class="nav-btn">Profile</button>
                 </div>
             </nav>
@@ -178,6 +179,31 @@
                     <div id="discord-list"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- Security Section -->
+        <div id="security-section" class="admin-page">
+            <h2>Security & Logs</h2>
+            
+            <div class="user-management-layout" style="margin-bottom: 3rem; border-bottom: 1px solid #30363d; padding-bottom: 2rem;">
+                <div class="user-management-form">
+                    <h3>Ban IP Address</h3>
+                    <form id="ban-ip-form">
+                        <div>
+                            <label for="ban-ip-input">IP Address</label>
+                            <input type="text" id="ban-ip-input" required placeholder="192.168.1.1">
+                        </div>
+                        <button type="submit" style="background: #da3633;">Ban IP</button>
+                    </form>
+                </div>
+                <div class="user-management-list">
+                    <h3>Banned IPs</h3>
+                    <div id="banned-ips-list"></div>
+                </div>
+            </div>
+
+            <h3>System Logs (Last 50)</h3>
+            <div id="system-logs-list" style="background: #0d1117; padding: 1rem; border-radius: 6px; border: 1px solid #30363d; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.9rem;"></div>
         </div>
 
         <!-- Profile Section -->
