@@ -505,6 +505,7 @@ app.post('/api/webhook/telegram', async (c) => {
 					const helpText = `<b>🤖 Admin Bot Commands</b>\n\n` +
 						`/stats - View website statistics\n` +
 						`/latest - Show most recent gallery item\n` +
+						`/content - List recent content\n` +
 						`/search [term] - Search gallery items\n` +
 						`/users - List recent users\n` +
 						`/admins - List authorized Telegram admins\n` +
@@ -592,6 +593,30 @@ app.post('/api/webhook/telegram', async (c) => {
 							method: 'POST',
 							headers: { 'Content-Type': 'application/json' },
 							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching latest item.' })
+						});
+					}
+				} else if (command === '/content') {
+					try {
+						const { results } = await c.env.DB.prepare('SELECT id, name, category, createdAt FROM gallery_items ORDER BY createdAt DESC LIMIT 10').all();
+						let msg = '<b>🖼️ Recent Content (Last 10)</b>\n\n';
+						if (results && results.length > 0) {
+							results.forEach((item: any) => {
+								const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+								msg += `• <b>${item.name}</b> (${item.category}) - ${date}\n  ID: <code>${item.id}</code>\n`;
+							});
+						} else {
+							msg += 'No content found.';
+						}
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' })
+						});
+					} catch (e) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching content.' })
 						});
 					}
 				} else if (command === '/search') {
@@ -1122,6 +1147,31 @@ app.post('/api/config/telegram', async (c) => {
 
 	if (token && token.trim() !== '') {
 		await c.env.DB.prepare("INSERT INTO configurations (key, value) VALUES ('telegram_bot_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token.trim()).run();
+
+		// Automatically register the webhook for the new token
+		try {
+			const url = new URL(c.req.url);
+			const webhookUrl = `${url.protocol}//${url.host}/api/webhook/telegram`;
+			const response = await fetch(`https://api.telegram.org/bot${token.trim()}/setWebhook?url=${webhookUrl}`);
+			const data: any = await response.json();
+			
+			if (!data.ok) {
+				return c.json({ message: `Token saved, but Webhook error: ${data.description}` });
+			}
+		} catch (e) {
+			console.error('Webhook registration failed:', e);
+			return c.json({ message: 'Token saved, but failed to register Webhook.' });
+		}
+
+		return c.json({ message: 'Telegram settings updated and Webhook registered' });
+	} else {
+		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'telegram_bot_token'").run();
+		return c.json({ message: 'Telegram settings cleared' });
+	}
+});
+
+// --- Export the Hono app ---
+export default app;epare("INSERT INTO configurations (key, value) VALUES ('telegram_bot_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token.trim()).run();
 
 		// Automatically register the webhook for the new token
 		try {
