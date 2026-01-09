@@ -209,9 +209,15 @@ body.is-admin #nav-users-btn { display: inline-block; }
     display: flex;
     gap: 0.5rem;
     margin-bottom: 2rem;
+    /* Modern Scrollable Nav */
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -webkit-overflow-scrolling: touch; /* iOS */
 }
+#admin-nav::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
 .nav-btn {
-    flex-grow: 1;
+    flex: 0 0 auto; /* Don't shrink, don't grow excessively */
     background: none;
     border: none;
     border-bottom: 2px solid #30363d;
@@ -220,6 +226,7 @@ body.is-admin #nav-users-btn { display: inline-block; }
     color: #8b949e;
     font-weight: 500;
     transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 .nav-btn:hover:not(.active) { color: #c9d1d9; }
 .nav-btn.active {
@@ -284,6 +291,7 @@ body.is-admin #nav-users-btn { display: inline-block; }
 .item-publisher { font-weight: 500; }
 .item-actions { margin-top: auto; display: flex; gap: 0.75rem; }
 .item-actions button {
+    flex: 1; /* Distribute space evenly */
     padding: 0.6rem;
     background: #21262d;
     font-weight: 500;
@@ -505,19 +513,65 @@ body.is-admin #nav-users-btn { display: inline-block; }
     }
     h2 { font-size: 1.5rem; }
     .admin-controls { flex-direction: column; align-items: stretch; }
-    #admin-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+    
+    /* Optimized Header for Mobile */
+    #admin-header { 
+        flex-direction: row; 
+        gap: 0.5rem; 
+        align-items: center; 
+        justify-content: space-between;
+    }
+    .header-logo { height: 32px; } /* Smaller logo */
     .logo-container span { display: none; } /* Hide "Admin Panel" text on mobile */
+    #logout-btn { width: auto; padding: 0.5rem 0.8rem; font-size: 0.85rem; }
+
     #toast-container { right: 10px; left: 10px; bottom: 10px; width: auto; }
     #item-list {
         /* Ensure a single column layout on small screens for content cards */
         grid-template-columns: 1fr;
     }
+
+    /* Modern Scrollable Nav for Mobile */
+    #admin-nav {
+        margin: 0 -1rem 1.5rem -1rem; /* Bleed to edges */
+        padding: 0 1rem 0.5rem 1rem;
+        border-bottom: 1px solid #30363d;
+        gap: 1rem;
+    }
+    .nav-btn {
+        padding: 0.5rem 0.25rem;
+        border-bottom-width: 3px;
+        font-size: 0.95rem;
+    }
+    .nav-btn.active {
+        background: transparent; /* Remove background highlight on mobile */
+        color: #58a6ff;
+    }
+
+    /* Fix Cut-off Buttons */
     .sort-buttons {
         width: 100%;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two equal columns */
+        gap: 10px;
+    }
+    .sort-buttons span {
+        grid-column: 1 / -1; /* Span full width */
+        margin-bottom: 0.25rem;
     }
     .sort-btn {
-        flex: 1;
-        min-width: 0; /* Allow buttons to shrink to fit */
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Better Touch Targets */
+    input, select, textarea, button {
+        font-size: 16px; /* Prevent iOS zoom */
+    }
+    .item-actions {
+        flex-wrap: wrap;
+    }
+    .item-actions button {
+        padding: 12px; /* Larger touch area */
     }
 }
