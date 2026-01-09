@@ -417,7 +417,7 @@ adminRoutes.delete('/api/users/:id', async (c) => {
 
 // --- Telegram Admin Management Routes ---
 
-adminRoutes.get('/telegram', async (c) => {
+adminRoutes.get('/api/users/telegram', async (c) => {
 	try {
 		const { results } = await c.env.DB.prepare('SELECT * FROM telegram_admins ORDER BY created_at DESC').all();
 		return c.json(results);
@@ -426,7 +426,7 @@ adminRoutes.get('/telegram', async (c) => {
 	}
 });
 
-adminRoutes.post('/telegram', async (c) => {
+adminRoutes.post('/api/users/telegram', async (c) => {
 	const { chat_id, name } = await c.req.json();
 	if (!chat_id) return c.json({ error: 'Chat ID is required' }, 400);
 
@@ -451,7 +451,7 @@ adminRoutes.post('/telegram', async (c) => {
 	}
 });
 
-adminRoutes.delete('/telegram/:id', async (c) => {
+adminRoutes.delete('/api/users/telegram/:id', async (c) => {
 	const id = c.req.param('id');
 	await c.env.DB.prepare('DELETE FROM telegram_admins WHERE id = ?').bind(id).run();
 	return c.json({ message: 'Chat ID removed' });
