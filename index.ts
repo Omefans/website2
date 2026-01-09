@@ -6,6 +6,7 @@ type Bindings = {
 	DB: D1Database;
 	JWT_SECRET: string; // Secret for signing JWTs, must be set in Cloudflare dashboard
 	TELEGRAM_BOT_TOKEN: string;
+	TELEGRAM_ADMIN_CHAT_IDS: string; // Comma-separated list of admin chat IDs
 	DISCORD_WEBHOOK_OMEGLE: string;
 	DISCORD_WEBHOOK_ONLYFANS: string;
 	DISCORD_WEBHOOK_CONTACT: string;
@@ -119,6 +120,32 @@ app.post('/api/contact', async (c) => {
 			})
 		});
 
+		// --- Telegram Notification for Admins ---
+		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+		const adminChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+
+		if (telegramBotToken && adminChatIds.length > 0) {
+			const telegramText = `<b>New Contact Submission</b>\n` +
+				`<b>Topic:</b> ${category || 'General'}\n` +
+				`<b>Platform:</b> ${platform || 'N/A'}\n` +
+				`<b>Name:</b> ${name}\n` +
+				`<b>Model Image:</b> ${modelImage || 'N/A'}\n` +
+				`<b>Message:</b>\n${message}`;
+
+			// Send to each admin asynchronously
+			Promise.all(adminChatIds.map(chatId => 
+				fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						chat_id: chatId.trim(),
+						text: telegramText,
+						parse_mode: 'HTML'
+					})
+				})
+			)).catch(err => console.error('Telegram Admin Notification Error:', err));
+		}
+
 		if (!res.ok) {
 			const err = await res.text();
 			console.error('Discord Webhook Error:', err);
@@ -129,6 +156,35 @@ app.post('/api/contact', async (c) => {
 	} catch (error) {
 		console.error('Contact endpoint error:', error);
 		return c.json({ error: 'Internal Server Error' }, 500);
+	}
+});
+
+// Telegram Webhook Route (For getting Chat IDs)
+app.post('/api/webhook/telegram', async (c) => {
+	try {
+		const update = await c.req.json();
+		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+
+		// Check if it's a message and contains text
+		if (update.message && update.message.text === '/start') {
+			const chatId = update.message.chat.id;
+			
+			if (telegramBotToken) {
+				await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						chat_id: chatId,
+						text: `Hello! Your Chat ID is: <code>${chatId}</code>\n\nSend this ID to the admin to receive notifications.`,
+						parse_mode: 'HTML'
+					})
+				});
+			}
+		}
+		return c.json({ ok: true });
+	} catch (e) {
+		console.error('Telegram Webhook Error:', e);
+		return c.json({ error: 'Error processing update' }, 500);
 	}
 });
 
