@@ -531,32 +531,35 @@ body.is-admin #nav-users-btn { display: inline-block; }
         grid-template-columns: 1fr;
     }
 
-    /* Modern Scrollable Nav for Mobile */
+    /* Vertical Stacked Nav for Mobile */
     #nav-links {
         display: flex;
-        flex-direction: row;
-        overflow-x: auto;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        scrollbar-width: none; /* Firefox */
-        margin: 0 -1rem 1.5rem -1rem; /* Bleed to edges */
-        padding: 0 1rem;
-        border-bottom: 1px solid #30363d;
-        gap: 1rem;
+        flex-direction: column;
+        overflow-x: visible;
+        white-space: normal;
+        margin: 0 0 1.5rem 0;
+        padding: 0;
+        border-bottom: none;
+        gap: 0.75rem;
     }
-    #nav-links::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+    #nav-links::-webkit-scrollbar { display: none; }
 
     .nav-btn {
-        flex: 0 0 auto;
-        padding: 0.75rem 0.25rem;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -1px; /* Sit on the line */
-        font-size: 0.95rem;
+        flex: 1;
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin-bottom: 0;
+        font-size: 1.1rem;
+        background: #161b22;
+        text-align: center;
+        color: #c9d1d9;
     }
     .nav-btn.active {
-        background: transparent;
-        border-bottom-color: #58a6ff;
-        color: #f0f6fc;
+        background: #1f6feb;
+        border-color: #1f6feb;
+        color: #ffffff;
     }
 
     /* Fix Cut-off Buttons */
