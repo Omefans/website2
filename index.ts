@@ -122,6 +122,7 @@ app.post('/api/contact', async (c) => {
 
 		// --- Telegram Notification for Admins ---
 		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+		// Use the secret if available, otherwise fallback to your hardcoded ID
 		const adminChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
 
 		if (telegramBotToken && adminChatIds.length > 0) {
@@ -133,7 +134,7 @@ app.post('/api/contact', async (c) => {
 				`<b>Message:</b>\n${message}`;
 
 			// Send to each admin asynchronously
-			Promise.all(adminChatIds.map(chatId => 
+			const telegramPromise = Promise.all(adminChatIds.map(chatId => 
 				fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -144,6 +145,9 @@ app.post('/api/contact', async (c) => {
 					})
 				})
 			)).catch(err => console.error('Telegram Admin Notification Error:', err));
+
+			// Ensure the worker waits for the notification to be sent before stopping
+			c.executionCtx.waitUntil(telegramPromise);
 		}
 
 		if (!res.ok) {
