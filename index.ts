@@ -685,6 +685,104 @@ app.post('/api/webhook/telegram', async (c) => {
 							});
 						}
 					}
+				} else if (command === '/id') {
+					await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ chat_id: chatId, text: `Your Chat ID: <code>${chatId}</code>`, parse_mode: 'HTML' })
+					});
+				} else if (command === '/status') {
+					let dbStatus = 'Unknown';
+					try {
+						await c.env.DB.prepare('SELECT 1').first();
+						dbStatus = '✅ Connected';
+					} catch (e) { dbStatus = '❌ Error'; }
+					
+					await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ chat_id: chatId, text: `<b>System Status</b>\n\nDatabase: ${dbStatus}\nRegion: ${c.req.header('cf-ray') || 'Unknown'}`, parse_mode: 'HTML' })
+					});
+				} else if (command === '/logs') {
+					try {
+						const { results } = await c.env.DB.prepare('SELECT level, message, created_at FROM system_logs ORDER BY created_at DESC LIMIT 5').all();
+						let msg = '<b>📜 Recent System Logs</b>\n\n';
+						if (results && results.length > 0) {
+							results.forEach((l: any) => {
+								msg += `[${l.level}] ${l.message}\n<i>${l.created_at}</i>\n\n`;
+							});
+						} else { msg += 'No logs found.'; }
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' })
+						});
+					} catch (e) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching logs.' })
+						});
+					}
+				} else if (command === '/ban_ip') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: 'Usage: /ban_ip [ip]' }) });
+					} else {
+						await c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS banned_ips (ip TEXT PRIMARY KEY, reason TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+						await c.env.DB.prepare('INSERT INTO banned_ips (ip, reason) VALUES (?, ?) ON CONFLICT(ip) DO NOTHING').bind(args.trim(), 'Banned via Telegram').run();
+						await logEvent(c.env.DB, 'WARN', `IP ${args.trim()} banned via Telegram`);
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `🚫 IP <b>${args}</b> has been banned.`, parse_mode: 'HTML' }) });
+					}
+				} else if (command === '/unban_ip') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: 'Usage: /unban_ip [ip]' }) });
+					} else {
+						await c.env.DB.prepare('DELETE FROM banned_ips WHERE ip = ?').bind(args.trim()).run();
+						await logEvent(c.env.DB, 'INFO', `IP ${args.trim()} unbanned via Telegram`);
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `✅ IP <b>${args}</b> unbanned.`, parse_mode: 'HTML' }) });
+					}
+				} else if (command === '/add_admin') {
+					const [newId, ...nameParts] = args.split(' ');
+					const newName = nameParts.join(' ') || 'Admin';
+					if (!newId) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: 'Usage: /add_admin [id] [name]' }) });
+					} else {
+						try {
+							await c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS telegram_admins (id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT NOT NULL UNIQUE, name TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+							await c.env.DB.prepare('INSERT INTO telegram_admins (chat_id, name) VALUES (?, ?)').bind(newId, newName).run();
+							await logEvent(c.env.DB, 'WARN', `New Telegram Admin added: ${newId} (${newName})`);
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `✅ Admin <b>${newName}</b> (${newId}) added.`, parse_mode: 'HTML' }) });
+						} catch (e) {
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: 'Failed to add admin (ID might exist).' }) });
+						}
+					}
+				} else if (command === '/remove_admin') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: 'Usage: /remove_admin [id]' }) });
+					} else {
+						const info = await c.env.DB.prepare('DELETE FROM telegram_admins WHERE chat_id = ?').bind(args.trim()).run();
+						if (info.changes > 0) {
+							await logEvent(c.env.DB, 'WARN', `Telegram Admin removed: ${args.trim()}`);
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `🗑️ Admin <b>${args}</b> removed.`, parse_mode: 'HTML' }) });
+						} else {
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `❌ Admin ID <b>${args}</b> not found.`, parse_mode: 'HTML' }) });
+						}
+					}
+				} else if (command === '/add_manager') {
+					const [newUsername, newPassword] = args.split(' ');
+					if (!newUsername || !newPassword) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: 'Usage: /add_manager [username] [password]' }) });
+					} else {
+						try {
+							await c.env.DB.prepare('INSERT INTO users (username, passwordHash, role) VALUES (?, ?, ?)')
+								.bind(newUsername, newPassword, 'manager').run();
+							await logEvent(c.env.DB, 'WARN', `New manager created via Telegram: ${newUsername}`);
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `✅ Manager <b>${newUsername}</b> created.`, parse_mode: 'HTML' }) });
+						} catch (e: any) {
+							const errorMsg = e.message.includes('UNIQUE') ? 'Username already exists.' : 'Failed to create user.';
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: `❌ ${errorMsg}` }) });
+						}
+					}
 				} else if (command === '/maintenance') {
 					const status = args.trim().toLowerCase();
 					if (status === 'on' || status === 'off') {
