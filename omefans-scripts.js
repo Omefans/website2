@@ -55,13 +55,12 @@ document.addEventListener("DOMContentLoaded", function() {
             btn.style.pointerEvents = 'none';
             
             try {
-                const response = await fetch(`${AppConfig.backendUrl}/api/contact`, {
+                const response = await fetch(`${AppConfig.backendUrl}/api/report`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        name: 'Gallery Visitor',
-                        category: category,
-                        message: `Automated Report: User reported "${category}" for gallery item "${currentReportItem}".`
+                        itemName: currentReportItem,
+                        category: category
                     })
                 });
 

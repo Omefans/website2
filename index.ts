@@ -197,6 +197,86 @@ app.post('/api/contact', async (c) => {
 	}
 });
 
+// Report route (for broken links/videos)
+app.post('/api/report', async (c) => {
+	try {
+		// --- Rate Limiting for Reports ---
+		const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+		const now = Date.now();
+		const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute cooldown
+
+		// Separate table for reports so it doesn't conflict with contact form limits
+		await c.env.DB.prepare(`
+			CREATE TABLE IF NOT EXISTS report_rate_limits (
+				ip TEXT PRIMARY KEY,
+				last_request INTEGER
+			)
+		`).run();
+
+		const limitRecord = await c.env.DB.prepare('SELECT last_request FROM report_rate_limits WHERE ip = ?').bind(ip).first();
+		
+		if (limitRecord && (now - (limitRecord.last_request as number)) < RATE_LIMIT_WINDOW) {
+			return c.json({ error: 'Too many reports. Please wait a minute before reporting again.' }, 429);
+		}
+
+		// Update timestamp
+		await c.env.DB.prepare(`
+			INSERT INTO report_rate_limits (ip, last_request) VALUES (?, ?)
+			ON CONFLICT(ip) DO UPDATE SET last_request = excluded.last_request
+		`).bind(ip, now).run();
+
+		// Cleanup old records asynchronously
+		c.executionCtx.waitUntil(
+			c.env.DB.prepare('DELETE FROM report_rate_limits WHERE last_request < ?').bind(now - 86400000).run()
+		);
+
+		const { itemName, category } = await c.req.json();
+
+		if (!itemName || !category) {
+			return c.json({ error: 'Missing required fields' }, 400);
+		}
+
+		const message = `**New Content Report**\n**Item:** ${itemName}\n**Issue:** ${category}`;
+
+		// Send to Discord (using Contact webhook)
+		const discordWebhookUrl = c.env.DISCORD_WEBHOOK_CONTACT;
+		await fetch(discordWebhookUrl, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ content: message })
+		});
+
+		// Send to Telegram Admins
+		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
+		const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
+		let dbChatIds: string[] = [];
+		try {
+			const { results } = await c.env.DB.prepare('SELECT chat_id FROM telegram_admins').all();
+			dbChatIds = results.map((r: any) => r.chat_id);
+		} catch (e) { }
+		const adminChatIds = [...new Set([...envChatIds, ...dbChatIds])];
+
+		if (telegramBotToken && adminChatIds.length > 0) {
+			c.executionCtx.waitUntil(Promise.all(adminChatIds.map(chatId => 
+				fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						chat_id: chatId.trim(),
+						text: `⚠️ <b>Content Report</b>\n\n<b>Item:</b> ${itemName}\n<b>Issue:</b> ${category}`,
+						parse_mode: 'HTML'
+					})
+				})
+			)).catch(err => console.error('Telegram Report Error:', err)));
+		}
+
+		return c.json({ message: 'Report received' });
+	} catch (error) {
+		console.error('Report endpoint error:', error);
+		return c.json({ error: 'Internal Server Error' }, 500);
+	}
+});
+
 // Telegram Webhook Route (For getting Chat IDs)
 app.post('/api/webhook/telegram', async (c) => {
 	try {
