@@ -539,6 +539,7 @@ app.post('/api/webhook/telegram', async (c) => {
 						`/users - List recent users\n` +
 						`/admins - List authorized Telegram admins\n` +
 						`/add_admin [id] [name] - Add new admin\n` +
+						`/add_manager [user] [pass] - Add web manager\n` +
 						`/remove_admin [id] - Remove admin\n` +
 						`/ban_ip [ip] - Ban an IP address\n` +
 						`/logs - View recent system logs\n` +
