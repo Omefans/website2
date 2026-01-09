@@ -34,10 +34,18 @@
 
         <main id="admin-panel-main">
             <nav id="admin-nav">
-                <button id="nav-content-btn" class="nav-btn">Content</button>
-                <button id="nav-users-btn" class="nav-btn">Users</button>
-                <button id="nav-automation-btn" class="nav-btn">Automation</button>
-                <button id="nav-profile-btn" class="nav-btn">Profile</button>
+                <div class="nav-mobile-header">
+                    <button id="nav-toggle-btn" type="button" aria-label="Toggle Menu">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                    </button>
+                    <span id="mobile-page-title">Content</span>
+                </div>
+                <div id="nav-links">
+                    <button id="nav-content-btn" class="nav-btn">Content</button>
+                    <button id="nav-users-btn" class="nav-btn">Users</button>
+                    <button id="nav-automation-btn" class="nav-btn">Automation</button>
+                    <button id="nav-profile-btn" class="nav-btn">Profile</button>
+                </div>
             </nav>
 
             <div id="content-management-section" class="admin-page">
@@ -224,6 +232,6 @@
     </div>
 
     <!-- Make sure this path is correct for your project structure -->
-    <script src="admin-scripts.js?v=1.0.13"></script>
+    <script src="admin-scripts.js?v=1.0.14"></script>
 </body>
 </html>
