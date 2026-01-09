@@ -347,42 +347,97 @@ app.post('/api/webhook/telegram', async (c) => {
 				const items = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items').first('count');
 				const users = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first('count');
 				
-				let topCountryText = 'N/A';
+				let statsText = '';
 				let periodLabel = '';
 
 				if (data === 'stats_daily') {
 					periodLabel = 'Today';
 					const today = new Date().toISOString().split('T')[0];
+					const startOfDay = `${today}T00:00:00Z`;
 					try {
-						const top = await c.env.DB.prepare('SELECT country_code, visits FROM daily_visits WHERE date = ? ORDER BY visits DESC LIMIT 1').bind(today).first();
-						// @ts-ignore
-						if (top) topCountryText = `${top.country_code} (${top.visits})`;
-					} catch(e) {}
+						// Traffic
+						const totalVisitsResult = await c.env.DB.prepare('SELECT SUM(visits) as total FROM daily_visits WHERE date = ?').bind(today).first();
+						const totalVisits = totalVisitsResult?.total || 0;
+						const topCountries = await c.env.DB.prepare('SELECT country_code, visits FROM daily_visits WHERE date = ? ORDER BY visits DESC LIMIT 20').bind(today).all();
+						
+						// Content & Users
+						const newItems = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items WHERE createdAt >= ?').bind(startOfDay).first('count');
+						const newUsers = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE createdAt >= ?').bind(startOfDay).first('count');
+
+						statsText = `📅 <b>Stats for ${periodLabel}</b>\n\n` +
+									`👁️ <b>Visits:</b> ${totalVisits}\n` +
+									`🖼️ <b>New Items:</b> ${newItems}\n` +
+									`👥 <b>New Users:</b> ${newUsers}\n\n` +
+									`🌍 <b>Top Countries:</b>\n`;
+						
+						if (topCountries.results && topCountries.results.length > 0) {
+							topCountries.results.forEach((r: any, i: number) => {
+								statsText += `${i+1}. <b>${r.country_code}</b>: ${r.visits}\n`;
+							});
+						} else {
+							statsText += 'No visits recorded today.';
+						}
+					} catch(e) { statsText = 'Error fetching daily stats.'; }
 				} else if (data === 'stats_monthly') {
 					periodLabel = 'This Month';
 					const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+					const startOfMonth = `${month}-01T00:00:00Z`;
 					try {
-						const top = await c.env.DB.prepare('SELECT country_code, SUM(visits) as total_visits FROM daily_visits WHERE date LIKE ? GROUP BY country_code ORDER BY total_visits DESC LIMIT 1').bind(`${month}%`).first();
-						// @ts-ignore
-						if (top) topCountryText = `${top.country_code} (${top.total_visits})`;
-					} catch(e) {}
+						// Traffic
+						const totalVisitsResult = await c.env.DB.prepare('SELECT SUM(visits) as total FROM daily_visits WHERE date LIKE ?').bind(`${month}%`).first();
+						const totalVisits = totalVisitsResult?.total || 0;
+						const topCountries = await c.env.DB.prepare('SELECT country_code, SUM(visits) as total_visits FROM daily_visits WHERE date LIKE ? GROUP BY country_code ORDER BY total_visits DESC LIMIT 20').bind(`${month}%`).all();
+
+						// Content & Users
+						const newItems = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items WHERE createdAt >= ?').bind(startOfMonth).first('count');
+						const newUsers = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE createdAt >= ?').bind(startOfMonth).first('count');
+
+						statsText = `📅 <b>Stats for ${periodLabel}</b>\n\n` +
+									`👁️ <b>Visits:</b> ${totalVisits}\n` +
+									`🖼️ <b>New Items:</b> ${newItems}\n` +
+									`👥 <b>New Users:</b> ${newUsers}\n\n` +
+									`🌍 <b>Top Countries:</b>\n`;
+
+						if (topCountries.results && topCountries.results.length > 0) {
+							topCountries.results.forEach((r: any, i: number) => {
+								statsText += `${i+1}. <b>${r.country_code}</b>: ${r.total_visits}\n`;
+							});
+						} else {
+							statsText += 'No visits recorded this month.';
+						}
+					} catch(e) { statsText = 'Error fetching monthly stats.'; }
 				} else if (data === 'stats_all_time') {
 					periodLabel = 'All Time';
 					try {
-						const top = await c.env.DB.prepare('SELECT country_code, visits FROM country_stats ORDER BY visits DESC LIMIT 1').first();
-						// @ts-ignore
-						if (top) topCountryText = `${top.country_code} (${top.visits})`;
-					} catch(e) {}
+						// Traffic
+						const totalVisitsResult = await c.env.DB.prepare('SELECT SUM(visits) as total FROM country_stats').first();
+						const totalVisits = totalVisitsResult?.total || 0;
+						const topCountries = await c.env.DB.prepare('SELECT country_code, visits FROM country_stats ORDER BY visits DESC LIMIT 20').all();
+
+						statsText = `📅 <b>All Time Stats</b>\n\n` +
+									`👁️ <b>Total Visits:</b> ${totalVisits}\n` +
+									`🖼️ <b>Total Items:</b> ${items}\n` +
+									`👥 <b>Total Users:</b> ${users}\n\n` +
+									`🌍 <b>Top Countries:</b>\n`;
+
+						if (topCountries.results && topCountries.results.length > 0) {
+							topCountries.results.forEach((r: any, i: number) => {
+								statsText += `${i+1}. <b>${r.country_code}</b>: ${r.visits}\n`;
+							});
+						} else {
+							statsText += 'No data available.';
+						}
+					} catch(e) { statsText = 'Error fetching all-time stats.'; }
 				}
 
-				if (periodLabel) {
+				if (statsText) {
 					await fetch(`https://api.telegram.org/bot${telegramBotToken}/editMessageText`, {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							chat_id: chatId,
 							message_id: messageId,
-							text: `📊 <b>Website Statistics</b>\n\n🖼️ <b>Gallery Items:</b> ${items}\n👥 <b>Users:</b> ${users}\n\n🌍 <b>Top Country (${periodLabel}):</b> ${topCountryText}`,
+							text: statsText,
 							parse_mode: 'HTML',
 							reply_markup: {
 								inline_keyboard: [
@@ -465,15 +520,27 @@ app.post('/api/webhook/telegram', async (c) => {
 				const items = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items').first('count');
 				const users = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first('count');
 				
-				let topCountryText = 'N/A';
+				let overviewText = '';
 				try {
-					const topCountry = await c.env.DB.prepare('SELECT country_code, visits FROM country_stats ORDER BY visits DESC LIMIT 1').first();
-					if (topCountry) {
-						// @ts-ignore
-						topCountryText = `${topCountry.country_code} (${topCountry.visits})`;
+					const totalVisitsResult = await c.env.DB.prepare('SELECT SUM(visits) as total FROM country_stats').first();
+					const totalVisits = totalVisitsResult?.total || 0;
+					const topCountries = await c.env.DB.prepare('SELECT country_code, visits FROM country_stats ORDER BY visits DESC LIMIT 5').all();
+					
+					overviewText = `📊 <b>Website Statistics (All Time)</b>\n\n` +
+								   `🖼️ <b>Gallery Items:</b> ${items}\n` +
+								   `👥 <b>Users:</b> ${users}\n` +
+								   `👁️ <b>Total Visits:</b> ${totalVisits}\n\n` +
+								   `🌍 <b>Top 5 Countries:</b>\n`;
+					
+					if (topCountries.results && topCountries.results.length > 0) {
+						topCountries.results.forEach((r: any, i: number) => {
+							overviewText += `${i+1}. <b>${r.country_code}</b>: ${r.visits}\n`;
+						});
+					} else {
+						overviewText += 'N/A\n';
 					}
 				} catch (e) {
-					// Table might not exist yet
+					overviewText = 'Stats unavailable (DB error).';
 				}
 
 				if (telegramBotToken) {
@@ -482,7 +549,7 @@ app.post('/api/webhook/telegram', async (c) => {
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							chat_id: chatId,
-							text: `📊 <b>Website Statistics</b>\n\n🖼️ <b>Gallery Items:</b> ${items}\n👥 <b>Users:</b> ${users}\n\n🌍 <b>Top Country (All Time):</b> ${topCountryText}\n\n<i>Select a period below to view specific stats:</i>`,
+							text: `${overviewText}\n<i>Select a period below for detailed stats:</i>`,
 							parse_mode: 'HTML',
 							reply_markup: {
 								inline_keyboard: [
