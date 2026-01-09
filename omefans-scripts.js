@@ -238,8 +238,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 e.preventDefault();
                 e.stopPropagation();
                 const itemName = reportBtn.dataset.itemName;
-                const affiliateUrl = reportBtn.dataset.affiliateUrl;
-                const imageUrl = reportBtn.dataset.imageUrl;
+                let affiliateUrl = reportBtn.dataset.affiliateUrl;
+                let imageUrl = reportBtn.dataset.imageUrl;
+
+                // Fallback: If attributes are missing or undefined, look up in masterGalleryData
+                if ((!affiliateUrl || affiliateUrl === 'undefined' || affiliateUrl === 'null') && typeof masterGalleryData !== 'undefined') {
+                    const item = masterGalleryData.find(i => i.name === itemName);
+                    if (item) {
+                        affiliateUrl = item.affiliateUrl;
+                        imageUrl = item.imageUrl;
+                    }
+                }
 
                 if (reportModal && reportItemNameEl) {
                     currentReportItem = itemName;
