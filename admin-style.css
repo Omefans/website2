@@ -216,7 +216,7 @@ body.is-admin #nav-users-btn { display: inline-block; }
 }
 
 .nav-btn {
-    flex: 0 0 auto; /* Don't shrink, don't grow excessively */
+    flex: 1; /* Distribute space evenly and allow shrinking */
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
@@ -226,7 +226,8 @@ body.is-admin #nav-users-btn { display: inline-block; }
     color: #8b949e;
     font-weight: 500;
     transition: color 0.2s, border-color 0.2s;
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: normal; /* Allow text to wrap if needed */
+    text-align: center;
 }
 .nav-btn:hover:not(.active) { color: #c9d1d9; }
 .nav-btn.active {
