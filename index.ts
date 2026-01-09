@@ -179,7 +179,7 @@ app.post('/api/webhook/telegram', async (c) => {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						chat_id: chatId,
-						text: `Hello! Your Chat ID is: <code>${chatId}</code>\n\nSend this ID to the admin to receive notifications.`,
+						text: `Connected! Your Chat ID is: <code>${chatId}</code>\n\nSend this ID to the admin to receive notifications.`,
 						parse_mode: 'HTML'
 					})
 				});
