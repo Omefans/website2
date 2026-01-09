@@ -260,13 +260,13 @@ app.post('/api/report', async (c) => {
 			c.env.DB.prepare('DELETE FROM report_rate_limits WHERE last_request < ?').bind(now - 86400000).run()
 		);
 
-		const { itemName, category } = await c.req.json();
+		const { itemName, category, affiliateUrl, imageUrl } = await c.req.json();
 
 		if (!itemName || !category) {
 			return c.json({ error: 'Missing required fields' }, 400);
 		}
 
-		const message = `**New Content Report**\n**Item:** ${itemName}\n**Issue:** ${category}`;
+		const message = `**New Content Report**\n**Item:** ${itemName}\n**Issue:** ${category}\n**Affiliate Link:** ${affiliateUrl || 'N/A'}\n**Image URL:** ${imageUrl || 'N/A'}`;
 
 		// Send to Discord (using Contact webhook)
 		const discordWebhookUrl = c.env.DISCORD_WEBHOOK_CONTACT;
@@ -307,7 +307,7 @@ app.post('/api/report', async (c) => {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						chat_id: chatId.trim(),
-						text: `⚠️ <b>Content Report</b>\n\n<b>Item:</b> ${itemName}\n<b>Issue:</b> ${category}`,
+						text: `⚠️ <b>Content Report</b>\n\n<b>Item:</b> ${itemName}\n<b>Issue:</b> ${category}\n<b>Affiliate Link:</b> ${affiliateUrl || 'N/A'}\n<b>Image URL:</b> ${imageUrl || 'N/A'}`,
 						parse_mode: 'HTML'
 					})
 				})
