@@ -702,10 +702,27 @@ app.post('/api/config/telegram', async (c) => {
 
 	if (token && token.trim() !== '') {
 		await c.env.DB.prepare("INSERT INTO configurations (key, value) VALUES ('telegram_bot_token', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(token.trim()).run();
+
+		// Automatically register the webhook for the new token
+		try {
+			const url = new URL(c.req.url);
+			const webhookUrl = `${url.protocol}//${url.host}/api/webhook/telegram`;
+			const response = await fetch(`https://api.telegram.org/bot${token.trim()}/setWebhook?url=${webhookUrl}`);
+			const data: any = await response.json();
+			
+			if (!data.ok) {
+				return c.json({ message: `Token saved, but Webhook error: ${data.description}` });
+			}
+		} catch (e) {
+			console.error('Webhook registration failed:', e);
+			return c.json({ message: 'Token saved, but failed to register Webhook.' });
+		}
+
+		return c.json({ message: 'Telegram settings updated and Webhook registered' });
 	} else {
 		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'telegram_bot_token'").run();
+		return c.json({ message: 'Telegram settings cleared' });
 	}
-	return c.json({ message: 'Telegram settings updated' });
 });
 
 // --- Export the Hono app ---
