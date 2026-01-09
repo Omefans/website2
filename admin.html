@@ -37,6 +37,7 @@
                 <button id="nav-content-btn" class="nav-btn">Content</button>
                 <button id="nav-users-btn" class="nav-btn">Users</button>
                 <button id="nav-telegram-btn" class="nav-btn">Telegram</button>
+                <button id="nav-discord-btn" class="nav-btn">Discord</button>
                 <button id="nav-profile-btn" class="nav-btn">Profile</button>
             </nav>
 
@@ -135,6 +136,31 @@
                 <div class="user-management-list">
                     <h3>Authorized Chat IDs</h3>
                     <div id="telegram-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discord Management Section -->
+        <div id="discord-management-section" class="admin-page">
+            <h2>Discord Notifications</h2>
+            <div class="user-management-layout">
+                <div class="user-management-form">
+                    <h3>Add Webhook</h3>
+                    <form id="add-discord-form">
+                        <div>
+                            <label for="discord-url">Webhook URL</label>
+                            <input type="url" id="discord-url" required placeholder="https://discord.com/api/webhooks/...">
+                        </div>
+                        <div>
+                            <label for="discord-name">Name (Optional)</label>
+                            <input type="text" id="discord-name" placeholder="e.g. Admin Channel">
+                        </div>
+                        <button type="submit">Add Webhook</button>
+                    </form>
+                </div>
+                <div class="user-management-list">
+                    <h3>Active Webhooks</h3>
+                    <div id="discord-list"></div>
                 </div>
             </div>
         </div>

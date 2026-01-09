@@ -145,6 +145,24 @@ app.post('/api/contact', async (c) => {
 			})
 		});
 
+		// --- Send to additional Discord Webhooks from DB ---
+		try {
+			const { results } = await c.env.DB.prepare('SELECT url FROM discord_webhooks').all();
+			if (results && results.length > 0) {
+				const discordPayload = JSON.stringify({
+					content: `**New Contact Submission**\n**Topic:** ${category || 'General'}\n**Platform:** ${platform || 'N/A'}\n**Name:** ${name}\n**Model Image:** ${modelImage || 'N/A'}\n**Message:**\n${message}`
+				});
+				
+				c.executionCtx.waitUntil(Promise.all(results.map((r: any) => 
+					fetch(r.url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: discordPayload
+					})
+				)).catch(err => console.error('Discord DB Webhook Error:', err)));
+			}
+		} catch (e) { /* Ignore if table doesn't exist */ }
+
 		// --- Telegram Notification for Admins ---
 		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
 		// Use the secret if available, otherwise fallback to your hardcoded ID
@@ -245,6 +263,20 @@ app.post('/api/report', async (c) => {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ content: message })
 		});
+
+		// Send to additional Discord Webhooks from DB
+		try {
+			const { results } = await c.env.DB.prepare('SELECT url FROM discord_webhooks').all();
+			if (results && results.length > 0) {
+				c.executionCtx.waitUntil(Promise.all(results.map((r: any) => 
+					fetch(r.url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ content: message })
+					})
+				)).catch(err => console.error('Discord Report Error:', err)));
+			}
+		} catch (e) { }
 
 		// Send to Telegram Admins
 		const telegramBotToken = c.env.TELEGRAM_BOT_TOKEN;
@@ -587,6 +619,48 @@ adminRoutes.delete('/api/users/telegram/:id', async (c) => {
 	const id = c.req.param('id');
 	await c.env.DB.prepare('DELETE FROM telegram_admins WHERE id = ?').bind(id).run();
 	return c.json({ message: 'Chat ID removed' });
+});
+
+// --- Discord Webhook Management Routes ---
+
+adminRoutes.get('/api/users/discord', async (c) => {
+	try {
+		const { results } = await c.env.DB.prepare('SELECT * FROM discord_webhooks ORDER BY created_at DESC').all();
+		return c.json(results);
+	} catch (e) {
+		return c.json([]); // Return empty if table doesn't exist
+	}
+});
+
+adminRoutes.post('/api/users/discord', async (c) => {
+	const { url, name } = await c.req.json();
+	if (!url) return c.json({ error: 'Webhook URL is required' }, 400);
+
+	// Ensure table exists (lazy migration)
+	await c.env.DB.prepare(`
+		CREATE TABLE IF NOT EXISTS discord_webhooks (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			url TEXT NOT NULL UNIQUE,
+			name TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)
+	`).run();
+
+	try {
+		await c.env.DB.prepare('INSERT INTO discord_webhooks (url, name) VALUES (?, ?)').bind(url, name).run();
+		return c.json({ message: 'Webhook added successfully' });
+	} catch (e: any) {
+		if (e.message.includes('UNIQUE')) {
+			 return c.json({ error: 'Webhook URL already exists' }, 409);
+		}
+		return c.json({ error: 'Failed to add Webhook' }, 500);
+	}
+});
+
+adminRoutes.delete('/api/users/discord/:id', async (c) => {
+	const id = c.req.param('id');
+	await c.env.DB.prepare('DELETE FROM discord_webhooks WHERE id = ?').bind(id).run();
+	return c.json({ message: 'Webhook removed' });
 });
 
 // --- Export the Hono app ---

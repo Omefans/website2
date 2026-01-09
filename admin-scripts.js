@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const telegramSection = document.getElementById('telegram-management-section');
     const addTelegramForm = document.getElementById('add-telegram-form');
     const telegramList = document.getElementById('telegram-list');
+    const navDiscordBtn = document.getElementById('nav-discord-btn');
+    const discordSection = document.getElementById('discord-management-section');
+    const addDiscordForm = document.getElementById('add-discord-form');
+    const discordList = document.getElementById('discord-list');
     const navProfileBtn = document.getElementById('nav-profile-btn');
     const profileSection = document.getElementById('profile-section');
     const profileUsernameEl = document.getElementById('profile-username');
@@ -136,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navContentBtn.addEventListener('click', () => showPage('content'));
     navUsersBtn.addEventListener('click', () => showPage('users'));
     navTelegramBtn.addEventListener('click', () => showPage('telegram'));
+    navDiscordBtn.addEventListener('click', () => showPage('discord'));
     navProfileBtn.addEventListener('click', () => showPage('profile'));
 
     // Check if a token exists on page load
@@ -216,6 +221,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Event listeners for Discord management
+    if (addDiscordForm) {
+        addDiscordForm.addEventListener('submit', handleAddDiscord);
+    }
+    if (discordList) {
+        discordList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-discord-btn')) {
+                const id = e.target.dataset.id;
+                if (id) handleDeleteDiscord(id);
+            }
+        });
+    }
+
     // Event listeners for password change modal
     if (changePasswordBtn && passwordModal && closePasswordModalBtn && changePasswordForm) {
         changePasswordBtn.addEventListener('click', () => {
@@ -247,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('is-admin');
             loadUsers(); // Load user data in the background
             loadTelegramAdmins(); // Load telegram data
+            loadDiscordWebhooks(); // Load discord data
             // Allow admins to create other admins
             const roleSelect = document.getElementById('new-role');
             if (roleSelect && !roleSelect.querySelector('option[value="admin"]')) {
@@ -693,6 +712,77 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { showToast(e.message, 'error'); }
     }
 
+    async function handleAddDiscord(e) {
+        e.preventDefault();
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const url = document.getElementById('discord-url').value;
+        const name = document.getElementById('discord-name').value;
+
+        setButtonLoadingState(button, true, 'Adding...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/discord`, {
+                method: 'POST',
+                body: JSON.stringify({ url, name })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to add Webhook.');
+
+            showToast(result.message, 'success');
+            form.reset();
+            loadDiscordWebhooks();
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
+        }
+    }
+
+    async function loadDiscordWebhooks() {
+        if (!discordList) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/discord`);
+            if (!response.ok) return;
+            const items = await response.json();
+            discordList.innerHTML = '';
+            
+            if (items.length === 0) {
+                discordList.innerHTML = '<p>No Webhooks found.</p>';
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'user-list-item';
+                el.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-username" style="font-size: 0.85rem; word-break: break-all;">${item.url}</span>
+                        <span class="user-role">${item.name || 'No Name'}</span>
+                    </div>
+                    <div class="user-actions">
+                        <button class="delete-discord-btn" data-id="${item.id}" style="background: #da3633;">Delete</button>
+                    </div>
+                `;
+                fragment.appendChild(el);
+            });
+            discordList.appendChild(fragment);
+        } catch (e) { console.error(e); }
+    }
+
+    async function handleDeleteDiscord(id) {
+        if (!confirm('Remove this Webhook?')) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/discord/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                showToast('Webhook removed', 'success');
+                loadDiscordWebhooks();
+            } else {
+                showToast('Failed to remove Webhook', 'error');
+            }
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+
     async function handleChangePassword(e) {
         e.preventDefault();
         const button = changePasswordForm.querySelector('button[type="submit"]');
@@ -743,6 +833,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navUsersBtn.classList.remove('active');
         telegramSection.classList.remove('active');
         navTelegramBtn.classList.remove('active');
+        discordSection.classList.remove('active');
+        navDiscordBtn.classList.remove('active');
         profileSection.classList.remove('active');
         navProfileBtn.classList.remove('active');
 
@@ -756,6 +848,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'telegram' && userRole === 'admin') {
             telegramSection.classList.add('active');
             navTelegramBtn.classList.add('active');
+        } else if (pageName === 'discord' && userRole === 'admin') {
+            discordSection.classList.add('active');
+            navDiscordBtn.classList.add('active');
         } else if (pageName === 'profile') {
             profileSection.classList.add('active');
             navProfileBtn.classList.add('active');
