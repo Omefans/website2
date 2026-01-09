@@ -411,7 +411,10 @@ app.post('/api/webhook/telegram', async (c) => {
 		// Check if it's a message and contains text
 		if (update.message && update.message.text) {
 			const chatId = update.message.chat.id;
-			const text = update.message.text;
+			const text = update.message.text.trim();
+			const parts = text.split(' ');
+			const command = parts[0];
+			const args = parts.slice(1).join(' ');
 
 			const envChatIds = c.env.TELEGRAM_ADMIN_CHAT_IDS ? c.env.TELEGRAM_ADMIN_CHAT_IDS.split(',') : [];
 
@@ -424,9 +427,9 @@ app.post('/api/webhook/telegram', async (c) => {
 
 			const isAuthorized = [...envChatIds, ...dbChatIds].some(id => id.trim() === chatId.toString());
 
-			if (text === '/start') {
+			if (command === '/start') {
 				const messageText = isAuthorized
-					? `Connected! You are authorized to receive notifications.\nTry /stats to see website statistics.`
+					? `Connected! You are authorized.\nTry /help to see available commands.`
 					: `Your Chat ID is: <code>${chatId}</code>\n\nAdd this ID to Cloudflare to receive notifications.`;
 				
 				if (telegramBotToken) {
@@ -440,7 +443,25 @@ app.post('/api/webhook/telegram', async (c) => {
 						})
 					});
 				}
-			} else if (text === '/stats' && isAuthorized) {
+			} else if (isAuthorized) {
+				// --- Authorized Admin Commands ---
+
+				if (command === '/help') {
+					const helpText = `<b>🤖 Admin Bot Commands</b>\n\n` +
+						`/stats - View website statistics\n` +
+						`/latest - Show most recent gallery item\n` +
+						`/users - List recent users\n` +
+						`/delete_user [username] - Delete a user\n` +
+						`/delete_item [id] - Delete an item by ID\n` +
+						`/broadcast [msg] - Message all admins`;
+
+					await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ chat_id: chatId, text: helpText, parse_mode: 'HTML' })
+					});
+
+				} else if (command === '/stats') {
 				const items = await c.env.DB.prepare('SELECT COUNT(*) as count FROM gallery_items').first('count');
 				const users = await c.env.DB.prepare('SELECT COUNT(*) as count FROM users').first('count');
 				
@@ -474,6 +495,120 @@ app.post('/api/webhook/telegram', async (c) => {
 							}
 						})
 					});
+				}
+				} else if (command === '/latest') {
+					try {
+						const item: any = await c.env.DB.prepare('SELECT * FROM gallery_items ORDER BY createdAt DESC LIMIT 1').first();
+						if (item) {
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									chat_id: chatId,
+									photo: item.imageUrl,
+									caption: `<b>Latest Item</b>\n\n<b>ID:</b> ${item.id}\n<b>Name:</b> ${item.name}\n<b>Category:</b> ${item.category}\n<b>Date:</b> ${item.createdAt}`,
+									parse_mode: 'HTML'
+								})
+							});
+						} else {
+							await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ chat_id: chatId, text: 'No items found.' })
+							});
+						}
+					} catch (e) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching latest item.' })
+						});
+					}
+				} else if (command === '/users') {
+					try {
+						const { results } = await c.env.DB.prepare('SELECT username, role, createdAt FROM users ORDER BY createdAt DESC LIMIT 5').all();
+						let msg = '<b>👥 Recent Users (Last 5)</b>\n\n';
+						if (results && results.length > 0) {
+							results.forEach((u: any) => {
+								msg += `• <b>${u.username}</b> (${u.role})\n`;
+							});
+						} else {
+							msg += 'No users found.';
+						}
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' })
+						});
+					} catch (e) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching users.' })
+						});
+					}
+				} else if (command === '/delete_user') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Usage: /delete_user [username]' })
+						});
+					} else {
+						const info = await c.env.DB.prepare('DELETE FROM users WHERE username = ?').bind(args.trim()).run();
+						const reply = info.changes > 0 ? `✅ User <b>${args}</b> deleted.` : `❌ User <b>${args}</b> not found.`;
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML' })
+						});
+					}
+				} else if (command === '/delete_item') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Usage: /delete_item [id]' })
+						});
+					} else {
+						const info = await c.env.DB.prepare('DELETE FROM gallery_items WHERE id = ?').bind(args.trim()).run();
+						const reply = info.changes > 0 ? `✅ Item ID <b>${args}</b> deleted.` : `❌ Item ID <b>${args}</b> not found.`;
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML' })
+						});
+					}
+				} else if (command === '/broadcast') {
+					if (!args) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Usage: /broadcast [message]' })
+						});
+					} else {
+						// Send to all admins except sender
+						const recipients = [...envChatIds, ...dbChatIds].filter(id => id.trim() !== chatId.toString());
+						const uniqueRecipients = [...new Set(recipients)];
+						
+						c.executionCtx.waitUntil(Promise.all(uniqueRecipients.map(id => 
+							fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									chat_id: id.trim(),
+									text: `📢 <b>Admin Broadcast</b>\n\n${args}`,
+									parse_mode: 'HTML'
+								})
+							})
+						)));
+						
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: `✅ Broadcast sent to ${uniqueRecipients.length} admins.` })
+						});
+					}
 				}
 			}
 		}
