@@ -102,6 +102,31 @@ app.post('/api/auth/login', async (c) => {
 // Contact route
 app.post('/api/contact', async (c) => {
 	try {
+		// --- Rate Limiting ---
+		const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+		const now = Date.now();
+		const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute cooldown
+
+		// Ensure table exists (lazy migration) - This is SAFE, it won't delete other tables
+		await c.env.DB.prepare(`
+			CREATE TABLE IF NOT EXISTS rate_limits (
+				ip TEXT PRIMARY KEY,
+				last_request INTEGER
+			)
+		`).run();
+
+		const limitRecord = await c.env.DB.prepare('SELECT last_request FROM rate_limits WHERE ip = ?').bind(ip).first();
+		
+		if (limitRecord && (now - (limitRecord.last_request as number)) < RATE_LIMIT_WINDOW) {
+			return c.json({ error: 'Too many requests. Please wait a minute before sending another message.' }, 429);
+		}
+
+		// Update timestamp for this IP
+		await c.env.DB.prepare(`
+			INSERT INTO rate_limits (ip, last_request) VALUES (?, ?)
+			ON CONFLICT(ip) DO UPDATE SET last_request = excluded.last_request
+		`).bind(ip, now).run();
+
 		const { name, message, category, platform, modelImage } = await c.req.json();
 
 		if (!name || !message) {

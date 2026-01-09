@@ -189,7 +189,8 @@
                                   contactForm.reset();
                                   toggleFields();
                               } else {
-                                  formStatus.textContent = 'Failed to send request.';
+                                  const data = await response.json();
+                                  formStatus.textContent = data.error || 'Failed to send request.';
                                   formStatus.style.color = '#f87171';
                               }
                           } catch (error) {

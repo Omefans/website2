@@ -69,7 +69,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     alert('Report sent successfully. Thank you!');
                     closeReport();
                 } else {
-                    alert('Failed to send report. Please try again.');
+                    const data = await response.json();
+                    alert(data.error || 'Failed to send report. Please try again.');
                 }
             } catch (error) {
                 console.error('Report error:', error);
@@ -564,11 +565,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     formStatus.style.display = 'block';
                     contactForm.reset();
                 } else {
-                    throw new Error('Failed to send');
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to send');
                 }
             } catch (error) {
                 console.error('Contact form error:', error);
-                formStatus.innerText = 'Error sending request. Please try again later.';
+                formStatus.innerText = error.message || 'Error sending request. Please try again later.';
                 formStatus.style.color = '#ff4444';
                 formStatus.style.display = 'block';
             } finally {
