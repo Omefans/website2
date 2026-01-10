@@ -1231,8 +1231,14 @@ adminRoutes.delete('/api/users/telegram/:id', async (c) => {
 
 // --- Announcement Management Routes ---
 
-adminRoutes.post('/api/announcements', async (c) => {
-	const { title, message, duration } = await c.req.json();
+// Apply Admin Middleware explicitly to these routes since they don't start with /api/users/
+app.get('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
+	const { results } = await c.env.DB.prepare('SELECT * FROM announcements ORDER BY created_at DESC').all();
+	return c.json(results);
+});
+
+app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
+	const { title, message, duration, imageUrl } = await c.req.json();
 	if (!title || !message) return c.json({ error: 'Title and message are required' }, 400);
 
 	// Calculate Expiration
@@ -1250,6 +1256,7 @@ adminRoutes.post('/api/announcements', async (c) => {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			title TEXT,
 			message TEXT,
+			imageUrl TEXT,
 			expires_at TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)
@@ -1258,17 +1265,29 @@ adminRoutes.post('/api/announcements', async (c) => {
 	try {
 		await c.env.DB.prepare('ALTER TABLE announcements ADD COLUMN expires_at TEXT').run();
 	} catch (e) { /* Column likely exists */ }
+	try {
+		await c.env.DB.prepare('ALTER TABLE announcements ADD COLUMN imageUrl TEXT').run();
+	} catch (e) { /* Column likely exists */ }
 	
-	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at) VALUES (?, ?, ?)').bind(title, message, expiresAtStr).run();
+	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at, imageUrl) VALUES (?, ?, ?, ?)').bind(title, message, expiresAtStr, imageUrl || null).run();
 
 	// 2. Send to Discord
 	if (c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS) {
+		const discordBody: any = {
+			content: `@everyone\n**📢 NEW ANNOUNCEMENT**\n\n**${title}**\n${message}`
+		};
+		if (imageUrl) {
+			discordBody.embeds = [{
+				title: title,
+				image: { url: imageUrl },
+				color: 0x58a6ff
+			}];
+		}
+
 		c.executionCtx.waitUntil(fetch(c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				content: `@everyone\n**📢 NEW ANNOUNCEMENT**\n\n**${title}**\n${message}`
-			})
+			body: JSON.stringify(discordBody)
 		}).catch(e => console.error('Discord Announcement Error:', e)));
 	}
 
@@ -1276,18 +1295,33 @@ adminRoutes.post('/api/announcements', async (c) => {
 	const telegramBotToken = await getTelegramToken(c.env);
 	const telegramChatId = '@OmeFans'; // Or make this configurable
 	if (telegramBotToken) {
-		c.executionCtx.waitUntil(fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+		const method = imageUrl ? 'sendPhoto' : 'sendMessage';
+		const body: any = {
+			chat_id: telegramChatId,
+			parse_mode: 'HTML'
+		};
+
+		if (imageUrl) {
+			body.photo = imageUrl;
+			body.caption = `📢 <b>NEW ANNOUNCEMENT</b>\n\n<b>${title}</b>\n${message}`;
+		} else {
+			body.text = `📢 <b>NEW ANNOUNCEMENT</b>\n\n<b>${title}</b>\n${message}`;
+		}
+
+		c.executionCtx.waitUntil(fetch(`https://api.telegram.org/bot${telegramBotToken}/${method}`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				chat_id: telegramChatId,
-				text: `📢 <b>NEW ANNOUNCEMENT</b>\n\n<b>${title}</b>\n${message}`,
-				parse_mode: 'HTML'
-			})
+			body: JSON.stringify(body)
 		}).catch(e => console.error('Telegram Announcement Error:', e)));
 	}
 
 	return c.json({ message: 'Announcement published successfully' });
+});
+
+app.delete('/api/announcements/:id', authMiddleware, adminMiddleware, async (c) => {
+	const id = c.req.param('id');
+	await c.env.DB.prepare('DELETE FROM announcements WHERE id = ?').bind(id).run();
+	return c.json({ message: 'Announcement deleted' });
 });
 
 // --- Discord Webhook Management Routes ---
@@ -1384,21 +1418,21 @@ app.post('/api/config/telegram', async (c) => {
 
 // --- Security & Logs Routes ---
 
-adminRoutes.get('/api/logs', async (c) => {
+app.get('/api/logs', authMiddleware, adminMiddleware, async (c) => {
 	try {
 		const { results } = await c.env.DB.prepare('SELECT * FROM system_logs ORDER BY created_at DESC LIMIT 50').all();
 		return c.json(results);
 	} catch (e) { return c.json([]); }
 });
 
-adminRoutes.get('/api/security/bans', async (c) => {
+app.get('/api/security/bans', authMiddleware, adminMiddleware, async (c) => {
 	try {
 		const { results } = await c.env.DB.prepare('SELECT * FROM banned_ips ORDER BY created_at DESC').all();
 		return c.json(results);
 	} catch (e) { return c.json([]); }
 });
 
-adminRoutes.post('/api/security/bans', async (c) => {
+app.post('/api/security/bans', authMiddleware, adminMiddleware, async (c) => {
 	const { ip, reason } = await c.req.json();
 	if (!ip) return c.json({ error: 'IP is required' }, 400);
 	
@@ -1411,7 +1445,7 @@ adminRoutes.post('/api/security/bans', async (c) => {
 	} catch (e) { return c.json({ error: 'IP already banned' }, 409); }
 });
 
-adminRoutes.delete('/api/security/bans/:ip', async (c) => {
+app.delete('/api/security/bans/:ip', authMiddleware, adminMiddleware, async (c) => {
 	const ip = c.req.param('ip');
 	await c.env.DB.prepare('DELETE FROM banned_ips WHERE ip = ?').bind(ip).run();
 	await logEvent(c.env.DB, 'INFO', `IP Unbanned: ${ip}`);

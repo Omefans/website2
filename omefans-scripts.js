@@ -623,6 +623,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="modal-content" style="max-width: 500px; text-align: center; border: 1px solid #30363d; background: #0d1117;">
                 <button class="modal-close-btn" style="position: absolute; top: 10px; right: 15px; font-size: 24px; background: none; border: none; color: #fff; cursor: pointer;">&times;</button>
                 <h2 style="color: #58a6ff; margin-bottom: 15px;">📢 ${data.title}</h2>
+                ${data.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100%; border-radius: 6px; margin-bottom: 15px;" alt="Announcement">` : ''}
                 <p style="color: #c9d1d9; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap;">${data.message}</p>
                 <button id="ack-announcement" style="background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Got it</button>
             </div>

@@ -41,6 +41,7 @@
                     <button id="nav-content-btn" class="nav-btn">Content</button>
                     <button id="nav-users-btn" class="nav-btn">Users</button>
                     <button id="nav-automation-btn" class="nav-btn">Automation</button>
+                    <button id="nav-announcements-btn" class="nav-btn">Announcements</button>
                     <button id="nav-security-btn" class="nav-btn">Security</button>
                     <button id="nav-profile-btn" class="nav-btn">Profile</button>
                 </div>
@@ -184,6 +185,12 @@
             </div>
         </div>
 
+        <!-- Announcements Management Section -->
+        <div id="announcements-section" class="admin-page">
+            <h2>Manage Announcements</h2>
+            <div id="announcements-list" class="user-management-list" style="margin-top: 1rem;"></div>
+        </div>
+
         <!-- Security Section -->
         <div id="security-section" class="admin-page">
             <h2>Security & Logs</h2>
@@ -268,6 +275,10 @@
                 <div>
                     <label for="announcement-message">Message</label>
                     <textarea id="announcement-message" required rows="5" placeholder="Enter your update here..."></textarea>
+                </div>
+                <div>
+                    <label for="announcement-image">Image URL (Optional)</label>
+                    <input type="url" id="announcement-image" placeholder="https://...">
                 </div>
                 <div>
                     <label for="announcement-duration">Duration (Website Popup)</label>

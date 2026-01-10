@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navSecurityBtn = document.getElementById('nav-security-btn');
     const securitySection = document.getElementById('security-section');
     const banIpForm = document.getElementById('ban-ip-form');
+    const navAnnouncementsBtn = document.getElementById('nav-announcements-btn');
+    const announcementsSection = document.getElementById('announcements-section');
+    const announcementsList = document.getElementById('announcements-list');
     const bannedIpsList = document.getElementById('banned-ips-list');
     const systemLogsList = document.getElementById('system-logs-list');
     const updateTelegramTokenForm = document.getElementById('update-telegram-token-form');
@@ -149,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navUsersBtn.addEventListener('click', () => showPage('users'));
     navAutomationBtn.addEventListener('click', () => showPage('automation'));
     navSecurityBtn.addEventListener('click', () => showPage('security'));
+    navAnnouncementsBtn.addEventListener('click', () => showPage('announcements'));
     navProfileBtn.addEventListener('click', () => showPage('profile'));
 
     // Check if a token exists on page load
@@ -227,6 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
         bannedIpsList.addEventListener('click', (e) => {
             if (e.target.classList.contains('unban-btn')) {
                 handleUnbanIp(e.target.dataset.ip);
+            }
+        });
+    }
+
+    if (announcementsList) {
+        announcementsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-announcement-btn')) {
+                handleDeleteAnnouncement(e.target.dataset.id);
             }
         });
     }
@@ -311,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadBannedIps(); // Load bans
             loadSystemLogs(); // Load logs
             loadDiscordWebhooks(); // Load discord data
+            loadAnnouncements(); // Load announcements
             // Allow admins to create other admins
             const roleSelect = document.getElementById('new-role');
             if (roleSelect && !roleSelect.querySelector('option[value="admin"]')) {
@@ -970,13 +983,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = postAnnouncementForm.querySelector('button[type="submit"]');
         const title = document.getElementById('announcement-title').value;
         const message = document.getElementById('announcement-message').value;
+        const imageUrl = document.getElementById('announcement-image').value;
         const duration = document.getElementById('announcement-duration').value;
 
         setButtonLoadingState(button, true, 'Posting...');
         try {
             const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`, {
                 method: 'POST',
-                body: JSON.stringify({ title, message, duration })
+                body: JSON.stringify({ title, message, duration, imageUrl })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to post announcement.');
@@ -984,11 +998,44 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(result.message, 'success');
             announcementModal.classList.remove('show');
             postAnnouncementForm.reset();
+            loadAnnouncements();
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         } finally {
             setButtonLoadingState(button, false);
         }
+    }
+
+    async function loadAnnouncements() {
+        if (!announcementsList) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`);
+            const items = await response.json();
+            announcementsList.innerHTML = '';
+            if (items.length === 0) { announcementsList.innerHTML = '<p>No announcements found.</p>'; return; }
+            
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'user-list-item';
+                el.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-username">${item.title}</span>
+                        <span class="user-role" style="font-size: 0.8rem;">${new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="user-actions"><button class="delete-announcement-btn" data-id="${item.id}" style="background: #da3633;">Delete</button></div>
+                `;
+                announcementsList.appendChild(el);
+            });
+        } catch (e) {}
+    }
+
+    async function handleDeleteAnnouncement(id) {
+        if (!confirm('Delete this announcement?')) return;
+        try {
+            await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements/${id}`, { method: 'DELETE' });
+            showToast('Announcement deleted', 'success');
+            loadAnnouncements();
+        } catch (e) { showToast(e.message, 'error'); }
     }
 
     /**
@@ -1005,6 +1052,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navAutomationBtn.classList.remove('active');
         securitySection.classList.remove('active');
         navSecurityBtn.classList.remove('active');
+        announcementsSection.classList.remove('active');
+        navAnnouncementsBtn.classList.remove('active');
         profileSection.classList.remove('active');
         navProfileBtn.classList.remove('active');
 
@@ -1021,6 +1070,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'security' && userRole === 'admin') {
             securitySection.classList.add('active');
             navSecurityBtn.classList.add('active');
+        } else if (pageName === 'announcements' && userRole === 'admin') {
+            announcementsSection.classList.add('active');
+            navAnnouncementsBtn.classList.add('active');
         } else if (pageName === 'profile') {
             profileSection.classList.add('active');
             navProfileBtn.classList.add('active');
