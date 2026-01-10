@@ -1054,14 +1054,14 @@ app.post('/api/upload', authMiddleware, async (c) => {
 		const telegramChatId = '@OmeFans'; 
 
 		if (telegramBotToken) {
-			await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+			await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					chat_id: telegramChatId,
-					photo: imageUrl,
-					caption: `NEW EXCLUSIVE🆕️🔥🔥\n🆕️CHECK OUR NEW EXCLUSIVE CONTENT ON OUR WEBSITE🔥🔥❤️\n\n<b>${category.toUpperCase()}</b>\n<b>${name}</b>\n${description || ''}`,
+					text: `NEW EXCLUSIVE🆕️🔥🔥\n🆕️CHECK OUR NEW EXCLUSIVE CONTENT ON OUR WEBSITE🔥🔥❤️\n\n<b>${category.toUpperCase()}</b>\n<b>${name}</b>\n${description || ''}\n<a href="${imageUrl}">&#8205;</a>`,
 					parse_mode: 'HTML',
+					disable_web_page_preview: false,
 					reply_markup: {
 						inline_keyboard: [
 							[{ text: '🌐 Website', url: 'https://omefans.com/gallery' }],
