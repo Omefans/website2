@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bannedIpsList = document.getElementById('banned-ips-list');
     const systemLogsList = document.getElementById('system-logs-list');
     const updateTelegramTokenForm = document.getElementById('update-telegram-token-form');
+    const updateDiscordAnnouncementForm = document.getElementById('update-discord-announcement-form');
     const addTelegramForm = document.getElementById('add-telegram-form');
     const telegramList = document.getElementById('telegram-list');
     const addDiscordForm = document.getElementById('add-discord-form');
@@ -224,6 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTelegramTokenForm.addEventListener('submit', handleUpdateTelegramToken);
     }
 
+    if (updateDiscordAnnouncementForm) {
+        updateDiscordAnnouncementForm.addEventListener('submit', handleUpdateDiscordAnnouncement);
+    }
+
     if (banIpForm) {
         banIpForm.addEventListener('submit', handleBanIp);
     }
@@ -320,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadUsers(); // Load user data in the background
             loadTelegramAdmins(); // Load telegram data
             loadTelegramToken(); // Load telegram token
+            loadDiscordAnnouncement(); // Load discord announcement webhook
             loadBannedIps(); // Load bans
             loadSystemLogs(); // Load logs
             loadDiscordWebhooks(); // Load discord data
@@ -794,6 +800,42 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 input.value = data.token || '';
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function handleUpdateDiscordAnnouncement(e) {
+        e.preventDefault();
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const url = document.getElementById('discord-announcement-url').value;
+
+        setButtonLoadingState(button, true, 'Updating...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/discord_announcement`, {
+                method: 'POST',
+                body: JSON.stringify({ url })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to update webhook.');
+
+            showToast(result.message, 'success');
+            loadDiscordAnnouncement();
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
+        }
+    }
+
+    async function loadDiscordAnnouncement() {
+        const input = document.getElementById('discord-announcement-url');
+        if (!input) return;
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/discord_announcement`);
+            if (response.ok) {
+                const data = await response.json();
+                input.value = data.url || '';
             }
         } catch (e) { console.error(e); }
     }

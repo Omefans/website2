@@ -33,6 +33,17 @@ async function getTelegramToken(env: Bindings): Promise<string> {
 	return token;
 }
 
+async function getDiscordAnnouncementWebhook(env: Bindings): Promise<string> {
+	let url = env.DISCORD_WEBHOOK_ANNOUNCEMENTS;
+	try {
+		const dbUrl = await env.DB.prepare("SELECT value FROM configurations WHERE key = 'discord_webhook_announcements'").first('value');
+		if (dbUrl) url = dbUrl as string;
+	} catch (e) {
+		// Table might not exist yet or other error
+	}
+	return url;
+}
+
 // --- Helper: System Logging ---
 async function logEvent(db: D1Database, level: string, message: string) {
 	try {
@@ -1272,7 +1283,8 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at, imageUrl) VALUES (?, ?, ?, ?)').bind(title, message, expiresAtStr, imageUrl || null).run();
 
 	// 2. Send to Discord
-	if (c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS) {
+	const discordWebhookUrl = await getDiscordAnnouncementWebhook(c.env);
+	if (discordWebhookUrl) {
 		const discordBody: any = {
 			content: `@everyone\n**📢 NEW ANNOUNCEMENT**\n\n**${title}**\n${message}`
 		};
@@ -1284,7 +1296,7 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 			}];
 		}
 
-		c.executionCtx.waitUntil(fetch(c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS, {
+		c.executionCtx.waitUntil(fetch(discordWebhookUrl, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(discordBody)
@@ -1413,6 +1425,28 @@ app.post('/api/config/telegram', async (c) => {
 	} else {
 		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'telegram_bot_token'").run();
 		return c.json({ message: 'Telegram settings cleared' });
+	}
+});
+
+app.get('/api/config/discord_announcement', async (c) => {
+	try {
+		const result = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'discord_webhook_announcements'").first('value');
+		return c.json({ url: result || '' });
+	} catch (e) {
+		return c.json({ url: '' });
+	}
+});
+
+app.post('/api/config/discord_announcement', async (c) => {
+	const { url } = await c.req.json();
+	await c.env.DB.prepare(`CREATE TABLE IF NOT EXISTS configurations (key TEXT PRIMARY KEY, value TEXT)`).run();
+
+	if (url && url.trim() !== '') {
+		await c.env.DB.prepare("INSERT INTO configurations (key, value) VALUES ('discord_webhook_announcements', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(url.trim()).run();
+		return c.json({ message: 'Announcement Webhook updated' });
+	} else {
+		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'discord_webhook_announcements'").run();
+		return c.json({ message: 'Announcement Webhook cleared' });
 	}
 });
 
