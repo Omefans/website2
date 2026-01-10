@@ -599,6 +599,9 @@ document.addEventListener("DOMContentLoaded", function() {
     /* --- 7. ANNOUNCEMENT POPUP --- */
     async function checkAnnouncements() {
         try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isTest = urlParams.has('test-announcement');
+
             const response = await fetch(`${AppConfig.backendUrl}/api/announcements/latest`);
             if (!response.ok) return;
             const announcement = await response.json();
@@ -606,7 +609,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Check if announcement exists and hasn't been seen yet
             if (announcement && announcement.id) {
                 const seenId = localStorage.getItem('seen_announcement_id');
-                if (seenId != announcement.id) {
+                if (isTest || seenId != announcement.id) {
                     showAnnouncementModal(announcement);
                 }
             }
@@ -629,7 +632,7 @@ document.addEventListener("DOMContentLoaded", function() {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: '10000',
+            zIndex: '99999', /* Increased Z-Index to ensure it's on top of everything */
             backdropFilter: 'blur(4px)'
         });
 

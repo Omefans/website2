@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const announcementModal = document.getElementById('announcement-modal');
     const closeAnnouncementModalBtn = announcementModal ? announcementModal.querySelector('.modal-close-btn') : null;
     const postAnnouncementForm = document.getElementById('post-announcement-form');
+    const previewAnnouncementBtn = document.getElementById('preview-announcement-btn');
 
     const loginButton = loginForm ? loginForm.querySelector('button[type="submit"]') : null;
 
@@ -314,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         postAnnouncementForm.addEventListener('submit', handlePostAnnouncement);
+        if (previewAnnouncementBtn) previewAnnouncementBtn.addEventListener('click', handlePreviewAnnouncement);
     }
 
     function showLoggedInState() {
@@ -1065,6 +1067,42 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             setButtonLoadingState(button, false);
         }
+    }
+
+    function handlePreviewAnnouncement() {
+        const title = document.getElementById('announcement-title').value;
+        const message = document.getElementById('announcement-message').value;
+        const imageUrl = document.getElementById('announcement-image').value;
+
+        if (!title || !message) {
+            showToast('Please enter a title and message to preview.', 'error');
+            return;
+        }
+
+        // Create a temporary modal to show the preview
+        const previewModal = document.createElement('div');
+        Object.assign(previewModal.style, {
+            position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)', display: 'flex', justifyContent: 'center',
+            alignItems: 'center', zIndex: '20000', backdropFilter: 'blur(4px)'
+        });
+
+        previewModal.innerHTML = `
+            <div style="position: relative; width: 90%; max-width: 500px; text-align: center; border: 1px solid #30363d; background: #0d1117; padding: 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <button class="close-preview" style="position: absolute; top: 10px; right: 15px; font-size: 24px; background: none; border: none; color: #fff; cursor: pointer;">&times;</button>
+                <h2 style="color: #58a6ff; margin-top: 0; margin-bottom: 15px;">📢 ${title}</h2>
+                ${imageUrl ? `<img src="${imageUrl}" style="max-width: 100%; border-radius: 6px; margin-bottom: 15px;" alt="Announcement">` : ''}
+                <p style="color: #c9d1d9; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap; text-align: left;">${message}</p>
+                <button class="close-preview-btn" style="background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Got it (Preview)</button>
+            </div>
+        `;
+
+        document.body.appendChild(previewModal);
+
+        const close = () => previewModal.remove();
+        previewModal.querySelector('.close-preview').addEventListener('click', close);
+        previewModal.querySelector('.close-preview-btn').addEventListener('click', close);
+        previewModal.addEventListener('click', (e) => { if (e.target === previewModal) close(); });
     }
 
     async function loadAnnouncements() {
