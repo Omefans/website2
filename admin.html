@@ -16,7 +16,10 @@
                 <img src="images/header-logo.png" alt="OmeFans Logo" class="header-logo">
                 <span>Admin Panel</span>
             </div>
-            <button id="logout-btn">Logout</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="announcement-btn" style="background-color: #238636; color: white; border: 1px solid rgba(240, 246, 252, 0.1); padding: 5px 16px; border-radius: 6px; cursor: pointer;">📢 Post Update</button>
+                <button id="logout-btn">Logout</button>
+            </div>
         </header>
         <form id="login-form">
             <img src="images/header-logo.png" alt="OmeFans Logo" class="login-logo">
@@ -247,6 +250,34 @@
                     <input type="password" id="confirm-password" required minlength="6">
                 </div>
                 <button type="submit">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Announcement Modal -->
+    <div id="announcement-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h2>📢 Post Announcement</h2>
+            <p style="color: #8b949e; font-size: 0.9rem; margin-bottom: 1rem;">This will show on the website popup and post to Telegram & Discord.</p>
+            <form id="post-announcement-form">
+                <div>
+                    <label for="announcement-title">Title</label>
+                    <input type="text" id="announcement-title" required placeholder="e.g. Maintenance Update">
+                </div>
+                <div>
+                    <label for="announcement-message">Message</label>
+                    <textarea id="announcement-message" required rows="5" placeholder="Enter your update here..."></textarea>
+                </div>
+                <div>
+                    <label for="announcement-duration">Duration (Website Popup)</label>
+                    <select id="announcement-duration" style="width: 100%; padding: 8px; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px;">
+                        <option value="1d">1 Day</option>
+                        <option value="1w">1 Week</option>
+                        <option value="1m">1 Month</option>
+                    </select>
+                </div>
+                <button type="submit" style="background-color: #238636;">Post Announcement</button>
             </form>
         </div>
     </div>

@@ -10,6 +10,7 @@ type Bindings = {
 	DISCORD_WEBHOOK_OMEGLE: string;
 	DISCORD_WEBHOOK_ONLYFANS: string;
 	DISCORD_WEBHOOK_CONTACT: string;
+	DISCORD_WEBHOOK_ANNOUNCEMENTS: string;
 };
 
 // Define custom variables for our context
@@ -974,6 +975,17 @@ app.get('/api/gallery', async (c) => {
 	return c.json(results);
 });
 
+// Get latest announcement (for website popup)
+app.get('/api/announcements/latest', async (c) => {
+	try {
+		const now = new Date().toISOString();
+		// Only fetch announcements that haven't expired
+		const announcement = await c.env.DB.prepare('SELECT * FROM announcements WHERE expires_at > ? ORDER BY created_at DESC LIMIT 1').bind(now).first();
+		return c.json(announcement || {});
+	} catch (e) {
+		return c.json({});
+	}
+});
 
 // --- Authenticated Routes (All roles) ---
 
@@ -1215,6 +1227,67 @@ adminRoutes.delete('/api/users/telegram/:id', async (c) => {
 	const id = c.req.param('id');
 	await c.env.DB.prepare('DELETE FROM telegram_admins WHERE id = ?').bind(id).run();
 	return c.json({ message: 'Chat ID removed' });
+});
+
+// --- Announcement Management Routes ---
+
+adminRoutes.post('/api/announcements', async (c) => {
+	const { title, message, duration } = await c.req.json();
+	if (!title || !message) return c.json({ error: 'Title and message are required' }, 400);
+
+	// Calculate Expiration
+	const now = new Date();
+	let expiresAt = new Date(now);
+	if (duration === '1w') expiresAt.setDate(now.getDate() + 7);
+	else if (duration === '1m') expiresAt.setMonth(now.getMonth() + 1);
+	else expiresAt.setDate(now.getDate() + 1); // Default to 1 day
+
+	const expiresAtStr = expiresAt.toISOString();
+
+	// 1. Store in DB
+	await c.env.DB.prepare(`
+		CREATE TABLE IF NOT EXISTS announcements (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT,
+			message TEXT,
+			expires_at TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)
+	`).run();
+
+	try {
+		await c.env.DB.prepare('ALTER TABLE announcements ADD COLUMN expires_at TEXT').run();
+	} catch (e) { /* Column likely exists */ }
+	
+	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at) VALUES (?, ?, ?)').bind(title, message, expiresAtStr).run();
+
+	// 2. Send to Discord
+	if (c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS) {
+		c.executionCtx.waitUntil(fetch(c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				content: `@everyone\n**📢 NEW ANNOUNCEMENT**\n\n**${title}**\n${message}`
+			})
+		}).catch(e => console.error('Discord Announcement Error:', e)));
+	}
+
+	// 3. Send to Telegram Channel (@OmeFans)
+	const telegramBotToken = await getTelegramToken(c.env);
+	const telegramChatId = '@OmeFans'; // Or make this configurable
+	if (telegramBotToken) {
+		c.executionCtx.waitUntil(fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				chat_id: telegramChatId,
+				text: `📢 <b>NEW ANNOUNCEMENT</b>\n\n<b>${title}</b>\n${message}`,
+				parse_mode: 'HTML'
+			})
+		}).catch(e => console.error('Telegram Announcement Error:', e)));
+	}
+
+	return c.json({ message: 'Announcement published successfully' });
 });
 
 // --- Discord Webhook Management Routes ---

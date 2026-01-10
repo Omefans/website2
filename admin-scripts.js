@@ -43,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordModal = document.getElementById('password-modal');
     const closePasswordModalBtn = passwordModal.querySelector('.modal-close-btn');
     const changePasswordForm = document.getElementById('change-password-form');
+    const announcementBtn = document.getElementById('announcement-btn');
+    const announcementModal = document.getElementById('announcement-modal');
+    const closeAnnouncementModalBtn = announcementModal ? announcementModal.querySelector('.modal-close-btn') : null;
+    const postAnnouncementForm = document.getElementById('post-announcement-form');
 
     const loginButton = loginForm ? loginForm.querySelector('button[type="submit"]') : null;
 
@@ -270,6 +274,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         changePasswordForm.addEventListener('submit', handleChangePassword);
+    }
+
+    // Event listeners for announcement modal
+    if (announcementBtn && announcementModal && closeAnnouncementModalBtn && postAnnouncementForm) {
+        announcementBtn.addEventListener('click', () => {
+            announcementModal.classList.add('show');
+        });
+
+        const closeAnnModal = () => {
+            announcementModal.classList.remove('show');
+            postAnnouncementForm.reset();
+        };
+
+        closeAnnouncementModalBtn.addEventListener('click', closeAnnModal);
+        announcementModal.addEventListener('click', (e) => {
+            if (e.target === announcementModal) closeAnnModal();
+        });
+
+        postAnnouncementForm.addEventListener('submit', handlePostAnnouncement);
     }
 
     function showLoggedInState() {
@@ -935,6 +958,32 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('For security, you will be logged out.', 'success');
             setTimeout(logout, 2000); // Force logout after password change
 
+        } catch (error) {
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            setButtonLoadingState(button, false);
+        }
+    }
+
+    async function handlePostAnnouncement(e) {
+        e.preventDefault();
+        const button = postAnnouncementForm.querySelector('button[type="submit"]');
+        const title = document.getElementById('announcement-title').value;
+        const message = document.getElementById('announcement-message').value;
+        const duration = document.getElementById('announcement-duration').value;
+
+        setButtonLoadingState(button, true, 'Posting...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`, {
+                method: 'POST',
+                body: JSON.stringify({ title, message, duration })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Failed to post announcement.');
+
+            showToast(result.message, 'success');
+            announcementModal.classList.remove('show');
+            postAnnouncementForm.reset();
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         } finally {
