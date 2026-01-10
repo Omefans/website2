@@ -173,6 +173,20 @@ button:disabled {
     border-bottom: 1px solid #30363d;
 }
 .logo-container { display: flex; align-items: center; gap: 1rem; }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+
+#announcement-btn {
+    width: auto;
+    background-color: #238636;
+    color: white;
+    border: 1px solid rgba(240, 246, 252, 0.1);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+#announcement-btn:hover { background-color: #2ea043; }
+
 .header-logo { height: 40px; }
 .logo-container span { font-size: 1.25rem; font-weight: 600; color: #f0f6fc; }
 .login-logo { display: block; height: 60px; margin: 0 auto 1.5rem auto; }
@@ -251,6 +265,12 @@ body.is-admin #nav-users-btn { display: inline-block; }
     border: 1px solid #30363d;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+/* Staggered animation for items */
+.admin-item-card:nth-child(n) { animation-delay: 0ms; }
+.admin-item-card:nth-child(2n) { animation-delay: 50ms; }
+.admin-item-card:nth-child(3n) { animation-delay: 100ms; }
 }
 .admin-item-card:hover {
     transform: translateY(-4px);
@@ -524,6 +544,7 @@ body.is-admin #nav-users-btn { display: inline-block; }
     }
     .header-logo { height: 32px; } /* Smaller logo */
     .logo-container span { display: none; } /* Hide "Admin Panel" text on mobile */
+    .header-actions .btn-text { display: none; } /* Hide "Post Update" text on mobile */
     #logout-btn { width: auto; padding: 0.5rem 0.8rem; font-size: 0.85rem; }
 
     #toast-container { right: 10px; left: 10px; bottom: 10px; width: auto; }
@@ -532,34 +553,34 @@ body.is-admin #nav-users-btn { display: inline-block; }
         grid-template-columns: 1fr;
     }
 
-    /* Vertical Stacked Nav for Mobile */
+    /* Optimized Horizontal Scroll Nav for Mobile */
     #nav-links {
         display: flex;
-        flex-direction: column;
-        overflow-x: visible;
-        white-space: normal;
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
         margin: 0 0 1.5rem 0;
-        padding: 0;
-        border-bottom: none;
-        gap: 0.75rem;
+        padding: 0 0 10px 0;
+        border-bottom: 1px solid #30363d;
+        gap: 0.5rem;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     }
     #nav-links::-webkit-scrollbar { display: none; }
 
     .nav-btn {
-        flex: 1;
-        width: 100%;
-        padding: 1rem;
-        border: 1px solid #30363d;
-        border-radius: 6px;
+        flex: 0 0 auto;
+        width: auto;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
         margin-bottom: 0;
-        font-size: 1.1rem;
-        background: #161b22;
-        text-align: center;
-        color: #c9d1d9;
+        font-size: 0.95rem;
+        background: transparent;
     }
     .nav-btn.active {
-        background: #1f6feb;
-        border-color: #1f6feb;
+        background: transparent;
+        border-bottom-color: #58a6ff;
         color: #ffffff;
     }
 
