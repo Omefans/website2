@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeAnnouncementModalBtn = announcementModal ? announcementModal.querySelector('.modal-close-btn') : null;
     const postAnnouncementForm = document.getElementById('post-announcement-form');
     const previewAnnouncementBtn = document.getElementById('preview-announcement-btn');
+    const postWebsiteOnlyBtn = document.getElementById('post-website-only-btn');
 
     const loginButton = loginForm ? loginForm.querySelector('button[type="submit"]') : null;
 
@@ -316,6 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         postAnnouncementForm.addEventListener('submit', handlePostAnnouncement);
         if (previewAnnouncementBtn) previewAnnouncementBtn.addEventListener('click', handlePreviewAnnouncement);
+        if (postWebsiteOnlyBtn) postWebsiteOnlyBtn.addEventListener('click', (e) => {
+            handlePostAnnouncement(e, true);
+        });
     }
 
     function showLoggedInState() {
@@ -1041,19 +1045,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function handlePostAnnouncement(e) {
+    async function handlePostAnnouncement(e, websiteOnly = false) {
         e.preventDefault();
-        const button = postAnnouncementForm.querySelector('button[type="submit"]');
+        const button = websiteOnly ? document.getElementById('post-website-only-btn') : postAnnouncementForm.querySelector('button[type="submit"]');
         const title = document.getElementById('announcement-title').value;
         const message = document.getElementById('announcement-message').value;
         const imageUrl = document.getElementById('announcement-image').value;
         const duration = document.getElementById('announcement-duration').value;
 
-        setButtonLoadingState(button, true, 'Posting...');
+        setButtonLoadingState(button, true, websiteOnly ? 'Posting...' : 'Broadcasting...');
         try {
             const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`, {
                 method: 'POST',
-                body: JSON.stringify({ title, message, duration, imageUrl })
+                body: JSON.stringify({ title, message, duration, imageUrl, websiteOnly })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to post announcement.');

@@ -1249,7 +1249,7 @@ app.get('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 });
 
 app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
-	const { title, message, duration, imageUrl } = await c.req.json();
+	const { title, message, duration, imageUrl, websiteOnly } = await c.req.json();
 	if (!title || !message) return c.json({ error: 'Title and message are required' }, 400);
 
 	// Calculate Expiration
@@ -1282,6 +1282,7 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 	
 	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at, imageUrl) VALUES (?, ?, ?, ?)').bind(title, message, expiresAtStr, imageUrl || null).run();
 
+	if (!websiteOnly) {
 	// 2. Send to Discord
 	const discordWebhookUrl = await getDiscordAnnouncementWebhook(c.env);
 	if (discordWebhookUrl) {
@@ -1325,6 +1326,7 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		}).catch(e => console.error('Telegram Announcement Error:', e)));
+	}
 	}
 
 	return c.json({ message: 'Announcement published successfully' });
