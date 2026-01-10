@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const systemLogsList = document.getElementById('system-logs-list');
     const updateTelegramTokenForm = document.getElementById('update-telegram-token-form');
     const updateDiscordAnnouncementForm = document.getElementById('update-discord-announcement-form');
+    const testDiscordAnnouncementBtn = document.getElementById('test-discord-announcement-btn');
     const addTelegramForm = document.getElementById('add-telegram-form');
     const telegramList = document.getElementById('telegram-list');
     const addDiscordForm = document.getElementById('add-discord-form');
@@ -227,6 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (updateDiscordAnnouncementForm) {
         updateDiscordAnnouncementForm.addEventListener('submit', handleUpdateDiscordAnnouncement);
+    }
+    if (testDiscordAnnouncementBtn) {
+        testDiscordAnnouncementBtn.addEventListener('click', handleTestDiscordAnnouncement);
     }
 
     if (banIpForm) {
@@ -826,6 +830,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             setButtonLoadingState(button, false);
         }
+    }
+
+    async function handleTestDiscordAnnouncement() {
+        const button = document.getElementById('test-discord-announcement-btn');
+        setButtonLoadingState(button, true, 'Testing...');
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/discord_announcement/test`, { method: 'POST' });
+            const result = await response.json();
+            if (response.ok) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.error || 'Test failed', 'error');
+            }
+        } catch (e) { showToast(e.message, 'error'); }
+        finally { setButtonLoadingState(button, false, 'Test'); }
     }
 
     async function loadDiscordAnnouncement() {

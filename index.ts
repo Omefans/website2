@@ -1431,7 +1431,7 @@ app.post('/api/config/telegram', async (c) => {
 app.get('/api/config/discord_announcement', async (c) => {
 	try {
 		const result = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'discord_webhook_announcements'").first('value');
-		return c.json({ url: result || '' });
+		return c.json({ url: result || c.env.DISCORD_WEBHOOK_ANNOUNCEMENTS || '' });
 	} catch (e) {
 		return c.json({ url: '' });
 	}
@@ -1448,6 +1448,21 @@ app.post('/api/config/discord_announcement', async (c) => {
 		await c.env.DB.prepare("DELETE FROM configurations WHERE key = 'discord_webhook_announcements'").run();
 		return c.json({ message: 'Announcement Webhook cleared' });
 	}
+});
+
+app.post('/api/config/discord_announcement/test', async (c) => {
+	const webhookUrl = await getDiscordAnnouncementWebhook(c.env);
+	if (!webhookUrl) return c.json({ error: 'No webhook URL configured.' }, 400);
+
+	try {
+		const response = await fetch(webhookUrl, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ content: '🔔 **Test Notification**\nThis is a test message from your OmeFans Admin Panel.' })
+		});
+		if (response.ok) return c.json({ message: 'Test message sent!' });
+		else return c.json({ error: `Discord returned ${response.status}` }, 500);
+	} catch (e: any) { return c.json({ error: e.message }, 500); }
 });
 
 // --- Security & Logs Routes ---

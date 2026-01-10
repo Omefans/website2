@@ -150,7 +150,10 @@
                             <input type="password" id="discord-announcement-url" placeholder="https://discord.com/api/webhooks/..." autocomplete="off">
                             <p style="font-size: 0.8rem; color: #8b949e; margin-top: 0.5rem;">Leave empty to use the default environment variable.</p>
                         </div>
-                        <button type="submit">Update Webhook</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" style="flex: 1;">Update Webhook</button>
+                            <button type="button" id="test-discord-announcement-btn" style="background-color: #1f6feb; flex: 0 0 auto;">Test</button>
+                        </div>
                     </form>
                 </div>
             </div>
