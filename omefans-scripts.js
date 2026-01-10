@@ -659,6 +659,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 </button>
             </div>
             ${data.imageUrl ? `<div style="margin-top: 10px;"><img src="${data.imageUrl}" style="width: 100%; border-radius: 4px; display: block;"></div>` : ''}
+            ${data.linkUrl ? `<div style="margin-top: 10px;"><a href="${data.linkUrl}" target="_blank" style="display: block; width: 100%; padding: 8px 0; background: #238636; color: white; text-align: center; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">Visit Link</a></div>` : ''}
         `;
         
         document.body.appendChild(notification);

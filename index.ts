@@ -1249,7 +1249,7 @@ app.get('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 });
 
 app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
-	const { title, message, duration, imageUrl, websiteOnly } = await c.req.json();
+	const { title, message, duration, imageUrl, linkUrl, websiteOnly } = await c.req.json();
 	if (!title || !message) return c.json({ error: 'Title and message are required' }, 400);
 
 	// Calculate Expiration
@@ -1279,8 +1279,11 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 	try {
 		await c.env.DB.prepare('ALTER TABLE announcements ADD COLUMN imageUrl TEXT').run();
 	} catch (e) { /* Column likely exists */ }
+	try {
+		await c.env.DB.prepare('ALTER TABLE announcements ADD COLUMN linkUrl TEXT').run();
+	} catch (e) { /* Column likely exists */ }
 	
-	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at, imageUrl) VALUES (?, ?, ?, ?)').bind(title, message, expiresAtStr, imageUrl || null).run();
+	await c.env.DB.prepare('INSERT INTO announcements (title, message, expires_at, imageUrl, linkUrl) VALUES (?, ?, ?, ?, ?)').bind(title, message, expiresAtStr, imageUrl || null, linkUrl || null).run();
 
 	if (!websiteOnly) {
 	// 2. Send to Discord
@@ -1289,9 +1292,15 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 		const discordBody: any = {
 			content: `@everyone\n**📢 NEW ANNOUNCEMENT**\n\n**${title}**\n${message}`
 		};
+
+		if (linkUrl) {
+			discordBody.content += `\n\n🔗 ${linkUrl}`;
+		}
+
 		if (imageUrl) {
 			discordBody.embeds = [{
 				title: title,
+				url: linkUrl || undefined,
 				image: { url: imageUrl },
 				color: 0x58a6ff
 			}];
@@ -1319,6 +1328,14 @@ app.post('/api/announcements', authMiddleware, adminMiddleware, async (c) => {
 			body.caption = `📢 <b>NEW ANNOUNCEMENT</b>\n\n<b>${title}</b>\n${message}`;
 		} else {
 			body.text = `📢 <b>NEW ANNOUNCEMENT</b>\n\n<b>${title}</b>\n${message}`;
+		}
+
+		if (linkUrl) {
+			body.reply_markup = {
+				inline_keyboard: [[
+					{ text: "🔗 Visit Link", url: linkUrl }
+				]]
+			};
 		}
 
 		c.executionCtx.waitUntil(fetch(`https://api.telegram.org/bot${telegramBotToken}/${method}`, {

@@ -1051,13 +1051,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = document.getElementById('announcement-title').value;
         const message = document.getElementById('announcement-message').value;
         const imageUrl = document.getElementById('announcement-image').value;
+        const linkUrl = document.getElementById('announcement-link').value;
         const duration = document.getElementById('announcement-duration').value;
 
         setButtonLoadingState(button, true, websiteOnly ? 'Posting...' : 'Broadcasting...');
         try {
             const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`, {
                 method: 'POST',
-                body: JSON.stringify({ title, message, duration, imageUrl, websiteOnly })
+                body: JSON.stringify({ title, message, duration, imageUrl, linkUrl, websiteOnly })
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to post announcement.');
@@ -1077,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = document.getElementById('announcement-title').value;
         const message = document.getElementById('announcement-message').value;
         const imageUrl = document.getElementById('announcement-image').value;
+        const linkUrl = document.getElementById('announcement-link').value;
 
         if (!title || !message) {
             showToast('Please enter a title and message to preview.', 'error');
@@ -1106,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
             </div>
             ${imageUrl ? `<div style="margin-top: 10px;"><img src="${imageUrl}" style="width: 100%; border-radius: 4px; display: block;"></div>` : ''}
+            ${linkUrl ? `<div style="margin-top: 10px;"><a href="${linkUrl}" target="_blank" style="display: block; width: 100%; padding: 8px 0; background: #238636; color: white; text-align: center; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600;">Visit Link</a></div>` : ''}
         `;
 
         document.body.appendChild(previewNotification);
