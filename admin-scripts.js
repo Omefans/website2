@@ -1086,36 +1086,41 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create a temporary notification to show the preview
         const previewNotification = document.createElement('div');
         Object.assign(previewNotification.style, {
-            position: 'fixed', top: '20px', right: '20px', width: '320px', maxWidth: '90vw',
-            backgroundColor: '#0d1117', border: '1px solid #30363d', borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: '20000', padding: '15px',
-            display: 'flex', flexDirection: 'column', gap: '10px',
-            transform: 'translateX(120%)', transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            position: 'fixed', top: '20px', right: '20px', width: '300px', maxWidth: '90vw',
+            backgroundColor: 'rgba(22, 27, 34, 0.95)', backdropFilter: 'blur(8px)',
+            borderLeft: '4px solid #58a6ff', borderRadius: '4px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)', zIndex: '20000', padding: '16px',
+            opacity: '0', transform: 'translateY(-20px)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
             fontFamily: "'Inter', sans-serif"
         });
 
         previewNotification.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <h3 style="color: #58a6ff; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                    <span>📢</span> ${title}
-                </h3>
-                <button class="close-preview" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; font-size: 1.2rem; line-height: 1;">&times;</button>
+            <div style="display: flex; align-items: start; gap: 12px;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #58a6ff;">${title}</h3>
+                    <div style="font-size: 13px; line-height: 1.4; color: #c9d1d9;">${message}</div>
+                </div>
+                <button class="close-preview" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; margin-top: 2px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
-            ${imageUrl ? `<img src="${imageUrl}" style="width: 100%; border-radius: 4px; object-fit: cover; max-height: 150px;" alt="Announcement">` : ''}
-            <div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; max-height: 200px; overflow-y: auto;">${message}</div>
-            <button class="close-preview-btn" style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; align-self: flex-end;">Got it (Preview)</button>
+            ${imageUrl ? `<div style="margin-top: 10px;"><img src="${imageUrl}" style="width: 100%; border-radius: 4px; display: block;"></div>` : ''}
         `;
 
         document.body.appendChild(previewNotification);
         
-        requestAnimationFrame(() => { previewNotification.style.transform = 'translateX(0)'; });
+        requestAnimationFrame(() => { 
+            previewNotification.style.opacity = '1';
+            previewNotification.style.transform = 'translateY(0)'; 
+        });
 
         const close = () => {
-            previewNotification.style.transform = 'translateX(120%)';
+            previewNotification.style.opacity = '0';
+            previewNotification.style.transform = 'translateY(-20px)';
             setTimeout(() => previewNotification.remove(), 300);
         };
         previewNotification.querySelector('.close-preview').addEventListener('click', close);
-        previewNotification.querySelector('.close-preview-btn').addEventListener('click', close);
     }
 
     async function loadAnnouncements() {

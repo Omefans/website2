@@ -617,6 +617,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function showAnnouncementNotification(data) {
+        // Remove any existing notifications
+        const existing = document.querySelector('.announcement-notification');
+        if (existing) existing.remove();
+
         // Create notification container dynamically
         const notification = document.createElement('div');
         notification.className = 'announcement-notification';
@@ -629,43 +633,45 @@ document.addEventListener("DOMContentLoaded", function() {
             left: 'auto',
             bottom: 'auto',
             margin: '0',
-            width: '320px',
+            width: '300px',
             maxWidth: '90vw',
-            backgroundColor: '#0d1117',
-            border: '1px solid #30363d',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-            zIndex: '99999',
-            padding: '15px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            transform: 'translateX(120%)', // Start off-screen
-            transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            backgroundColor: 'rgba(22, 27, 34, 0.95)',
+            backdropFilter: 'blur(8px)',
+            borderLeft: '4px solid #58a6ff',
+            borderRadius: '4px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            zIndex: '100000',
+            padding: '16px',
+            opacity: '0',
+            transform: 'translateY(-20px)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
             fontFamily: "'Inter', sans-serif"
         });
 
         notification.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <h3 style="color: #58a6ff; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                    <span>📢</span> ${data.title}
-                </h3>
-                <button class="close-announcement" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; font-size: 1.2rem; line-height: 1;">&times;</button>
+            <div style="display: flex; align-items: start; gap: 12px;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #58a6ff;">${data.title}</h3>
+                    <div style="font-size: 13px; line-height: 1.4; color: #c9d1d9;">${data.message}</div>
+                </div>
+                <button class="close-announcement" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; margin-top: 2px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             </div>
-            ${data.imageUrl ? `<img src="${data.imageUrl}" style="width: 100%; border-radius: 4px; object-fit: cover; max-height: 150px;" alt="Announcement">` : ''}
-            <div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; max-height: 200px; overflow-y: auto;">${data.message}</div>
-            <button id="ack-announcement" style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; align-self: flex-end;">Got it</button>
+            ${data.imageUrl ? `<div style="margin-top: 10px;"><img src="${data.imageUrl}" style="width: 100%; border-radius: 4px; display: block;"></div>` : ''}
         `;
         
         document.body.appendChild(notification);
         
         // Trigger animation
         requestAnimationFrame(() => {
-            notification.style.transform = 'translateX(0)';
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateY(0)';
         });
         
         const close = () => {
-            notification.style.transform = 'translateX(120%)';
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
             setTimeout(() => {
                 notification.remove();
                 localStorage.setItem('seen_announcement_id', data.id);
@@ -673,7 +679,6 @@ document.addEventListener("DOMContentLoaded", function() {
         };
         
         notification.querySelector('.close-announcement').addEventListener('click', close);
-        notification.querySelector('#ack-announcement').addEventListener('click', close);
     }
 
     checkAnnouncements();
