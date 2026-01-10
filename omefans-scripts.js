@@ -610,56 +610,67 @@ document.addEventListener("DOMContentLoaded", function() {
             if (announcement && announcement.id) {
                 const seenId = localStorage.getItem('seen_announcement_id');
                 if (isTest || seenId != announcement.id) {
-                    showAnnouncementModal(announcement);
+                    showAnnouncementNotification(announcement);
                 }
             }
         } catch (e) { console.error('Announcement check failed', e); }
     }
 
-    function showAnnouncementModal(data) {
-        // Create modal HTML dynamically
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
+    function showAnnouncementNotification(data) {
+        // Create notification container dynamically
+        const notification = document.createElement('div');
+        notification.className = 'announcement-notification';
         
-        // Apply styles directly to ensure visibility on the main site
-        Object.assign(modal.style, {
+        // Apply styles directly for top-right positioning
+        Object.assign(notification.style, {
             position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            top: '20px',
+            right: '20px',
+            width: '320px',
+            maxWidth: '90vw',
+            backgroundColor: '#0d1117',
+            border: '1px solid #30363d',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            zIndex: '99999',
+            padding: '15px',
             display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: '99999', /* Increased Z-Index to ensure it's on top of everything */
-            backdropFilter: 'blur(4px)'
+            flexDirection: 'column',
+            gap: '10px',
+            transform: 'translateX(120%)', // Start off-screen
+            transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            fontFamily: "'Inter', sans-serif"
         });
 
-        modal.innerHTML = `
-            <div class="modal-content" style="position: relative; width: 90%; max-width: 500px; text-align: center; border: 1px solid #30363d; background: #0d1117; padding: 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <button class="modal-close-btn" style="position: absolute; top: 10px; right: 15px; font-size: 24px; background: none; border: none; color: #fff; cursor: pointer;">&times;</button>
-                <h2 style="color: #58a6ff; margin-top: 0; margin-bottom: 15px;">📢 ${data.title}</h2>
-                ${data.imageUrl ? `<img src="${data.imageUrl}" style="max-width: 100%; border-radius: 6px; margin-bottom: 15px;" alt="Announcement">` : ''}
-                <p style="color: #c9d1d9; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap; text-align: left;">${data.message}</p>
-                <button id="ack-announcement" style="background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Got it</button>
+        notification.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h3 style="color: #58a6ff; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>📢</span> ${data.title}
+                </h3>
+                <button class="close-announcement" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; font-size: 1.2rem; line-height: 1;">&times;</button>
             </div>
+            ${data.imageUrl ? `<img src="${data.imageUrl}" style="width: 100%; border-radius: 4px; object-fit: cover; max-height: 150px;" alt="Announcement">` : ''}
+            <div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; max-height: 200px; overflow-y: auto;">${data.message}</div>
+            <button id="ack-announcement" style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; align-self: flex-end;">Got it</button>
         `;
         
-        document.body.appendChild(modal);
+        document.body.appendChild(notification);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+            notification.style.transform = 'translateX(0)';
+        });
         
         const close = () => {
-            modal.remove();
-            localStorage.setItem('seen_announcement_id', data.id);
+            notification.style.transform = 'translateX(120%)';
+            setTimeout(() => {
+                notification.remove();
+                localStorage.setItem('seen_announcement_id', data.id);
+            }, 300);
         };
         
-        modal.querySelector('.modal-close-btn').addEventListener('click', close);
-        modal.querySelector('#ack-announcement').addEventListener('click', close);
-        
-        // Close when clicking outside the modal content
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) close();
-        });
+        notification.querySelector('.close-announcement').addEventListener('click', close);
+        notification.querySelector('#ack-announcement').addEventListener('click', close);
     }
 
     checkAnnouncements();

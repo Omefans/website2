@@ -1079,30 +1079,39 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Create a temporary modal to show the preview
-        const previewModal = document.createElement('div');
-        Object.assign(previewModal.style, {
-            position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.85)', display: 'flex', justifyContent: 'center',
-            alignItems: 'center', zIndex: '20000', backdropFilter: 'blur(4px)'
+        // Create a temporary notification to show the preview
+        const previewNotification = document.createElement('div');
+        Object.assign(previewNotification.style, {
+            position: 'fixed', top: '20px', right: '20px', width: '320px', maxWidth: '90vw',
+            backgroundColor: '#0d1117', border: '1px solid #30363d', borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: '20000', padding: '15px',
+            display: 'flex', flexDirection: 'column', gap: '10px',
+            transform: 'translateX(120%)', transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            fontFamily: "'Inter', sans-serif"
         });
 
-        previewModal.innerHTML = `
-            <div style="position: relative; width: 90%; max-width: 500px; text-align: center; border: 1px solid #30363d; background: #0d1117; padding: 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <button class="close-preview" style="position: absolute; top: 10px; right: 15px; font-size: 24px; background: none; border: none; color: #fff; cursor: pointer;">&times;</button>
-                <h2 style="color: #58a6ff; margin-top: 0; margin-bottom: 15px;">📢 ${title}</h2>
-                ${imageUrl ? `<img src="${imageUrl}" style="max-width: 100%; border-radius: 6px; margin-bottom: 15px;" alt="Announcement">` : ''}
-                <p style="color: #c9d1d9; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap; text-align: left;">${message}</p>
-                <button class="close-preview-btn" style="background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">Got it (Preview)</button>
+        previewNotification.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h3 style="color: #58a6ff; margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>📢</span> ${title}
+                </h3>
+                <button class="close-preview" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; font-size: 1.2rem; line-height: 1;">&times;</button>
             </div>
+            ${imageUrl ? `<img src="${imageUrl}" style="width: 100%; border-radius: 4px; object-fit: cover; max-height: 150px;" alt="Announcement">` : ''}
+            <div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5; max-height: 200px; overflow-y: auto;">${message}</div>
+            <button class="close-preview-btn" style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; align-self: flex-end;">Got it (Preview)</button>
         `;
 
-        document.body.appendChild(previewModal);
+        document.body.appendChild(previewNotification);
+        
+        requestAnimationFrame(() => { previewNotification.style.transform = 'translateX(0)'; });
 
-        const close = () => previewModal.remove();
-        previewModal.querySelector('.close-preview').addEventListener('click', close);
-        previewModal.querySelector('.close-preview-btn').addEventListener('click', close);
-        previewModal.addEventListener('click', (e) => { if (e.target === previewModal) close(); });
+        const close = () => {
+            previewNotification.style.transform = 'translateX(120%)';
+            setTimeout(() => previewNotification.remove(), 300);
+        };
+        previewNotification.querySelector('.close-preview').addEventListener('click', close);
+        previewNotification.querySelector('.close-preview-btn').addEventListener('click', close);
     }
 
     async function loadAnnouncements() {
