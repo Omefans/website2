@@ -267,22 +267,42 @@ document.addEventListener("DOMContentLoaded", function() {
                 
                 const itemId = likeBtn.dataset.id;
                 const isLiked = localStorage.getItem(`liked_${itemId}`);
-                
-                if (isLiked) return; // Prevent spamming
-
-                // Optimistic UI update
                 const countSpan = likeBtn.querySelector('.like-count');
                 const svg = likeBtn.querySelector('svg');
                 let currentCount = parseInt(countSpan.innerText) || 0;
-                countSpan.innerText = currentCount + 1;
-                svg.style.fill = '#f91880';
-                svg.style.stroke = '#f91880';
-                localStorage.setItem(`liked_${itemId}`, 'true');
 
-                try {
-                    await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/like`, { method: 'POST' });
-                } catch (err) {
-                    console.error('Like failed', err);
+                if (isLiked) {
+                    // Uncheck Like
+                    countSpan.innerText = Math.max(0, currentCount - 1);
+                    svg.style.fill = 'none';
+                    svg.style.stroke = 'currentColor';
+                    localStorage.removeItem(`liked_${itemId}`);
+                    fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/like`, { method: 'DELETE' }).catch(console.error);
+                } else {
+                    // Check Like
+                    countSpan.innerText = currentCount + 1;
+                    svg.style.fill = '#f91880';
+                    svg.style.stroke = '#f91880';
+                    localStorage.setItem(`liked_${itemId}`, 'true');
+                    fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/like`, { method: 'POST' }).catch(console.error);
+
+                    // Remove Dislike if present (Mutual Exclusivity)
+                    const dislikeBtn = likeBtn.parentElement.querySelector('.dislike-btn');
+                    if (dislikeBtn) {
+                        const isDisliked = localStorage.getItem(`disliked_${itemId}`);
+                        if (isDisliked) {
+                            const dCountSpan = dislikeBtn.querySelector('.dislike-count');
+                            const dSvg = dislikeBtn.querySelector('svg');
+                            let dCount = parseInt(dCountSpan.innerText) || 0;
+                            
+                            dCountSpan.innerText = Math.max(0, dCount - 1);
+                            dSvg.style.fill = 'none';
+                            dSvg.style.stroke = 'currentColor';
+                            
+                            localStorage.removeItem(`disliked_${itemId}`);
+                            fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/dislike`, { method: 'DELETE' }).catch(console.error);
+                        }
+                    }
                 }
             }
 
@@ -294,22 +314,42 @@ document.addEventListener("DOMContentLoaded", function() {
                 
                 const itemId = dislikeBtn.dataset.id;
                 const isDisliked = localStorage.getItem(`disliked_${itemId}`);
-                
-                if (isDisliked) return; // Prevent spamming
-
-                // Optimistic UI update
                 const countSpan = dislikeBtn.querySelector('.dislike-count');
                 const svg = dislikeBtn.querySelector('svg');
                 let currentCount = parseInt(countSpan.innerText) || 0;
-                countSpan.innerText = currentCount + 1;
-                svg.style.fill = '#6e7681';
-                svg.style.stroke = '#6e7681';
-                localStorage.setItem(`disliked_${itemId}`, 'true');
 
-                try {
-                    await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/dislike`, { method: 'POST' });
-                } catch (err) {
-                    console.error('Dislike failed', err);
+                if (isDisliked) {
+                    // Uncheck Dislike
+                    countSpan.innerText = Math.max(0, currentCount - 1);
+                    svg.style.fill = 'none';
+                    svg.style.stroke = 'currentColor';
+                    localStorage.removeItem(`disliked_${itemId}`);
+                    fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/dislike`, { method: 'DELETE' }).catch(console.error);
+                } else {
+                    // Check Dislike
+                    countSpan.innerText = currentCount + 1;
+                    svg.style.fill = '#da3633';
+                    svg.style.stroke = '#da3633';
+                    localStorage.setItem(`disliked_${itemId}`, 'true');
+                    fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/dislike`, { method: 'POST' }).catch(console.error);
+
+                    // Remove Like if present (Mutual Exclusivity)
+                    const likeBtn = dislikeBtn.parentElement.querySelector('.like-btn');
+                    if (likeBtn) {
+                        const isLiked = localStorage.getItem(`liked_${itemId}`);
+                        if (isLiked) {
+                            const lCountSpan = likeBtn.querySelector('.like-count');
+                            const lSvg = likeBtn.querySelector('svg');
+                            let lCount = parseInt(lCountSpan.innerText) || 0;
+                            
+                            lCountSpan.innerText = Math.max(0, lCount - 1);
+                            lSvg.style.fill = 'none';
+                            lSvg.style.stroke = 'currentColor';
+                            
+                            localStorage.removeItem(`liked_${itemId}`);
+                            fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/like`, { method: 'DELETE' }).catch(console.error);
+                        }
+                    }
                 }
             }
         });
@@ -412,8 +452,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 // Check local storage for dislike state
                 const isDisliked = localStorage.getItem(`disliked_${data.id}`);
-                const dislikeColor = isDisliked ? '#6e7681' : 'currentColor';
-                const dislikeFill = isDisliked ? '#6e7681' : 'none';
+                const dislikeColor = isDisliked ? '#da3633' : 'currentColor';
+                const dislikeFill = isDisliked ? '#da3633' : 'none';
 
                 itemArticle.innerHTML = `
                     <div class="gallery-item-image-link">

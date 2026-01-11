@@ -1004,6 +1004,18 @@ app.post('/api/gallery/:id/like', async (c) => {
 	}
 });
 
+// Unlike a gallery item
+app.delete('/api/gallery/:id/like', async (c) => {
+	const id = c.req.param('id');
+	try {
+		await c.env.DB.prepare('UPDATE gallery_items SET likes = MAX(0, COALESCE(likes, 0) - 1) WHERE id = ?').bind(id).run();
+		const newItem = await c.env.DB.prepare('SELECT likes FROM gallery_items WHERE id = ?').bind(id).first();
+		return c.json({ likes: newItem?.likes || 0 });
+	} catch (e) {
+		return c.json({ error: 'Failed to unlike item' }, 500);
+	}
+});
+
 // Dislike a gallery item
 app.post('/api/gallery/:id/dislike', async (c) => {
 	const id = c.req.param('id');
@@ -1019,6 +1031,18 @@ app.post('/api/gallery/:id/dislike', async (c) => {
 		return c.json({ dislikes: newItem?.dislikes || 0 });
 	} catch (e) {
 		return c.json({ error: 'Failed to dislike item' }, 500);
+	}
+});
+
+// Undislike a gallery item
+app.delete('/api/gallery/:id/dislike', async (c) => {
+	const id = c.req.param('id');
+	try {
+		await c.env.DB.prepare('UPDATE gallery_items SET dislikes = MAX(0, COALESCE(dislikes, 0) - 1) WHERE id = ?').bind(id).run();
+		const newItem = await c.env.DB.prepare('SELECT dislikes FROM gallery_items WHERE id = ?').bind(id).first();
+		return c.json({ dislikes: newItem?.dislikes || 0 });
+	} catch (e) {
+		return c.json({ error: 'Failed to undislike item' }, 500);
 	}
 });
 
