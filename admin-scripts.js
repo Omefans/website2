@@ -482,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="item-date">${formattedDate}</span>
                             <span class="item-likes" style="display: flex; align-items: center; gap: 6px;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="#f91880" stroke="#f91880" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> ${item.likes || 0}
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#da3633" stroke="#da3633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zm7 13h2.67A2.31 2.31 0 0 0 22 20v-7a2.31 2.31 0 0 0-2.33-2H17"></path></svg> ${item.dislikes || 0}
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="#da3633" stroke="#da3633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg> ${item.dislikes || 0}
                             </span>
                         </div>
                         <div class="item-meta" style="margin-top: 2px;">
