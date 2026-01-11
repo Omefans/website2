@@ -934,7 +934,7 @@ app.post('/api/webhook/telegram', async (c) => {
 // Get all gallery items
 app.get('/api/gallery', async (c) => {
 	const { sort, order } = c.req.query();
-    const validSort = ['createdAt', 'name'].includes(sort) ? sort : 'createdAt';
+    const validSort = ['createdAt', 'name', 'likes', 'dislikes'].includes(sort) ? sort : 'createdAt';
     const validOrder = ['asc', 'desc'].includes(order) ? order.toUpperCase() : 'DESC';
 
 	// --- Check Maintenance Mode ---
@@ -984,6 +984,42 @@ app.get('/api/gallery', async (c) => {
 	);
 	const { results } = await stmt.all();
 	return c.json(results);
+});
+
+// Like a gallery item
+app.post('/api/gallery/:id/like', async (c) => {
+	const id = c.req.param('id');
+	
+	// Lazy migration: Ensure 'likes' column exists
+	try {
+		await c.env.DB.prepare('ALTER TABLE gallery_items ADD COLUMN likes INTEGER DEFAULT 0').run();
+	} catch (e) { /* Column likely exists */ }
+
+	try {
+		await c.env.DB.prepare('UPDATE gallery_items SET likes = COALESCE(likes, 0) + 1 WHERE id = ?').bind(id).run();
+		const newItem = await c.env.DB.prepare('SELECT likes FROM gallery_items WHERE id = ?').bind(id).first();
+		return c.json({ likes: newItem?.likes || 0 });
+	} catch (e) {
+		return c.json({ error: 'Failed to like item' }, 500);
+	}
+});
+
+// Dislike a gallery item
+app.post('/api/gallery/:id/dislike', async (c) => {
+	const id = c.req.param('id');
+	
+	// Lazy migration: Ensure 'dislikes' column exists
+	try {
+		await c.env.DB.prepare('ALTER TABLE gallery_items ADD COLUMN dislikes INTEGER DEFAULT 0').run();
+	} catch (e) { /* Column likely exists */ }
+
+	try {
+		await c.env.DB.prepare('UPDATE gallery_items SET dislikes = COALESCE(dislikes, 0) + 1 WHERE id = ?').bind(id).run();
+		const newItem = await c.env.DB.prepare('SELECT dislikes FROM gallery_items WHERE id = ?').bind(id).first();
+		return c.json({ dislikes: newItem?.dislikes || 0 });
+	} catch (e) {
+		return c.json({ error: 'Failed to dislike item' }, 500);
+	}
 });
 
 // Get latest announcement (for website popup)

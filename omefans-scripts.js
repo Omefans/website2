@@ -258,6 +258,60 @@ document.addEventListener("DOMContentLoaded", function() {
                     reportModal.style.display = "block";
                 }
             }
+
+            // Like Button Logic
+            const likeBtn = e.target.closest('.like-btn');
+            if (likeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const itemId = likeBtn.dataset.id;
+                const isLiked = localStorage.getItem(`liked_${itemId}`);
+                
+                if (isLiked) return; // Prevent spamming
+
+                // Optimistic UI update
+                const countSpan = likeBtn.querySelector('.like-count');
+                const svg = likeBtn.querySelector('svg');
+                let currentCount = parseInt(countSpan.innerText) || 0;
+                countSpan.innerText = currentCount + 1;
+                svg.style.fill = '#f91880';
+                svg.style.stroke = '#f91880';
+                localStorage.setItem(`liked_${itemId}`, 'true');
+
+                try {
+                    await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/like`, { method: 'POST' });
+                } catch (err) {
+                    console.error('Like failed', err);
+                }
+            }
+
+            // Dislike Button Logic
+            const dislikeBtn = e.target.closest('.dislike-btn');
+            if (dislikeBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const itemId = dislikeBtn.dataset.id;
+                const isDisliked = localStorage.getItem(`disliked_${itemId}`);
+                
+                if (isDisliked) return; // Prevent spamming
+
+                // Optimistic UI update
+                const countSpan = dislikeBtn.querySelector('.dislike-count');
+                const svg = dislikeBtn.querySelector('svg');
+                let currentCount = parseInt(countSpan.innerText) || 0;
+                countSpan.innerText = currentCount + 1;
+                svg.style.fill = '#6e7681';
+                svg.style.stroke = '#6e7681';
+                localStorage.setItem(`disliked_${itemId}`, 'true');
+
+                try {
+                    await fetch(`${AppConfig.backendUrl}/api/gallery/${itemId}/dislike`, { method: 'POST' });
+                } catch (err) {
+                    console.error('Dislike failed', err);
+                }
+            }
         });
     }
 
@@ -351,6 +405,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     day: 'numeric'
                 });
 
+                // Check local storage for like state
+                const isLiked = localStorage.getItem(`liked_${data.id}`);
+                const likeColor = isLiked ? '#f91880' : 'currentColor';
+                const likeFill = isLiked ? '#f91880' : 'none';
+
+                // Check local storage for dislike state
+                const isDisliked = localStorage.getItem(`disliked_${data.id}`);
+                const dislikeColor = isDisliked ? '#6e7681' : 'currentColor';
+                const dislikeFill = isDisliked ? '#6e7681' : 'none';
+
                 itemArticle.innerHTML = `
                     <div class="gallery-item-image-link">
                         <img src="${data.imageUrl}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
@@ -368,6 +432,16 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                         <div class="item-footer">
                             <span class="item-date">${releaseDate}</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="like-btn" data-id="${data.id}" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #8b949e; padding: 4px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${likeFill}" stroke="${likeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                    <span class="like-count" style="font-size: 0.85rem;">${data.likes || 0}</span>
+                                </button>
+                                <button class="dislike-btn" data-id="${data.id}" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #8b949e; padding: 4px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${dislikeFill}" stroke="${dislikeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zm7 13h2.67A2.31 2.31 0 0 0 22 20v-7a2.31 2.31 0 0 0-2.33-2H17"></path></svg>
+                                    <span class="dislike-count" style="font-size: 0.85rem;">${data.dislikes || 0}</span>
+                                </button>
+                            </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <button class="report-link-btn" data-item-name="${data.name}" data-affiliate-url="${data.affiliateUrl}" data-image-url="${data.imageUrl}" title="Report Broken Link" style="background: none; border: none; padding: 0; cursor: pointer; color: #ff4444; display: flex; align-items: center; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>

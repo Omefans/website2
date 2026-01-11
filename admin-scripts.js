@@ -480,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="item-meta">
                             <span class="item-category" style="color: ${categoryColor}; text-transform: capitalize; font-weight: 600;">${item.category || 'Omegle'}</span>
                             <span class="item-date">${formattedDate}</span>
+                            <span class="item-likes" style="display: flex; align-items: center; gap: 4px;">❤️ ${item.likes || 0} 👎 ${item.dislikes || 0}</span>
                         </div>
                         <div class="item-meta" style="margin-top: 2px;">
                             <span class="item-publisher">by ${item.publisherName || 'Unknown'}</span>
