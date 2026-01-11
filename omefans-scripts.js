@@ -208,12 +208,15 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Inject Likes Button if it doesn't exist
     let sortLikesBtn = document.getElementById('sort-likes-btn');
-    if (!sortLikesBtn && sortNameBtn && sortNameBtn.parentNode) {
-        sortLikesBtn = document.createElement('button');
-        sortLikesBtn.id = 'sort-likes-btn';
-        sortLikesBtn.className = 'sort-btn';
-        sortLikesBtn.innerHTML = 'Likes';
-        sortNameBtn.parentNode.insertBefore(sortLikesBtn, sortNameBtn.nextSibling);
+    if (!sortLikesBtn) {
+        const anchorBtn = sortNameBtn || sortDateBtn;
+        if (anchorBtn && anchorBtn.parentNode) {
+            sortLikesBtn = document.createElement('button');
+            sortLikesBtn.id = 'sort-likes-btn';
+            sortLikesBtn.className = 'sort-btn';
+            sortLikesBtn.innerHTML = 'Likes';
+            anchorBtn.insertAdjacentElement('afterend', sortLikesBtn);
+        }
     }
 
     let masterGalleryData = []; // Holds the original full list of items from the server

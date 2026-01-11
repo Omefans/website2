@@ -588,7 +588,7 @@ body.is-admin #nav-users-btn { display: inline-block; }
     .sort-buttons {
         width: 100%;
         display: grid;
-        grid-template-columns: 1fr 1fr; /* Two equal columns */
+        grid-template-columns: repeat(3, 1fr); /* Three equal columns */
         gap: 10px;
     }
     .sort-buttons span {
