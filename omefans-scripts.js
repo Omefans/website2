@@ -120,29 +120,6 @@ document.addEventListener("DOMContentLoaded", function() {
     /* --- 2. MOUSE FOLLOWER --- */
     const follower = document.getElementById('mouseFollower');
 
-    function applyMouseFollowerEffects() {
-        // This function can be called multiple times to apply effects to new elements
-        if (!follower || !window.matchMedia("(pointer: fine)").matches) return;
-        
-        const interactables = document.querySelectorAll('a, button, input, textarea, .gallery-item, .item-desc.is-expandable');
-        interactables.forEach(el => {
-            // Prevent adding the same listener multiple times
-            if (el.dataset.followerAttached) return;
-
-            el.addEventListener('mouseenter', () => {
-                follower.style.transform = 'translate(-50%, -50%) scale(1.8)';
-                follower.style.borderColor = '#ffffff';
-                follower.style.background = 'rgba(255, 255, 255, 0.1)';
-            });
-            el.addEventListener('mouseleave', () => {
-                follower.style.transform = 'translate(-50%, -50%) scale(1)';
-                follower.style.borderColor = '#00d9ff';
-                follower.style.background = 'rgba(255, 136, 0, 0.1)';
-            });
-            el.dataset.followerAttached = 'true';
-        });
-    }
-
     if (window.matchMedia("(pointer: fine)").matches && follower) {
         // OPTIMIZATION: Use requestAnimationFrame for smoother performance
         let mouseX = 0, mouseY = 0;
@@ -159,7 +136,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
             }
         });
-        applyMouseFollowerEffects(); // Initial call for static elements
+
+        // OPTIMIZATION: Event Delegation for hover effects
+        // Instead of attaching listeners to every element, we listen once on the document.
+        const selector = 'a, button, input, textarea, .gallery-item, .item-desc.is-expandable';
+        
+        document.addEventListener('mouseover', (e) => {
+            if (e.target.closest(selector)) {
+                follower.style.transform = 'translate(-50%, -50%) scale(1.8)';
+                follower.style.borderColor = '#ffffff';
+                follower.style.background = 'rgba(255, 255, 255, 0.1)';
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            if (!e.relatedTarget || !e.relatedTarget.closest(selector)) {
+                follower.style.transform = 'translate(-50%, -50%) scale(1)';
+                follower.style.borderColor = '#00d9ff';
+                follower.style.background = 'rgba(255, 136, 0, 0.1)';
+            }
+        });
     } else if (follower) {
         follower.style.display = 'none';
     }
@@ -509,9 +505,6 @@ document.addEventListener("DOMContentLoaded", function() {
                         desc.addEventListener('click', toggleDescription);
                     }
                 });
-
-                // Re-apply mouse follower effects AFTER the .is-expandable class has been added.
-                applyMouseFollowerEffects();
 
             });
 

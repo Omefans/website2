@@ -983,6 +983,7 @@ app.get('/api/gallery', async (c) => {
 		`SELECT gi.*, u.username as publisherName FROM gallery_items gi LEFT JOIN users u ON gi.userId = u.id ORDER BY ${validSort} ${validOrder}`
 	);
 	const { results } = await stmt.all();
+	c.header('Cache-Control', 'public, max-age=60');
 	return c.json(results);
 });
 
@@ -1052,6 +1053,7 @@ app.get('/api/announcements/latest', async (c) => {
 		const now = new Date().toISOString();
 		// Only fetch announcements that haven't expired
 		const announcement = await c.env.DB.prepare('SELECT * FROM announcements WHERE expires_at > ? ORDER BY created_at DESC LIMIT 1').bind(now).first();
+		c.header('Cache-Control', 'public, max-age=60');
 		return c.json(announcement || {});
 	} catch (e) {
 		return c.json({});
