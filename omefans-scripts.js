@@ -438,7 +438,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                     <span class="like-count" style="font-size: 0.85rem;">${data.likes || 0}</span>
                                 </button>
                                 <button class="dislike-btn" data-id="${data.id}" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #8b949e; padding: 4px;">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${dislikeFill}" stroke="${dislikeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zm7 13h2.67A2.31 2.31 0 0 0 22 20v-7a2.31 2.31 0 0 0-2.33-2H17"></path></svg>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="${dislikeFill}" stroke="${dislikeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path fill-rule="evenodd" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z M12 8l-2 3 3 2-2 3 3 2-2 0l0-10z"></path></svg>
                                     <span class="dislike-count" style="font-size: 0.85rem;">${data.dislikes || 0}</span>
                                 </button>
                             </div>
