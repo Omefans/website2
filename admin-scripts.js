@@ -361,6 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>Sort by:</span>
                         <button id="admin-sort-date-btn" class="sort-btn"></button>
                         <button id="admin-sort-name-btn" class="sort-btn"></button>
+                        <button id="admin-sort-likes-btn" class="sort-btn"></button>
                     </div>
                 </div>
             `;
@@ -383,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('admin-sort-date-btn').addEventListener('click', () => setSort('createdAt'));
         document.getElementById('admin-sort-name-btn').addEventListener('click', () => setSort('name'));
+        document.getElementById('admin-sort-likes-btn').addEventListener('click', () => setSort('likes'));
     }
 
     function setSort(sortType) {
@@ -401,19 +403,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateSortButtonUI() {
         const dateBtn = document.getElementById('admin-sort-date-btn');
         const nameBtn = document.getElementById('admin-sort-name-btn');
+        const likesBtn = document.getElementById('admin-sort-likes-btn');
 
         // Reset both buttons
         dateBtn.innerHTML = 'Date';
         nameBtn.innerHTML = 'Name';
+        likesBtn.innerHTML = 'Likes';
         dateBtn.classList.remove('active');
         nameBtn.classList.remove('active');
+        likesBtn.classList.remove('active');
 
         if (currentSort.field === 'createdAt') {
             dateBtn.classList.add('active');
             dateBtn.innerHTML = `Date ${currentSort.order === 'desc' ? '&#9660;' : '&#9650;'}`; // ▼ or ▲
-        } else { // name
+        } else if (currentSort.field === 'name') { // name
             nameBtn.classList.add('active');
             nameBtn.innerHTML = `Name ${currentSort.order === 'asc' ? 'A-Z' : 'Z-A'}`;
+        } else if (currentSort.field === 'likes') {
+            likesBtn.classList.add('active');
+            likesBtn.innerHTML = `Likes ${currentSort.order === 'desc' ? '&#9660;' : '&#9650;'}`;
         }
     }
 

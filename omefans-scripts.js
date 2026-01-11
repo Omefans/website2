@@ -205,11 +205,22 @@ document.addEventListener("DOMContentLoaded", function() {
     const sortDateBtn = document.getElementById('sort-date-btn');
     const sortNameBtn = document.getElementById('sort-name-btn');
     const filterBtns = document.querySelectorAll('.filter-btn');
+    
+    // Inject Likes Button if it doesn't exist
+    let sortLikesBtn = document.getElementById('sort-likes-btn');
+    if (!sortLikesBtn && sortNameBtn && sortNameBtn.parentNode) {
+        sortLikesBtn = document.createElement('button');
+        sortLikesBtn.id = 'sort-likes-btn';
+        sortLikesBtn.className = 'sort-btn';
+        sortLikesBtn.innerHTML = 'Likes';
+        sortNameBtn.parentNode.insertBefore(sortLikesBtn, sortNameBtn.nextSibling);
+    }
 
     let masterGalleryData = []; // Holds the original full list of items from the server
     let currentSort = 'date'; // 'date' or 'name'
     let dateSortDirection = 'desc'; // 'desc' for recent, 'asc' for older
     let nameSortDirection = 'asc'; // 'asc' for A-Z, 'desc' for Z-A
+    let likesSortDirection = 'desc';
     let currentCategory = 'all';
 
     function debounce(func, delay) {
@@ -552,6 +563,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     return nameSortDirection === 'asc'
                         ? nameA.localeCompare(nameB)
                         : nameB.localeCompare(nameA);
+                } else if (currentSort === 'likes') {
+                    const likesA = a.likes || 0;
+                    const likesB = b.likes || 0;
+                    return likesSortDirection === 'desc'
+                        ? likesB - likesA
+                        : likesA - likesB;
                 }
                 return 0;
             });
@@ -591,6 +608,7 @@ document.addEventListener("DOMContentLoaded", function() {
             // Set initial button state to show the default sort direction
             sortDateBtn.innerHTML = `Date <span class="sort-arrow">&darr;</span>`; // Active by default
             sortNameBtn.innerHTML = `Name`; // Inactive, no arrow
+            if (sortLikesBtn) sortLikesBtn.innerHTML = 'Likes';
 
             // Add event listeners for controls
             searchBar.addEventListener('input', debounce(() => {
@@ -608,6 +626,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 sortNameBtn.innerHTML = 'Name';
                 sortDateBtn.classList.add('active');
                 sortNameBtn.classList.remove('active');
+                if (sortLikesBtn) { sortLikesBtn.classList.remove('active'); sortLikesBtn.innerHTML = 'Likes'; }
                 updateDisplay();
             });
 
@@ -622,8 +641,27 @@ document.addEventListener("DOMContentLoaded", function() {
                 sortDateBtn.innerHTML = 'Date';
                 sortNameBtn.classList.add('active');
                 sortDateBtn.classList.remove('active');
+                if (sortLikesBtn) { sortLikesBtn.classList.remove('active'); sortLikesBtn.innerHTML = 'Likes'; }
                 updateDisplay();
             });
+            
+            if (sortLikesBtn) {
+                sortLikesBtn.addEventListener('click', () => {
+                    if (currentSort === 'likes') {
+                        likesSortDirection = likesSortDirection === 'desc' ? 'asc' : 'desc';
+                    } else {
+                        currentSort = 'likes';
+                        likesSortDirection = 'desc';
+                    }
+                    sortLikesBtn.innerHTML = `Likes <span class="sort-arrow">${likesSortDirection === 'desc' ? '&darr;' : '&uarr;'}</span>`;
+                    sortDateBtn.innerHTML = 'Date';
+                    sortNameBtn.innerHTML = 'Name';
+                    sortLikesBtn.classList.add('active');
+                    sortDateBtn.classList.remove('active');
+                    sortNameBtn.classList.remove('active');
+                    updateDisplay();
+                });
+            }
 
             // Category Filter Listeners
             filterBtns.forEach(btn => {
