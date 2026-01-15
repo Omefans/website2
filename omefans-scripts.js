@@ -656,7 +656,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         currentSort = 'likes';
                         likesSortDirection = 'desc';
                     }
-                    sortLikesBtn.innerHTML = `Likes <span class="sort-arrow">${likesSortDirection === 'desc' ? '&darr;' : '&uarr;'}</span>`;
+                    sortLikesBtn.innerHTML = `Likes <span class="sort-arrow">${likesSortDirection === 'desc' ? '&uarr;' : '&darr;'}</span>`;
                     sortDateBtn.innerHTML = 'Date';
                     sortNameBtn.innerHTML = 'Name';
                     sortLikesBtn.classList.add('active');

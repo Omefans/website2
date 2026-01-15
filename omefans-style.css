@@ -364,9 +364,6 @@ body {
     .filter-btn {
         flex: 0 0 auto; /* Prevent buttons from shrinking */
     }
-    .sort-buttons {
-        justify-content: space-between; /* Spread sort buttons evenly */
-    }
 }
 
 /* --- 7. GALLERY & DYNAMIC CONTENT --- */
@@ -463,29 +460,33 @@ body {
 
 .sort-buttons {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
-    background-color: #1a1a1a;
-    padding: 5px;
-    border-radius: 50px;
-    border: 1px solid #444;
+    gap: 8px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
 }
 
 .sort-buttons span {
-    padding-left: 15px;
+    padding-left: 0;
+    margin-right: 5px;
     font-size: 0.9rem;
     color: #aaa;
 }
 
 .sort-btn {
-    background: transparent;
-    border: none;
+    background: rgba(26, 26, 26, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: #ccc;
-    padding: 8px 15px;
-    border-radius: 50px;
+    padding: 8px 16px;
+    border-radius: 20px;
     cursor: none;
     font-weight: 600;
-    transition: background-color 0.3s, color 0.3s;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
 }
 
 .sort-arrow {
@@ -500,6 +501,8 @@ body {
 .sort-btn.active {
     background-color: #00d9ff;
     color: #000;
+    border-color: #00d9ff;
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
 }
 
 .sort-btn.active .sort-arrow {
@@ -507,7 +510,8 @@ body {
 }
 
 .sort-btn:not(.active):hover {
-    background-color: #333;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .gallery-grid {
