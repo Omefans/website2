@@ -456,6 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
 
+        // Sort: Featured items first
+        itemsToDisplay.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+
         itemListContainer.innerHTML = ''; // Clear previous list
         if (itemsToDisplay.length === 0) {
             const message = currentSearchTerm ? 'No items match your search.' : 'No items to manage yet.';

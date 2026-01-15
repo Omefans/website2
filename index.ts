@@ -945,6 +945,11 @@ app.get('/api/gallery', async (c) => {
 		}
 	} catch (e) {}
 
+	// Lazy migration: Ensure 'isFeatured' column exists
+	try {
+		await c.env.DB.prepare('ALTER TABLE gallery_items ADD COLUMN isFeatured INTEGER DEFAULT 0').run();
+	} catch (e) { /* Column likely exists */ }
+
 	// --- Visitor Tracking ---
 	const country = c.req.header('cf-ipcountry') || 'Unknown';
 	c.executionCtx.waitUntil((async () => {
@@ -980,7 +985,7 @@ app.get('/api/gallery', async (c) => {
 	})());
 
 	const stmt = c.env.DB.prepare(
-		`SELECT gi.*, u.username as publisherName FROM gallery_items gi LEFT JOIN users u ON gi.userId = u.id ORDER BY ${validSort} ${validOrder}`
+		`SELECT gi.*, u.username as publisherName FROM gallery_items gi LEFT JOIN users u ON gi.userId = u.id ORDER BY gi.isFeatured DESC, ${validSort} ${validOrder}`
 	);
 	const { results } = await stmt.all();
 	c.header('Cache-Control', 'public, max-age=60');
