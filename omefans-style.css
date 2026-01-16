@@ -948,32 +948,36 @@ img, video, iframe, canvas {
 
 @media (max-width: 768px) {
     .ad-banner-container.ad-728 iframe {
-        transform: scale(0.75);
+        transform: scale(0.6); /* Safer for smaller tablets */
         transform-origin: center;
     }
     .ad-banner-container.ad-728 {
-        height: 70px;
+        height: 60px;
         margin: 20px 0;
     }
     .ad-banner-container.ad-468 iframe {
-        transform: none;
+        transform: scale(0.9);
+        transform-origin: center;
+    }
+    .ad-banner-container.ad-468 {
+        height: 55px;
     }
 }
 @media (max-width: 480px) {
     .ad-banner-container.ad-728 iframe {
-        transform: scale(0.45); /* Fits ~330px width (standard mobile with padding) */
+        transform: scale(0.42); /* Fits 360px screens (320px content) */
         transform-origin: center;
     }
     .ad-banner-container.ad-728 {
-        height: 42px;
+        height: 40px;
         margin: 15px 0;
     }
     .ad-banner-container.ad-468 iframe {
-        transform: scale(0.70); /* Fits ~330px width */
+        transform: scale(0.65); /* Fits 360px screens */
         transform-origin: center;
     }
     .ad-banner-container.ad-468 {
-        height: 42px;
+        height: 40px;
         margin: 15px 0;
     }
 }
@@ -981,10 +985,10 @@ img, video, iframe, canvas {
 /* Extra small devices (iPhone SE, older Androids) */
 @media (max-width: 370px) {
     .ad-banner-container.ad-728 iframe {
-        transform: scale(0.38); /* Fits within 280px content area */
+        transform: scale(0.37); /* Fits within 280px content area */
     }
     .ad-banner-container.ad-728 {
-        height: 36px;
+        height: 35px;
     }
     .ad-banner-container.ad-468 iframe {
         transform: scale(0.58); /* Fits within 280px content area */
