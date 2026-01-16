@@ -598,10 +598,54 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (!response.ok) throw new Error('Network response was not ok');
                 masterGalleryData = await response.json();
                 updateDisplay(); // Initial render with default sorting
+                checkNewContent(masterGalleryData);
 
             } catch (error) {
                 console.error("Error fetching gallery:", error);
                 galleryContainer.innerHTML = '<p class="gallery-message">Failed to load gallery content.</p>';
+            }
+        }
+
+        function checkNewContent(items) {
+            if (!items || items.length === 0) return;
+
+            let newestItem = items[0];
+            for (let i = 1; i < items.length; i++) {
+                if (new Date(items[i].createdAt) > new Date(newestItem.createdAt)) {
+                    newestItem = items[i];
+                }
+            }
+
+            if (!newestItem) return;
+
+            const createdTime = new Date(newestItem.createdAt).getTime();
+            const now = Date.now();
+            const hours48 = 48 * 60 * 60 * 1000;
+
+            if (now - createdTime < hours48) {
+                const seenId = localStorage.getItem('seen_content_id');
+                if (seenId != newestItem.id) {
+                    const category = (newestItem.category || 'omegle').toLowerCase();
+                    let color = '#FF8800'; // Default Orange
+                    let titlePrefix = 'NEW CONTENT';
+
+                    if (category === 'onlyfans') {
+                        color = '#00AFF0';
+                        titlePrefix = 'NEW ONLYFANS CONTENT';
+                    } else {
+                        titlePrefix = 'NEW OMEGLE CONTENT';
+                    }
+
+                    showAnnouncementNotification({
+                        title: `${titlePrefix} 🔥`,
+                        message: `Check out <b>${newestItem.name}</b>!`,
+                        imageUrl: newestItem.imageUrl,
+                        linkUrl: newestItem.affiliateUrl,
+                        id: newestItem.id,
+                        color: color,
+                        storageKey: 'seen_content_id'
+                    });
+                }
             }
         }
 
@@ -769,6 +813,9 @@ document.addEventListener("DOMContentLoaded", function() {
         const existing = document.querySelector('.announcement-notification');
         if (existing) existing.remove();
 
+        const accentColor = data.color || '#58a6ff';
+        const storageKey = data.storageKey || 'seen_announcement_id';
+
         // Create notification container dynamically
         const notification = document.createElement('div');
         notification.className = 'announcement-notification';
@@ -785,7 +832,7 @@ document.addEventListener("DOMContentLoaded", function() {
             maxWidth: '90vw',
             backgroundColor: 'rgba(22, 27, 34, 0.95)',
             backdropFilter: 'blur(8px)',
-            borderLeft: '4px solid #58a6ff',
+            borderLeft: `4px solid ${accentColor}`,
             borderRadius: '4px',
             boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
             zIndex: '100000',
@@ -799,7 +846,7 @@ document.addEventListener("DOMContentLoaded", function() {
         notification.innerHTML = `
             <div style="display: flex; align-items: start; gap: 12px;">
                 <div style="flex: 1;">
-                    <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #58a6ff;">${data.title}</h3>
+                    <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: ${accentColor};">${data.title}</h3>
                     <div style="font-size: 13px; line-height: 1.4; color: #c9d1d9;">${data.message}</div>
                 </div>
                 <button class="close-announcement" style="background: none; border: none; color: #8b949e; cursor: pointer; padding: 0; margin-top: 2px;">
@@ -823,7 +870,7 @@ document.addEventListener("DOMContentLoaded", function() {
             notification.style.transform = 'translateY(-20px)';
             setTimeout(() => {
                 notification.remove();
-                localStorage.setItem('seen_announcement_id', data.id);
+                localStorage.setItem(storageKey, data.id);
             }, 300);
         };
         
