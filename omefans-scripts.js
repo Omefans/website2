@@ -904,4 +904,79 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     checkAnnouncements();
+
+    /* --- 8. ADVERTISEMENT BANNERS --- */
+    function injectAds() {
+        const createAd = (width, height, key) => {
+            const container = document.createElement('div');
+            container.className = `ad-banner-container ad-${width}`;
+            
+            const iframe = document.createElement('iframe');
+            iframe.width = width;
+            iframe.height = height;
+            iframe.frameBorder = "0";
+            iframe.scrolling = "no";
+            iframe.style.border = "none";
+            iframe.style.overflow = "hidden";
+            
+            container.appendChild(iframe);
+            return { container, iframe, key, width, height };
+        };
+
+        const loadAd = (ad) => {
+            const doc = ad.iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <body style="margin:0;padding:0;background:transparent;display:flex;justify-content:center;">
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '${ad.key}',
+                            'format' : 'iframe',
+                            'height' : ${ad.height},
+                            'width' : ${ad.width},
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="https://sonsstoop.com/${ad.key}/invoke.js"></script>
+                </body>
+            `);
+            doc.close();
+        };
+
+        // 1. Primary Ad (728x90) - Top/Main
+        const ad728 = createAd(728, 90, 'b9bfd94299ec4823b30b41c0773fc504');
+        let target = null;
+        let position = 'before';
+
+        const galleryControls = document.querySelector('.gallery-controls');
+        const contactContainer = document.querySelector('.contact-container');
+        const ctaContainer = document.querySelector('.cta-container');
+
+        if (galleryControls) {
+            target = galleryControls;
+            position = 'before';
+        } else if (contactContainer) {
+            target = contactContainer;
+            position = 'after';
+        } else if (ctaContainer) {
+            target = ctaContainer;
+            position = 'after';
+        }
+
+        if (target && target.parentNode) {
+            if (position === 'before') target.parentNode.insertBefore(ad728.container, target);
+            else target.parentNode.insertBefore(ad728.container, target.nextSibling);
+            loadAd(ad728);
+        }
+
+        // 2. Secondary Ad (468x60) - Bottom
+        const ad468 = createAd(468, 60, 'f3356048a2536047b85705f3d1b0b94d');
+        const footer = document.querySelector('.footer');
+        if (footer && footer.parentNode) {
+            footer.parentNode.insertBefore(ad468.container, footer);
+            loadAd(ad468);
+        }
+    }
+
+    injectAds();
 });

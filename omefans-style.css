@@ -934,3 +934,42 @@ img, video, iframe, canvas {
 .toast.show { transform: translateX(0); }
 .toast-success { border-left: 4px solid #00d9ff; }
 .toast-error { border-left: 4px solid #ff4444; }
+
+/* --- ADVERTISEMENT --- */
+.ad-banner-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0 10px 0;
+    z-index: 5;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .ad-banner-container.ad-728 iframe {
+        transform: scale(0.75);
+        transform-origin: center;
+    }
+    .ad-banner-container.ad-728 {
+        height: 70px;
+        margin: 20px 0;
+    }
+    .ad-banner-container.ad-468 iframe {
+        transform: none;
+    }
+}
+@media (max-width: 480px) {
+    .ad-banner-container.ad-728 iframe {
+        transform: scale(0.42);
+    }
+    .ad-banner-container.ad-728 {
+        height: 40px;
+    }
+    .ad-banner-container.ad-468 iframe {
+        transform: scale(0.65);
+    }
+    .ad-banner-container.ad-468 {
+        height: 45px;
+    }
+}
