@@ -937,63 +937,23 @@ img, video, iframe, canvas {
 
 /* --- ADVERTISEMENT --- */
 .ad-banner-container {
+    position: relative;
     width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 30px 0 10px 0;
+    overflow: visible; /* Changed to visible to prevent cutoff */
+    margin: 40px 0 60px 0; /* Increased spacing around ads */
     z-index: 5;
-    overflow: hidden;
+    /* Initial height to prevent layout collapse before JS runs */
+    min-height: 60px;
+    display: block;
+    pointer-events: auto; /* Ensure clicks work */
 }
 
-@media (max-width: 768px) {
-    .ad-banner-container.ad-728 iframe {
-        transform: scale(0.6); /* Safer for smaller tablets */
-        transform-origin: center;
-    }
-    .ad-banner-container.ad-728 {
-        height: 60px;
-        margin: 20px 0;
-    }
-    .ad-banner-container.ad-468 iframe {
-        transform: scale(0.9);
-        transform-origin: center;
-    }
-    .ad-banner-container.ad-468 {
-        height: 55px;
-    }
-}
-@media (max-width: 480px) {
-    .ad-banner-container.ad-728 iframe {
-        transform: scale(0.42); /* Fits 360px screens (320px content) */
-        transform-origin: center;
-    }
-    .ad-banner-container.ad-728 {
-        height: 40px;
-        margin: 15px 0;
-    }
-    .ad-banner-container.ad-468 iframe {
-        transform: scale(0.65); /* Fits 360px screens */
-        transform-origin: center;
-    }
-    .ad-banner-container.ad-468 {
-        height: 40px;
-        margin: 15px 0;
-    }
-}
-
-/* Extra small devices (iPhone SE, older Androids) */
-@media (max-width: 370px) {
-    .ad-banner-container.ad-728 iframe {
-        transform: scale(0.37); /* Fits within 280px content area */
-    }
-    .ad-banner-container.ad-728 {
-        height: 35px;
-    }
-    .ad-banner-container.ad-468 iframe {
-        transform: scale(0.58); /* Fits within 280px content area */
-    }
-    .ad-banner-container.ad-468 {
-        height: 36px;
-    }
+.ad-banner-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none !important; /* Critical: Prevents iframe from shrinking before scale */
+    transform-origin: top left; /* Scale from top-left for precise JS positioning */
+    border: none;
+    box-shadow: none;
 }

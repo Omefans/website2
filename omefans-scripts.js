@@ -912,8 +912,8 @@ document.addEventListener("DOMContentLoaded", function() {
             container.className = `ad-banner-container ad-${width}`;
             
             const iframe = document.createElement('iframe');
-            iframe.width = width;
-            iframe.height = height;
+            iframe.setAttribute('width', width);
+            iframe.setAttribute('height', height);
             iframe.frameBorder = "0";
             iframe.scrolling = "no";
             iframe.style.border = "none";
@@ -927,7 +927,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const doc = ad.iframe.contentWindow.document;
             doc.open();
             doc.write(`
-                <body style="margin:0;padding:0;background:transparent;display:flex;justify-content:center;">
+                <body style="margin:0;padding:0;background:transparent;display:flex;justify-content:center;align-items:center;height:100%;">
                     <script type="text/javascript">
                         atOptions = {
                             'key' : '${ad.key}',
@@ -976,6 +976,48 @@ document.addEventListener("DOMContentLoaded", function() {
             footer.parentNode.insertBefore(ad468.container, footer);
             loadAd(ad468);
         }
+
+        // --- DYNAMIC RESIZE LOGIC ---
+        function resizeAds() {
+            const containers = document.querySelectorAll('.ad-banner-container');
+            containers.forEach(container => {
+                const iframe = container.querySelector('iframe');
+                if (!iframe) return;
+
+                const originalW = parseInt(iframe.getAttribute('width'));
+                const originalH = parseInt(iframe.getAttribute('height'));
+                
+                // Get available width from container (respects parent padding)
+                let availableW = container.clientWidth;
+                // Safety: Ensure we don't exceed window width (minus small padding) to prevent horizontal scroll/cutoff
+                const maxW = (document.documentElement.clientWidth || window.innerWidth) - 10; 
+                if (availableW > maxW) availableW = maxW;
+
+                if (!availableW) return;
+
+                // Calculate scale (max 1 to prevent upscaling)
+                // Use (availableW - 1) to provide a safety buffer against sub-pixel rounding clipping
+                const scale = Math.min(1, (availableW - 1) / originalW);
+                
+                // Calculate centering offset manually
+                const scaledW = originalW * scale;
+                const leftOffset = (availableW - scaledW) / 2;
+
+                // Apply styles
+                iframe.style.transform = `scale(${scale})`;
+                iframe.style.left = `${leftOffset}px`;
+                
+                // Adjust container height to match scaled iframe so content flows correctly
+                container.style.height = `${originalH * scale}px`;
+                container.style.minHeight = '0';
+            });
+        }
+
+        window.addEventListener('resize', resizeAds);
+        // Run initially and after a short delay to ensure layout is settled
+        resizeAds();
+        setTimeout(resizeAds, 200);
+        setTimeout(resizeAds, 1000);
     }
 
     injectAds();
