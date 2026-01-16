@@ -283,6 +283,10 @@ body.is-admin #nav-users-btn { display: inline-block; }
     object-fit: cover;
     background-color: #0d1117;
 }
+.item-card-image:hover {
+    opacity: 0.9;
+    transition: opacity 0.2s;
+}
 .item-card-content {
     padding: 1rem;
     display: flex;

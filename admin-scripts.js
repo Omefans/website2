@@ -125,6 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initToastContainer();
 
+    /* --- IMAGE PREVIEW MODAL --- */
+    const imagePreviewModal = document.createElement('div');
+    imagePreviewModal.className = 'modal-overlay';
+    imagePreviewModal.id = 'admin-image-preview-modal';
+    imagePreviewModal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; width: auto; text-align: center; background: transparent; box-shadow: none; border: none;">
+            <img id="admin-preview-img" src="" style="max-height: 85vh; max-width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        </div>
+    `;
+    document.body.appendChild(imagePreviewModal);
+
+    imagePreviewModal.addEventListener('click', () => {
+        imagePreviewModal.classList.remove('show');
+        const img = document.getElementById('admin-preview-img');
+        if(img) img.src = '';
+    });
+
     /**
      * A wrapper around fetch that adds the auth token and handles 401 errors by logging out.
      * @param {string} url The URL to fetch.
@@ -481,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const categoryColor = (item.category && item.category.toLowerCase() === 'onlyfans') ? '#FF8800' : '#58a6ff';
 
             itemEl.innerHTML = `
-                <img src="${item.imageUrl}" alt="Preview" class="item-card-image" onerror="this.style.display='none'">
+                <img src="${item.imageUrl}" alt="Preview" class="item-card-image" onerror="this.style.display='none'" style="cursor: zoom-in;">
                 <div class="item-card-content">
                     <div class="item-card-header">
                         <div class="item-name-wrapper">
@@ -502,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="item-actions">
                         <button type="button" class="edit-btn">Edit</button>
+                        <button type="button" class="copy-btn" style="background: #1f6feb;">Copy Link</button>
                         <button type="button" class="delete-btn">Delete</button>
                     </div>
                 </div>
@@ -519,7 +537,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemId = itemEl.dataset.id;
 
         if (target.classList.contains('delete-btn')) handleDelete(itemId);
+        else if (target.classList.contains('item-card-image')) {
+            const img = document.getElementById('admin-preview-img');
+            img.src = target.src;
+            document.getElementById('admin-image-preview-modal').classList.add('show');
+        }
         else if (target.classList.contains('edit-btn')) handleEdit(itemId);
+        else if (target.classList.contains('copy-btn')) {
+            const item = galleryItemsCache.find(i => i.id == itemId);
+            if (item && item.affiliateUrl) {
+                navigator.clipboard.writeText(item.affiliateUrl).then(() => showToast('Link copied!', 'success'));
+            }
+        }
     });
 
     async function handleDelete(itemId) {

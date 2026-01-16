@@ -5,6 +5,28 @@ const AppConfig = {
 
 document.addEventListener("DOMContentLoaded", function() {
 
+    /* --- TOAST NOTIFICATION SYSTEM --- */
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    document.body.appendChild(toastContainer);
+
+    window.showToast = function(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `<span>${message}</span>`;
+        
+        toastContainer.appendChild(toast);
+        
+        // Animate in
+        requestAnimationFrame(() => toast.classList.add('show'));
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+
     /* --- NEW: MODAL SETUP --- */
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalImage');
@@ -69,15 +91,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
 
                 if (response.ok) {
-                    alert('Report sent successfully. Thank you!');
+                    showToast('Report sent successfully. Thank you!', 'success');
                     closeReport();
                 } else {
                     const data = await response.json();
-                    alert(data.error || 'Failed to send report. Please try again.');
+                    showToast(data.error || 'Failed to send report.', 'error');
                 }
             } catch (error) {
                 console.error('Report error:', error);
-                alert('Error sending report.');
+                showToast('Error sending report.', 'error');
             } finally {
                 btn.innerHTML = originalContent;
                 btn.style.pointerEvents = 'auto';
@@ -465,6 +487,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 const dislikeColor = isDisliked ? '#da3633' : 'currentColor';
                 const dislikeFill = isDisliked ? '#da3633' : 'none';
 
+                // Check if item is new (less than 48 hours)
+                const isNew = (Date.now() - new Date(data.createdAt).getTime()) < (48 * 60 * 60 * 1000);
+
                 itemArticle.innerHTML = `
                     <div class="gallery-item-image-link">
                         <img src="${data.imageUrl}" alt="${data.name || 'Gallery Content'}" loading="lazy" class="gallery-item-img">
@@ -473,6 +498,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="item-text-content">
                             <a href="${data.affiliateUrl}" target="_blank" rel="noopener noreferrer" class="item-name-link">
                                 <h3 class="item-name">${data.name}</h3>
+                                ${isNew ? '<span class="new-badge">NEW</span>' : ''}
                             </a>
                             ${
                                 data.description 
@@ -768,7 +794,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
 
                 if (response.ok) {
-                    formStatus.innerText = 'Request sent successfully!';
+                    showToast('Request sent successfully!', 'success');
                     formStatus.style.color = '#4caf50';
                     formStatus.style.display = 'block';
                     contactForm.reset();

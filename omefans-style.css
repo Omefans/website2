@@ -628,6 +628,20 @@ body {
     text-shadow: 0 1px 3px rgba(0,0,0,0.5); /* Add depth */
 }
 
+.new-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff0055, #ff4444);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 8px rgba(255, 0, 85, 0.4);
+    animation: pulseGlow 2s infinite;
+}
+
 .item-name-link {
     text-decoration: none; /* Removes the underline from the title link */
     color: inherit; /* Ensures the title color is not the default link blue/purple */
@@ -890,3 +904,33 @@ img, video, iframe, canvas {
     box-shadow: 0 0 25px var(--primary);
     transform: translateY(-5px);
 }
+
+/* --- TOAST NOTIFICATIONS --- */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    background: rgba(22, 27, 34, 0.95);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    transform: translateX(120%);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+.toast.show { transform: translateX(0); }
+.toast-success { border-left: 4px solid #00d9ff; }
+.toast-error { border-left: 4px solid #ff4444; }

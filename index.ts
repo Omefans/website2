@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { z } from 'zod';
 
 // Define the environment variables expected from wrangler.toml
 type Bindings = {
@@ -44,6 +45,37 @@ async function getDiscordAnnouncementWebhook(env: Bindings): Promise<string> {
 	return url;
 }
 
+// --- Helper: JWT Security ---
+async function signJWT(payload: any, secret: string): Promise<string> {
+	const encoder = new TextEncoder();
+	const header = { alg: 'HS256', typ: 'JWT' };
+	const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+	const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+	const data = encoder.encode(`${encodedHeader}.${encodedPayload}`);
+	
+	const key = await crypto.subtle.importKey(
+		'raw', encoder.encode(secret || 'fallback_secret_do_not_use_in_prod'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+	);
+	const signature = await crypto.subtle.sign('HMAC', key, data);
+	const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+	
+	return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
+}
+
+async function verifyJWT(token: string, secret: string): Promise<any> {
+	const parts = token.split('.');
+	if (parts.length !== 3) throw new Error('Invalid token format');
+	
+	const [encodedHeader, encodedPayload, encodedSignature] = parts;
+	const encoder = new TextEncoder();
+	const data = encoder.encode(`${encodedHeader}.${encodedPayload}`);
+	const signature = new Uint8Array(atob(encodedSignature.replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => c.charCodeAt(0)));
+	const key = await crypto.subtle.importKey('raw', encoder.encode(secret || 'fallback_secret_do_not_use_in_prod'), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+	const isValid = await crypto.subtle.verify('HMAC', key, signature, data);
+	if (!isValid) throw new Error('Invalid signature');
+	return JSON.parse(atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/')));
+}
+
 // --- Helper: System Logging ---
 async function logEvent(db: D1Database, level: string, message: string) {
 	try {
@@ -83,6 +115,22 @@ app.use('*', async (c, next) => {
 	await next();
 });
 
+// 0.5. Maintenance Mode Middleware
+app.use('/api/*', async (c, next) => {
+	const path = c.req.path;
+	// Allow admin, auth, and webhook routes regardless of maintenance mode
+	if (path.startsWith('/api/auth') || path.startsWith('/api/users') || path.startsWith('/api/config') || path.startsWith('/api/security') || path.startsWith('/api/logs') || path.startsWith('/api/webhook')) {
+		await next();
+		return;
+	}
+	// Check maintenance for public routes
+	try {
+		const maintenance = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'maintenance_mode'").first('value');
+		if (maintenance === 'true') return c.json({ error: 'Site is currently in maintenance mode.' }, 503);
+	} catch (e) {}
+	await next();
+});
+
 // 1. CORS Middleware
 app.use('/api/*', cors({
     origin: '*', // In production, you should restrict this to your frontend's domain
@@ -99,9 +147,8 @@ const authMiddleware = async (c, next) => {
 
 	const token = authHeader.substring(7);
 	try {
-		// This is a simplified decode, as seen in your frontend.
-		// For production, use a proper JWT library to verify the signature against env.JWT_SECRET
-		const payload = JSON.parse(atob(token.split('.')[1]));
+		// Securely verify the token signature
+		const payload = await verifyJWT(token, c.env.JWT_SECRET);
 
 		if (payload.exp * 1000 < Date.now()) {
 			return c.json({ error: 'Token expired' }, 401);
@@ -129,10 +176,14 @@ const adminMiddleware = async (c, next) => {
 
 // Login route
 app.post('/api/auth/login', async (c) => {
-	const { username, password } = await c.req.json();
-	if (!username || !password) {
-		return c.json({ error: 'Username and password are required' }, 400);
-	}
+	const schema = z.object({
+		username: z.string(),
+		password: z.string()
+	});
+	const body = await c.req.json();
+	const result = schema.safeParse(body);
+	if (!result.success) return c.json({ error: 'Invalid input' }, 400);
+	const { username, password } = result.data;
 
 	const user = await c.env.DB.prepare('SELECT id, username, passwordHash, role FROM users WHERE username = ?').bind(username).first();
 
@@ -143,10 +194,7 @@ app.post('/api/auth/login', async (c) => {
 	}
 
 	const payload = { sub: user.id, role: user.role, username: user.username, exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) }; // 24-hour expiry
-	const header = { alg: 'HS256', typ: 'JWT' };
-	const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-	const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-	const token = `${encodedHeader}.${encodedPayload}.`; // No signature, matching frontend
+	const token = await signJWT(payload, c.env.JWT_SECRET);
 
 	c.executionCtx.waitUntil(logEvent(c.env.DB, 'INFO', `User ${username} logged in`));
 	return c.json({ token });
@@ -180,11 +228,17 @@ app.post('/api/contact', async (c) => {
 			ON CONFLICT(ip) DO UPDATE SET last_request = excluded.last_request
 		`).bind(ip, now).run();
 
-		const { name, message, category, platform, modelImage } = await c.req.json();
-
-		if (!name || !message) {
-			return c.json({ error: 'Missing required fields' }, 400);
-		}
+		const schema = z.object({
+			name: z.string().min(1),
+			message: z.string().min(1),
+			category: z.string().optional(),
+			platform: z.string().optional(),
+			modelImage: z.string().optional()
+		});
+		const body = await c.req.json();
+		const result = schema.safeParse(body);
+		if (!result.success) return c.json({ error: 'Invalid input fields' }, 400);
+		const { name, message, category, platform, modelImage } = result.data;
 
 		const discordWebhookUrl = c.env.DISCORD_WEBHOOK_CONTACT;
 
@@ -937,14 +991,6 @@ app.get('/api/gallery', async (c) => {
     const validSort = ['createdAt', 'name', 'likes', 'dislikes'].includes(sort) ? sort : 'createdAt';
     const validOrder = ['asc', 'desc'].includes(order) ? order.toUpperCase() : 'DESC';
 
-	// --- Check Maintenance Mode ---
-	try {
-		const maintenance = await c.env.DB.prepare("SELECT value FROM configurations WHERE key = 'maintenance_mode'").first('value');
-		if (maintenance === 'true') {
-			return c.json({ error: 'Site is currently in maintenance mode.' }, 503);
-		}
-	} catch (e) {}
-
 	// Lazy migration: Ensure 'isFeatured' column exists
 	try {
 		await c.env.DB.prepare('ALTER TABLE gallery_items ADD COLUMN isFeatured INTEGER DEFAULT 0').run();
@@ -1069,10 +1115,18 @@ app.get('/api/announcements/latest', async (c) => {
 
 // Add a new gallery item
 app.post('/api/upload', authMiddleware, async (c) => {
-	const { name, description, category, imageUrl, affiliateUrl, isFeatured } = await c.req.json();
-	if (!name || !imageUrl || !affiliateUrl) {
-		return c.json({ error: 'Missing required fields' }, 400);
-	}
+	const schema = z.object({
+		name: z.string().min(1),
+		description: z.string().optional(),
+		category: z.string().min(1),
+		imageUrl: z.string().url(),
+		affiliateUrl: z.string().url(),
+		isFeatured: z.boolean().optional()
+	});
+	const body = await c.req.json();
+	const result = schema.safeParse(body);
+	if (!result.success) return c.json({ error: 'Invalid item data', details: result.error }, 400);
+	const { name, description, category, imageUrl, affiliateUrl, isFeatured } = result.data;
 
 	const { results } = await c.env.DB.prepare(
 		'INSERT INTO gallery_items (name, description, category, isFeatured, imageUrl, affiliateUrl, userId) VALUES (?, ?, ?, ?, ?, ?, ?)'
@@ -1150,10 +1204,18 @@ app.post('/api/upload', authMiddleware, async (c) => {
 // Update a gallery item
 app.put('/api/gallery/:id', authMiddleware, async (c) => {
 	const itemId = c.req.param('id');
-	const { name, description, category, imageUrl, affiliateUrl, isFeatured } = await c.req.json();
-	if (!name || !imageUrl || !affiliateUrl) {
-		return c.json({ error: 'Missing required fields' }, 400);
-	}
+	const schema = z.object({
+		name: z.string().min(1),
+		description: z.string().optional(),
+		category: z.string().min(1),
+		imageUrl: z.string().url(),
+		affiliateUrl: z.string().url(),
+		isFeatured: z.boolean().optional()
+	});
+	const body = await c.req.json();
+	const result = schema.safeParse(body);
+	if (!result.success) return c.json({ error: 'Invalid item data', details: result.error }, 400);
+	const { name, description, category, imageUrl, affiliateUrl, isFeatured } = result.data;
 
 	const info = await c.env.DB.prepare(
 		'UPDATE gallery_items SET name = ?, description = ?, category = ?, isFeatured = ?, imageUrl = ?, affiliateUrl = ? WHERE id = ?'
