@@ -961,19 +961,19 @@ img, video, iframe, canvas {
 }
 @media (max-width: 480px) {
     .ad-banner-container.ad-728 iframe {
-        transform: scale(0.55);
+        transform: scale(0.45); /* Fits ~330px width (standard mobile with padding) */
         transform-origin: center;
     }
     .ad-banner-container.ad-728 {
-        height: 50px;
+        height: 42px;
         margin: 15px 0;
     }
     .ad-banner-container.ad-468 iframe {
-        transform: scale(0.85);
+        transform: scale(0.70); /* Fits ~330px width */
         transform-origin: center;
     }
     .ad-banner-container.ad-468 {
-        height: 52px;
+        height: 42px;
         margin: 15px 0;
     }
 }
@@ -987,9 +987,9 @@ img, video, iframe, canvas {
         height: 36px;
     }
     .ad-banner-container.ad-468 iframe {
-        transform: scale(0.6); /* Fits within 280px content area */
+        transform: scale(0.58); /* Fits within 280px content area */
     }
     .ad-banner-container.ad-468 {
-        height: 38px;
+        height: 36px;
     }
 }
