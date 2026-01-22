@@ -1,4 +1,4 @@
-const AppConfig = {
+const AdminConfig = {
     // The live URL for the Cloudflare Worker backend.
     backendUrl: 'https://omefans-site.omefans.workers.dev'
 };
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = passwordInput.value;
         setButtonLoadingState(loginButton, true, 'Authenticating...');
         try {
-            const response = await fetch(`${AppConfig.backendUrl}/api/auth/login`, {
+            const response = await fetch(`${AdminConfig.backendUrl}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadManageableItems() {
-        const url = new URL(`${AppConfig.backendUrl}/api/gallery`);
+        const url = new URL(`${AdminConfig.backendUrl}/api/gallery`);
         url.searchParams.set('sort', currentSort.field);
         url.searchParams.set('order', currentSort.order);
 
@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Are you sure you want to delete this item?')) return;
 
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/gallery/${itemId}`, { method: 'DELETE' });
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/gallery/${itemId}`, { method: 'DELETE' });
 
             if (!response.ok) {
                 if (response.headers.get('content-type')?.includes('application/json')) {
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendPushNotification(title, body, url, image) {
         try {
-            await authenticatedFetch(`${AppConfig.backendUrl}/api/notifications/broadcast`, {
+            await authenticatedFetch(`${AdminConfig.backendUrl}/api/notifications/broadcast`, {
                 method: 'POST',
                 body: JSON.stringify({ title, body, url, image })
             });
@@ -653,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Revert to /api/upload for creating new items, as /api/gallery (POST) does not exist on the backend
-        const url = isEditing ? `${AppConfig.backendUrl}/api/gallery/${editingId}` : `${AppConfig.backendUrl}/api/upload`;
+        const url = isEditing ? `${AdminConfig.backendUrl}/api/gallery/${editingId}` : `${AdminConfig.backendUrl}/api/upload`;
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Creating...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users`, { method: 'POST', body: JSON.stringify({ username, password, role }) });
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users`, { method: 'POST', body: JSON.stringify({ username, password, role }) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Failed to create user.');
 
@@ -714,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!userList) return;
     
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users`);
             if (!response.ok) {
                 const errorResult = await response.json();
                 throw new Error(errorResult.error || 'Failed to fetch users.');
@@ -763,7 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm(`Are you sure you want to delete this user? This action cannot be undone.`)) return;
     
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/${userId}`, { method: 'DELETE' });
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/${userId}`, { method: 'DELETE' });
             
             if (!response.ok) {
                 if (response.headers.get('content-type')?.includes('application/json')) {
@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const form = e.target;
         const ip = document.getElementById('ban-ip-input').value;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/security/bans`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/security/bans`, {
                 method: 'POST',
                 body: JSON.stringify({ ip, reason: 'Admin Panel Ban' })
             });
@@ -802,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleUnbanIp(ip) {
         if (!confirm(`Unban ${ip}?`)) return;
         try {
-            await authenticatedFetch(`${AppConfig.backendUrl}/api/security/bans/${ip}`, { method: 'DELETE' });
+            await authenticatedFetch(`${AdminConfig.backendUrl}/api/security/bans/${ip}`, { method: 'DELETE' });
             showToast('IP Unbanned', 'success');
             loadBannedIps();
             loadSystemLogs();
@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadBannedIps() {
         if (!bannedIpsList) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/security/bans`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/security/bans`);
             const items = await response.json();
             bannedIpsList.innerHTML = '';
             if (items.length === 0) { bannedIpsList.innerHTML = '<p>No bans.</p>'; return; }
@@ -831,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadSystemLogs() {
         if (!systemLogsList) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/logs`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/logs`);
             const logs = await response.json();
             systemLogsList.innerHTML = '';
             if (logs.length === 0) { systemLogsList.innerHTML = '<p>No logs.</p>'; return; }
@@ -849,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Updating...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/telegram`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/config/telegram`, {
                 method: 'POST',
                 body: JSON.stringify({ token })
             });
@@ -872,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('tg-bot-token');
         if (!input) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/telegram`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/config/telegram`);
             if (response.ok) {
                 const data = await response.json();
                 input.value = data.token || '';
@@ -888,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Updating...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/discord_announcement`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/config/discord_announcement`, {
                 method: 'POST',
                 body: JSON.stringify({ url })
             });
@@ -908,7 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = document.getElementById('test-discord-announcement-btn');
         setButtonLoadingState(button, true, 'Testing...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/discord_announcement/test`, { method: 'POST' });
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/config/discord_announcement/test`, { method: 'POST' });
             const result = await response.json();
             if (response.ok) {
                 showToast(result.message, 'success');
@@ -923,7 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('discord-announcement-url');
         if (!input) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/config/discord_announcement`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/config/discord_announcement`);
             if (response.ok) {
                 const data = await response.json();
                 input.value = data.url || '';
@@ -940,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Adding...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/telegram`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/telegram`, {
                 method: 'POST',
                 body: JSON.stringify({ chat_id: chatId, name })
             });
@@ -960,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadTelegramAdmins() {
         if (!telegramList) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/telegram`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/telegram`);
             if (!response.ok) return; // Fail silently or handle error
             const items = await response.json();
             telegramList.innerHTML = '';
@@ -992,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleDeleteTelegram(id) {
         if (!confirm('Remove this Chat ID?')) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/telegram/${id}`, { method: 'DELETE' });
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/telegram/${id}`, { method: 'DELETE' });
             if (response.ok) {
                 showToast('Chat ID removed', 'success');
                 loadTelegramAdmins();
@@ -1011,7 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Adding...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/discord`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/discord`, {
                 method: 'POST',
                 body: JSON.stringify({ url, name })
             });
@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadDiscordWebhooks() {
         if (!discordList) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/discord`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/discord`);
             if (!response.ok) return;
             const items = await response.json();
             discordList.innerHTML = '';
@@ -1063,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleDeleteDiscord(id) {
         if (!confirm('Remove this Webhook?')) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/users/discord/${id}`, { method: 'DELETE' });
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/users/discord/${id}`, { method: 'DELETE' });
             if (response.ok) {
                 showToast('Webhook removed', 'success');
                 loadDiscordWebhooks();
@@ -1092,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, 'Updating...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/profile/password`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/profile/password`, {
                 method: 'PUT',
                 body: JSON.stringify({ oldPassword, newPassword })
             });
@@ -1124,7 +1124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setButtonLoadingState(button, true, websiteOnly ? 'Posting...' : 'Broadcasting...');
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/announcements`, {
                 method: 'POST',
                 body: JSON.stringify({ title, message, duration, imageUrl, linkUrl, websiteOnly })
             });
@@ -1202,7 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAnnouncements() {
         if (!announcementsList) return;
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/announcements`);
             const items = await response.json();
             announcementsList.innerHTML = '';
             if (items.length === 0) { announcementsList.innerHTML = '<p>No announcements found.</p>'; return; }
@@ -1225,7 +1225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleDeleteAnnouncement(id) {
         if (!confirm('Delete this announcement?')) return;
         try {
-            await authenticatedFetch(`${AppConfig.backendUrl}/api/announcements/${id}`, { method: 'DELETE' });
+            await authenticatedFetch(`${AdminConfig.backendUrl}/api/announcements/${id}`, { method: 'DELETE' });
             showToast('Announcement deleted', 'success');
             loadAnnouncements();
         } catch (e) { showToast(e.message, 'error'); }
@@ -1253,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/notifications/count`);
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/notifications/count`);
             if (response.ok) {
                 const data = await response.json();
                 const countEl = document.getElementById('push-sub-count');
