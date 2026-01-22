@@ -357,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadSystemLogs(); // Load logs
             loadDiscordWebhooks(); // Load discord data
             loadAnnouncements(); // Load announcements
+            loadSubscriberCount(); // Load push subs
             // Allow admins to create other admins
             const roleSelect = document.getElementById('new-role');
             if (roleSelect && !roleSelect.querySelector('option[value="admin"]')) {
@@ -365,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminOption.textContent = 'Admin';
                 roleSelect.appendChild(adminOption);
             }
+        } else if (userRole === 'manager') {
+            // Managers can also see subscriber count
+            loadSubscriberCount();
         }
 
         // Inject search and sort controls if they don't exist
@@ -1224,6 +1228,37 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { showToast(e.message, 'error'); }
     }
 
+    async function loadSubscriberCount() {
+        // Inject stats container if not exists
+        let statsContainer = document.getElementById('push-stats-container');
+        if (!statsContainer && automationSection) {
+            statsContainer = document.createElement('div');
+            statsContainer.id = 'push-stats-container';
+            statsContainer.className = 'user-list-item';
+            statsContainer.style.marginBottom = '20px';
+            statsContainer.style.background = 'rgba(0, 217, 255, 0.1)';
+            statsContainer.style.border = '1px solid #00d9ff';
+            statsContainer.innerHTML = `
+                <div class="user-info">
+                    <span class="user-username" style="font-size: 1.1rem;">🔔 Push Subscribers</span>
+                </div>
+                <div class="user-actions">
+                    <span id="push-sub-count" style="font-weight: bold; font-size: 1.2rem; color: #fff;">Loading...</span>
+                </div>
+            `;
+            automationSection.insertBefore(statsContainer, automationSection.firstChild);
+        }
+
+        try {
+            const response = await authenticatedFetch(`${AppConfig.backendUrl}/api/notifications/count`);
+            if (response.ok) {
+                const data = await response.json();
+                const countEl = document.getElementById('push-sub-count');
+                if (countEl) countEl.textContent = data.count;
+            }
+        } catch (e) { console.error('Failed to load subs', e); }
+    }
+
     /**
      * Switches between the 'Content' and 'Users' pages in the admin panel.
      * @param {'content' | 'users'} pageName The name of the page to display.
@@ -1250,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (pageName === 'users' && userRole === 'admin') {
             userManagementContainer.classList.add('active');
             navUsersBtn.classList.add('active');
-        } else if (pageName === 'automation' && userRole === 'admin') {
+        } else if (pageName === 'automation' && (userRole === 'admin' || userRole === 'manager')) {
             automationSection.classList.add('active');
             navAutomationBtn.classList.add('active');
         } else if (pageName === 'security' && userRole === 'admin') {

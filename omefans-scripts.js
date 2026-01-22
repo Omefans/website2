@@ -111,8 +111,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     /* --- CUSTOM CLOUDFLARE PUSH NOTIFICATIONS --- */
-    async function initPushNotifications() {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    async function subscribeToPush(isManual = false) {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            if (isManual) showToast('Push notifications not supported', 'error');
+            return;
+        }
 
         try {
             // 1. Register the Service Worker
@@ -120,7 +123,10 @@ document.addEventListener("DOMContentLoaded", function() {
             
             // 2. Ask for Permission
             const permission = await Notification.requestPermission();
-            if (permission !== 'granted') return;
+            if (permission !== 'granted') {
+                if (isManual) showToast('Permission denied. Please enable notifications in browser settings.', 'error');
+                return;
+            }
 
             // 3. Subscribe using VAPID Key
             // TODO: Generate VAPID keys and paste the PUBLIC key here.
@@ -138,8 +144,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(subscription)
             });
+
+            if (isManual) showToast('Subscribed to updates!', 'success');
         } catch (error) {
             console.log('Push subscription skipped:', error);
+            if (isManual) showToast('Failed to subscribe.', 'error');
         }
     }
 
@@ -156,7 +165,16 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Initialize on load
-    initPushNotifications();
+    subscribeToPush(false);
+
+    // Bind to manual button
+    const manualSubBtn = document.getElementById('subscribe-push-btn');
+    if (manualSubBtn) {
+        manualSubBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            subscribeToPush(true);
+        });
+    }
 
     /* --- NEW: DISABLE RIGHT-CLICK AND CTRL+U --- */
     // Disable right-click

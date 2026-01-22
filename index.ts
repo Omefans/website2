@@ -978,6 +978,30 @@ app.post('/api/webhook/telegram', async (c) => {
 							body: JSON.stringify({ chat_id: chatId, text: `✅ Broadcast sent to ${uniqueRecipients.length} admins.` })
 						});
 					}
+				} else if (command === '/subs') {
+					let count = 0;
+					let cursor: string | undefined = undefined;
+					let listComplete = false;
+					try {
+						do {
+							const list = await c.env.SUBSCRIPTIONS.list({ cursor });
+							count += list.keys.length;
+							listComplete = list.list_complete;
+							cursor = list.cursor;
+						} while (!listComplete);
+						
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: `🔔 <b>Push Subscribers:</b> ${count}`, parse_mode: 'HTML' })
+						});
+					} catch (e) {
+						await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ chat_id: chatId, text: 'Error fetching subscriber count.' })
+						});
+					}
 				}
 			}
 		}
@@ -1701,6 +1725,29 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 
 	await Promise.all(notifications);
 	return c.json({ message: 'Broadcast sent' });
+});
+
+app.get('/api/notifications/count', authMiddleware, async (c) => {
+	const role = c.get('userRole');
+	if (role !== 'admin' && role !== 'manager') {
+		return c.json({ error: 'Forbidden' }, 403);
+	}
+
+	let count = 0;
+	let cursor: string | undefined = undefined;
+	let listComplete = false;
+
+	try {
+		do {
+			const list = await c.env.SUBSCRIPTIONS.list({ cursor });
+			count += list.keys.length;
+			listComplete = list.list_complete;
+			cursor = list.cursor;
+		} while (!listComplete);
+		return c.json({ count });
+	} catch (e) {
+		return c.json({ count: 0 });
+	}
 });
 
 // --- Export the Hono app ---
