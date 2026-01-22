@@ -634,11 +634,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function sendPushNotification(title, body, url, image) {
         try {
-            await authenticatedFetch(`${AdminConfig.backendUrl}/api/notifications/broadcast`, {
+            const response = await authenticatedFetch(`${AdminConfig.backendUrl}/api/notifications/broadcast`, {
                 method: 'POST',
                 body: JSON.stringify({ title, body, url, image })
             });
-            showToast('Push notification broadcasted!', 'success');
+            
+            const result = await response.json();
+            if (response.ok) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.error || 'Broadcast failed', 'error');
+            }
         } catch (e) {
             console.error('Broadcast failed', e);
             showToast('Failed to send push notification', 'error');

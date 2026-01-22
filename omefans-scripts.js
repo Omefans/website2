@@ -132,11 +132,24 @@ document.addEventListener("DOMContentLoaded", function() {
             // TODO: Generate VAPID keys and paste the PUBLIC key here.
             const VAPID_PUBLIC_KEY = "BFW5zwtA-gigvSBijdfXKLGDur837vjKr7DYKewMI63cNL-9B4OHypQsp1oyxG1zAoxmOVqUlvJ8K1gvOW6jHWY"; 
             
-            const subscribeOptions = {
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            };
-            const subscription = await registration.pushManager.subscribe(subscribeOptions);
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                const subscribeOptions = {
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                };
+                subscription = await registration.pushManager.subscribe(subscribeOptions);
+            } else {
+                // If manual click and already subscribed, we update the server just in case
+                // Note: If the existing subscription uses a different key, 'subscribe' above would have thrown.
+                // Since we are here, we have a subscription.
+                if (isManual) {
+                    // Optional: Unsubscribe and resubscribe if you suspect key mismatch issues
+                    // await subscription.unsubscribe();
+                    // subscription = await registration.pushManager.subscribe(subscribeOptions);
+                }
+            }
 
             // 4. Send Subscription to Cloudflare Worker
             await fetch(`${AppConfig.backendUrl}/api/notifications/subscribe`, {

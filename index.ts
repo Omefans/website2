@@ -1693,17 +1693,27 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 	const data = await c.req.json();
 	const { title, body, url, image } = data;
 
+	if (!c.env.VAPID_PRIVATE_KEY) {
+		return c.json({ error: 'Server Error: VAPID_PRIVATE_KEY is missing in Cloudflare secrets.' }, 500);
+	}
+
 	// Configure web-push
-	webpush.setVapidDetails(
-		'mailto:admin@omefans.com',
-		'BFW5zwtA-gigvSBijdfXKLGDur837vjKr7DYKewMI63cNL-9B4OHypQsp1oyxG1zAoxmOVqUlvJ8K1gvOW6jHWY',
-		c.env.VAPID_PRIVATE_KEY
-	);
+	try {
+		webpush.setVapidDetails(
+			'mailto:admin@omefans.com',
+			'BFW5zwtA-gigvSBijdfXKLGDur837vjKr7DYKewMI63cNL-9B4OHypQsp1oyxG1zAoxmOVqUlvJ8K1gvOW6jHWY',
+			c.env.VAPID_PRIVATE_KEY
+		);
+	} catch (e) {
+		return c.json({ error: 'Server Error: Invalid VAPID configuration.' }, 500);
+	}
 
 	// Get all subscriptions from KV (with Pagination for >1000 users)
-	const notifications = [];
+	const notifications: Promise<void>[] = [];
 	let cursor: string | undefined = undefined;
 	let listComplete = false;
+	let successCount = 0;
+	let failureCount = 0;
 
 	do {
 		const value = await c.env.SUBSCRIPTIONS.list({ cursor });
@@ -1718,7 +1728,9 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 				
 				// Send notification
 				const p = webpush.sendNotification(subscription, payload)
+					.then(() => { successCount++; })
 					.catch(err => {
+						failureCount++;
 						if (err.statusCode === 410 || err.statusCode === 404) {
 							// Subscription is gone, delete from KV
 							return c.env.SUBSCRIPTIONS.delete(key.name);
@@ -1731,7 +1743,11 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 	} while (!listComplete);
 
 	await Promise.all(notifications);
-	return c.json({ message: 'Broadcast sent' });
+
+	if (successCount === 0 && failureCount === 0) {
+		return c.json({ message: 'No subscribers found to broadcast to.' });
+	}
+	return c.json({ message: `Broadcast Report: ${successCount} Sent, ${failureCount} Failed.` });
 });
 
 app.get('/api/notifications/count', authMiddleware, async (c) => {
