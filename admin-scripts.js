@@ -619,17 +619,10 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelEditButton.style.display = 'none';
     }
 
-    async function triggerPushBroadcast(data) {
     async function sendPushNotification(title, body, url, image) {
         try {
             await authenticatedFetch(`${AppConfig.backendUrl}/api/notifications/broadcast`, {
                 method: 'POST',
-                body: JSON.stringify({
-                    title: "New Content Alert! 🔥",
-                    body: `Check out ${data.name}!`,
-                    url: data.affiliateUrl,
-                    image: data.imageUrl
-                })
                 body: JSON.stringify({ title, body, url, image })
             });
             showToast('Push notification broadcasted!', 'success');
@@ -684,7 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Trigger Custom Cloudflare Push Notification
             if (!isEditing) {
-                triggerPushBroadcast(data);
                 sendPushNotification("New Content Alert! 🔥", `Check out ${data.name}!`, data.affiliateUrl, data.imageUrl);
             }
         } catch (error) {

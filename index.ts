@@ -1160,8 +1160,9 @@ app.post('/api/upload', authMiddleware, async (c) => {
 	).bind(name, description, category, isFeatured ? 1 : 0, imageUrl, affiliateUrl, c.get('userId')).run();
 	c.executionCtx.waitUntil(logEvent(c.env.DB, 'INFO', `Item added: ${name}`));
 
-	// --- Discord Notification Logic ---
-	try {
+	// --- OPTIMIZATION: Run Notifications in Background ---
+	const discordPromise = (async () => {
+		try {
 		let webhookUrl = '';
 
 		// 1. SELECT WEBHOOK BASED ON CATEGORY
@@ -1190,12 +1191,11 @@ app.post('/api/upload', authMiddleware, async (c) => {
 				})
 			});
 		}
-	} catch (e) {
-		console.error('Failed to send Discord notification', e);
-	}
+		} catch (e) { console.error('Failed to send Discord notification', e); }
+	})();
 
-	// --- Telegram Notification Logic ---
-	try {
+	const telegramPromise = (async () => {
+		try {
 		// TODO: Replace with your actual Bot Token from @BotFather
 		const telegramBotToken = await getTelegramToken(c.env); 
 		// TODO: Replace with your Channel Username (e.g. @OmeFans) or Numeric Chat ID
@@ -1221,10 +1221,10 @@ app.post('/api/upload', authMiddleware, async (c) => {
 				})
 			});
 		}
-	} catch (e) {
-		console.error('Failed to send Telegram notification', e);
-	}
+		} catch (e) { console.error('Failed to send Telegram notification', e); }
+	})();
 
+	c.executionCtx.waitUntil(Promise.all([discordPromise, telegramPromise]));
 	return c.json({ message: 'Item added successfully!', item: results }, 201);
 });
 
@@ -1700,28 +1700,35 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 		c.env.VAPID_PRIVATE_KEY
 	);
 
-	// Get all subscriptions from KV
-	const value = await c.env.SUBSCRIPTIONS.list();
+	// Get all subscriptions from KV (with Pagination for >1000 users)
 	const notifications = [];
+	let cursor: string | undefined = undefined;
+	let listComplete = false;
 
-	for (const key of value.keys) {
-		const subData = await c.env.SUBSCRIPTIONS.get(key.name);
-		if (subData) {
-			const subscription = JSON.parse(subData);
-			const payload = JSON.stringify({ title, body, url, image });
-			
-			// Send notification
-			const p = webpush.sendNotification(subscription, payload)
-				.catch(err => {
-					if (err.statusCode === 410 || err.statusCode === 404) {
-						// Subscription is gone, delete from KV
-						return c.env.SUBSCRIPTIONS.delete(key.name);
-					}
-					console.error('Push error', err);
-				});
-			notifications.push(p);
+	do {
+		const value = await c.env.SUBSCRIPTIONS.list({ cursor });
+		listComplete = value.list_complete;
+		cursor = value.cursor;
+
+		for (const key of value.keys) {
+			const subData = await c.env.SUBSCRIPTIONS.get(key.name);
+			if (subData) {
+				const subscription = JSON.parse(subData);
+				const payload = JSON.stringify({ title, body, url, image });
+				
+				// Send notification
+				const p = webpush.sendNotification(subscription, payload)
+					.catch(err => {
+						if (err.statusCode === 410 || err.statusCode === 404) {
+							// Subscription is gone, delete from KV
+							return c.env.SUBSCRIPTIONS.delete(key.name);
+						}
+						console.error('Push error', err);
+					});
+				notifications.push(p);
+			}
 		}
-	}
+	} while (!listComplete);
 
 	await Promise.all(notifications);
 	return c.json({ message: 'Broadcast sent' });
