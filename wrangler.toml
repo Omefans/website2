@@ -3,7 +3,7 @@
 name = "omefans-site" # This MUST match the subdomain of your worker URL.
 main = "index.ts" # The entry point for your backend code.
 compatibility_date = "2024-05-01"
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
 
 # This section links your D1 database to your Worker.
 [[d1_databases]]
