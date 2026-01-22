@@ -1732,11 +1732,20 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 					try {
 						// Generate headers/body using web-push (handles encryption)
 						const details = await webpush.generateRequestDetails(subscription, payload);
+
+						// Fix for Cloudflare Workers: Remove Content-Length to let fetch calculate it
+						// and ensure all headers are strings. This fixes Firefox/Safari failures.
+						const headers: Record<string, string> = {};
+						for (const [k, v] of Object.entries(details.headers)) {
+							if (k.toLowerCase() !== 'content-length') {
+								headers[k] = String(v);
+							}
+						}
 						
 						// Use Cloudflare fetch instead of node https
 						const res = await fetch(details.endpoint, {
 							method: 'POST',
-							headers: details.headers,
+							headers: headers,
 							body: details.body
 						});
 

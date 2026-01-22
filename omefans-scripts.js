@@ -112,6 +112,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
     /* --- CUSTOM CLOUDFLARE PUSH NOTIFICATIONS --- */
     async function subscribeToPush(isManual = false) {
+        // iOS Safari Check: Push only works if added to Home Screen
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        
+        if (isManual && isIOS && !isStandalone) {
+            showToast('On iPhone/iPad, you must "Add to Home Screen" first to enable notifications.', 'error');
+            return;
+        }
+
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             if (isManual) showToast('Push notifications not supported', 'error');
             return;
