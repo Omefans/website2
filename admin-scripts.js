@@ -1131,11 +1131,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let button = websiteOnly ? document.getElementById('post-website-only-btn') : postAnnouncementForm.querySelector('button[type="submit"]');
         if (!button) button = { disabled: false, textContent: '', dataset: {} }; // Safety fallback
 
-        const title = document.getElementById('announcement-title').value;
-        const message = document.getElementById('announcement-message').value;
-        const imageUrl = document.getElementById('announcement-image').value;
-        const linkUrl = document.getElementById('announcement-link').value;
-        const duration = document.getElementById('announcement-duration').value;
+        const titleEl = document.getElementById('announcement-title');
+        const messageEl = document.getElementById('announcement-message');
+        const imageEl = document.getElementById('announcement-image');
+        const linkEl = document.getElementById('announcement-link');
+        const durationEl = document.getElementById('announcement-duration');
+
+        const title = titleEl ? titleEl.value : '';
+        const message = messageEl ? messageEl.value : '';
+        const imageUrl = imageEl ? imageEl.value : '';
+        const linkUrl = linkEl ? linkEl.value : '';
+        const duration = durationEl ? durationEl.value : '1d';
 
         setButtonLoadingState(button, true, websiteOnly ? 'Posting...' : 'Broadcasting...');
         try {
@@ -1163,10 +1169,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handlePreviewAnnouncement() {
-        const title = document.getElementById('announcement-title').value;
-        const message = document.getElementById('announcement-message').value;
-        const imageUrl = document.getElementById('announcement-image').value;
-        const linkUrl = document.getElementById('announcement-link').value;
+        const titleEl = document.getElementById('announcement-title');
+        const messageEl = document.getElementById('announcement-message');
+        const imageEl = document.getElementById('announcement-image');
+        const linkEl = document.getElementById('announcement-link');
+
+        const title = titleEl ? titleEl.value : '';
+        const message = messageEl ? messageEl.value : '';
+        const imageUrl = imageEl ? imageEl.value : '';
+        const linkUrl = linkEl ? linkEl.value : '';
 
         if (!title || !message) {
             showToast('Please enter a title and message to preview.', 'error');
