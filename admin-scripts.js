@@ -317,24 +317,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Event listeners for announcement modal
-    if (announcementBtn && announcementModal && closeAnnouncementModalBtn && postAnnouncementForm) {
+    if (announcementBtn && announcementModal) {
         announcementBtn.addEventListener('click', () => {
             announcementModal.classList.add('show');
         });
+    }
 
+    if (announcementModal) {
         const closeAnnModal = () => {
             announcementModal.classList.remove('show');
-            postAnnouncementForm.reset();
+            if (postAnnouncementForm) postAnnouncementForm.reset();
         };
 
-        closeAnnouncementModalBtn.addEventListener('click', closeAnnModal);
+        if (closeAnnouncementModalBtn) {
+            closeAnnouncementModalBtn.addEventListener('click', closeAnnModal);
+        }
+        
         announcementModal.addEventListener('click', (e) => {
             if (e.target === announcementModal) closeAnnModal();
         });
+    }
 
+    if (postAnnouncementForm) {
         postAnnouncementForm.addEventListener('submit', handlePostAnnouncement);
-        if (previewAnnouncementBtn) previewAnnouncementBtn.addEventListener('click', handlePreviewAnnouncement);
-        if (postWebsiteOnlyBtn) postWebsiteOnlyBtn.addEventListener('click', (e) => {
+    }
+
+    if (previewAnnouncementBtn) {
+        previewAnnouncementBtn.addEventListener('click', handlePreviewAnnouncement);
+    }
+
+    if (postWebsiteOnlyBtn) {
+        postWebsiteOnlyBtn.addEventListener('click', (e) => {
             handlePostAnnouncement(e, true);
         });
     }
@@ -1115,7 +1128,9 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (!postAnnouncementForm) return;
 
-        const button = websiteOnly ? document.getElementById('post-website-only-btn') : postAnnouncementForm.querySelector('button[type="submit"]');
+        let button = websiteOnly ? document.getElementById('post-website-only-btn') : postAnnouncementForm.querySelector('button[type="submit"]');
+        if (!button) button = { disabled: false, textContent: '', dataset: {} }; // Safety fallback
+
         const title = document.getElementById('announcement-title').value;
         const message = document.getElementById('announcement-message').value;
         const imageUrl = document.getElementById('announcement-image').value;
