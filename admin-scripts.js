@@ -1271,11 +1271,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="user-info">
                     <span class="user-username" style="font-size: 1.1rem;">🔔 Push Subscribers</span>
                 </div>
-                <div class="user-actions">
-                    <span id="push-sub-count" style="font-weight: bold; font-size: 1.2rem; color: #fff;">Loading...</span>
+                <div class="user-actions" style="display: flex; align-items: center; gap: 10px;">
+                    <span id="push-sub-count" style="font-weight: bold; font-size: 1.2rem; color: #fff; margin-right: 10px;">Loading...</span>
+                    <button id="test-push-btn" style="background: #1f6feb; border: none; padding: 6px 12px; border-radius: 4px; color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Test Push</button>
                 </div>
             `;
             automationSection.insertBefore(statsContainer, automationSection.firstChild);
+
+            // Bind event listener for the new button
+            const testBtn = document.getElementById('test-push-btn');
+            if (testBtn) {
+                testBtn.addEventListener('click', async () => {
+                    if (!confirm('Send a test notification to ALL subscribers?')) return;
+                    
+                    const originalText = testBtn.textContent;
+                    testBtn.textContent = 'Sending...';
+                    testBtn.disabled = true;
+                    
+                    await sendPushNotification(
+                        "🔔 Test Notification", 
+                        "This is a test message to verify push notifications are working.", 
+                        "https://omefans.com", 
+                        "https://omefans.com/images/header-logo.png"
+                    );
+                    
+                    testBtn.textContent = originalText;
+                    testBtn.disabled = false;
+                });
+            }
         }
 
         try {
