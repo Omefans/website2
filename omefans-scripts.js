@@ -110,6 +110,54 @@ document.addEventListener("DOMContentLoaded", function() {
         if (btnReportVideo) btnReportVideo.addEventListener('click', () => sendReport('Video Removed'));
     }
 
+    /* --- CUSTOM CLOUDFLARE PUSH NOTIFICATIONS --- */
+    async function initPushNotifications() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+        try {
+            // 1. Register the Service Worker
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            
+            // 2. Ask for Permission
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            // 3. Subscribe using VAPID Key
+            // TODO: Generate VAPID keys and paste the PUBLIC key here.
+            const VAPID_PUBLIC_KEY = "BFW5zwtA-gigvSBijdfXKLGDur837vjKr7DYKewMI63cNL-9B4OHypQsp1oyxG1zAoxmOVqUlvJ8K1gvOW6jHWY"; 
+            
+            const subscribeOptions = {
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            };
+            const subscription = await registration.pushManager.subscribe(subscribeOptions);
+
+            // 4. Send Subscription to Cloudflare Worker
+            await fetch(`${AppConfig.backendUrl}/api/notifications/subscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription)
+            });
+        } catch (error) {
+            console.log('Push subscription skipped:', error);
+        }
+    }
+
+    // Helper to convert VAPID key
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Initialize on load
+    initPushNotifications();
+
     /* --- NEW: DISABLE RIGHT-CLICK AND CTRL+U --- */
     // Disable right-click
     document.addEventListener('contextmenu', (e) => {

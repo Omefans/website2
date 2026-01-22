@@ -615,6 +615,23 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelEditButton.style.display = 'none';
     }
 
+    async function triggerPushBroadcast(data) {
+        try {
+            await authenticatedFetch(`${AppConfig.backendUrl}/api/notifications/broadcast`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    title: "New Content Alert! 🔥",
+                    body: `Check out ${data.name}!`,
+                    url: data.affiliateUrl,
+                    image: data.imageUrl
+                })
+            });
+            showToast('Push notification broadcasted!', 'success');
+        } catch (e) {
+            console.error('Broadcast failed', e);
+        }
+    }
+
     if (cancelEditButton) cancelEditButton.addEventListener('click', cancelEdit);
 
     if (uploadForm) uploadForm.addEventListener('submit', async (e) => {
@@ -657,6 +674,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(result.message, 'success');
             isEditing ? cancelEdit() : uploadForm.reset();
             loadManageableItems(); // Refresh the list
+
+            // Trigger Custom Cloudflare Push Notification
+            if (!isEditing) {
+                triggerPushBroadcast(data);
+            }
         } catch (error) {
             showToast(`${isEditing ? 'Update failed' : 'Add failed'}: ${error.message}`, 'error');
         } finally {
