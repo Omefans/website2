@@ -134,21 +134,18 @@ document.addEventListener("DOMContentLoaded", function() {
             
             let subscription = await registration.pushManager.getSubscription();
 
+            // FIX: If manual click, force unsubscribe/resubscribe to ensure keys match
+            if (isManual && subscription) {
+                await subscription.unsubscribe();
+                subscription = null;
+            }
+
             if (!subscription) {
                 const subscribeOptions = {
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                 };
                 subscription = await registration.pushManager.subscribe(subscribeOptions);
-            } else {
-                // If manual click and already subscribed, we update the server just in case
-                // Note: If the existing subscription uses a different key, 'subscribe' above would have thrown.
-                // Since we are here, we have a subscription.
-                if (isManual) {
-                    // Optional: Unsubscribe and resubscribe if you suspect key mismatch issues
-                    // await subscription.unsubscribe();
-                    // subscription = await registration.pushManager.subscribe(subscribeOptions);
-                }
             }
 
             // 4. Send Subscription to Cloudflare Worker

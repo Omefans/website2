@@ -1714,6 +1714,7 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 	let listComplete = false;
 	let successCount = 0;
 	let failureCount = 0;
+	let lastError = '';
 
 	do {
 		const value = await c.env.SUBSCRIPTIONS.list({ cursor });
@@ -1731,6 +1732,7 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 					.then(() => { successCount++; })
 					.catch(err => {
 						failureCount++;
+						lastError = err.message || err.statusCode || 'Unknown Error';
 						if (err.statusCode === 410 || err.statusCode === 404) {
 							// Subscription is gone, delete from KV
 							return c.env.SUBSCRIPTIONS.delete(key.name);
@@ -1747,7 +1749,7 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 	if (successCount === 0 && failureCount === 0) {
 		return c.json({ message: 'No subscribers found to broadcast to.' });
 	}
-	return c.json({ message: `Broadcast Report: ${successCount} Sent, ${failureCount} Failed.` });
+	return c.json({ message: `Report: ${successCount} Sent, ${failureCount} Failed. Last Error: ${lastError}` });
 });
 
 app.get('/api/notifications/count', authMiddleware, async (c) => {
