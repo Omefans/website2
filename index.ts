@@ -1727,18 +1727,35 @@ app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async 
 				const subscription = JSON.parse(subData);
 				const payload = JSON.stringify({ title, body, url, image });
 				
-				// Send notification
-				const p = webpush.sendNotification(subscription, payload)
-					.then(() => { successCount++; })
-					.catch(err => {
+				// Send notification using fetch to bypass https.request issues
+				const p = (async () => {
+					try {
+						// Generate headers/body using web-push (handles encryption)
+						const details = await webpush.generateRequestDetails(subscription, payload);
+						
+						// Use Cloudflare fetch instead of node https
+						const res = await fetch(details.endpoint, {
+							method: 'POST',
+							headers: details.headers,
+							body: details.body
+						});
+
+						if (res.status === 410 || res.status === 404) {
+							await c.env.SUBSCRIPTIONS.delete(key.name);
+							throw new Error(`Subscription expired (${res.status})`);
+						}
+
+						if (!res.ok) {
+							const text = await res.text();
+							throw new Error(`Push Service Error ${res.status}: ${text}`);
+						}
+						successCount++;
+					} catch (err: any) {
 						failureCount++;
 						lastError = err.message || err.statusCode || 'Unknown Error';
-						if (err.statusCode === 410 || err.statusCode === 404) {
-							// Subscription is gone, delete from KV
-							return c.env.SUBSCRIPTIONS.delete(key.name);
-						}
 						console.error('Push error', err);
-					});
+					}
+				})();
 				notifications.push(p);
 			}
 		}
