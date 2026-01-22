@@ -537,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="item-actions">
                         <button type="button" class="edit-btn">Edit</button>
                         <button type="button" class="copy-btn" style="background: #1f6feb;">Copy Link</button>
+                        <button type="button" class="push-btn" style="background: #8a2be2;">Push</button>
                         <button type="button" class="delete-btn">Delete</button>
                     </div>
                 </div>
@@ -564,6 +565,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = galleryItemsCache.find(i => i.id == itemId);
             if (item && item.affiliateUrl) {
                 navigator.clipboard.writeText(item.affiliateUrl).then(() => showToast('Link copied!', 'success'));
+            }
+        }
+        else if (target.classList.contains('push-btn')) {
+            const item = galleryItemsCache.find(i => i.id == itemId);
+            if (item) {
+                if (confirm(`Send push notification for "${item.name}"?`)) {
+                    const originalText = target.textContent;
+                    target.textContent = 'Sending...';
+                    target.disabled = true;
+                    sendPushNotification("New Content Alert! 🔥", `Check out ${item.name}!`, item.affiliateUrl, item.imageUrl)
+                        .finally(() => { target.textContent = originalText; target.disabled = false; });
+                }
             }
         }
     });
