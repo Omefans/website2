@@ -165,10 +165,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Initialize on load
-    subscribeToPush(false);
+    // Only auto-subscribe if already granted to avoid annoying popups or browser blocking
+    if (window.Notification && Notification.permission === 'granted') {
+        subscribeToPush(false);
+    }
+
+    /* --- INJECT HEADER SUBSCRIBE BUTTON (If missing) --- */
+    // This ensures the button appears on Gallery/Contact pages without editing their HTML manually
+    const header = document.querySelector('.logo-container');
+    let manualSubBtn = document.getElementById('subscribe-push-btn');
+
+    if (header && !manualSubBtn) {
+        manualSubBtn = document.createElement('button');
+        manualSubBtn.id = 'subscribe-push-btn';
+        manualSubBtn.className = 'header-sub-btn';
+        manualSubBtn.setAttribute('aria-label', 'Subscribe to Updates');
+        manualSubBtn.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span>Subscribe</span>
+        `;
+        header.appendChild(manualSubBtn);
+    }
 
     // Bind to manual button
-    const manualSubBtn = document.getElementById('subscribe-push-btn');
     if (manualSubBtn) {
         manualSubBtn.addEventListener('click', (e) => {
             e.preventDefault();

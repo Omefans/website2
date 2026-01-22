@@ -68,11 +68,15 @@ body {
 
 /* --- HEADER AREA --- */
 .logo-container {
-    padding: 30px 40px;
+    padding: 20px 40px;
     width: 100%;
     animation: slideDown 1s ease-out forwards;
     position: relative; /* Needed for positioning the toggle button */
-    overflow: hidden; /* The definitive fix: This clips the flying Santa animation and removes the horizontal scrollbar. */
+    overflow: visible;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
 }
 
 .logo {
@@ -100,6 +104,33 @@ body {
 /* Hide text since image has it */
 .logo-text-header {
     display: none; 
+}
+
+/* Header Subscribe Button */
+.header-sub-btn {
+    background: rgba(0, 217, 255, 0.1);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 10px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.1);
+}
+
+.header-sub-btn:hover {
+    background: var(--primary);
+    color: #000;
+    box-shadow: 0 0 20px var(--primary);
+    transform: translateY(-2px);
 }
 
 /* --- HAPPY NEW YEAR TEXT ANIMATION --- */
@@ -341,11 +372,14 @@ body {
 }
 
 @media (max-width: 768px) {
-    .logo-container { display: flex; justify-content: center; padding: 20px; }
+    .logo-container { padding: 15px 20px; }
     .logo img { height: 50px; }
     .center-logo-img { max-width: 200px; margin-bottom: 20px; }    
     .cta-container { flex-direction: column; align-items: center; }
     .cta-button { width: 80%; max-width: 280px; text-align: center; }
+    
+    .header-sub-btn span { display: none; }
+    .header-sub-btn { padding: 10px; border-radius: 50%; }
     
     /* Mobile Gallery UI Improvements */
     .gallery-controls {
