@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { z } from 'zod';
+import webpush from 'web-push';
 
 // Define the environment variables expected from wrangler.toml
 type Bindings = {
@@ -12,6 +13,8 @@ type Bindings = {
 	DISCORD_WEBHOOK_ONLYFANS: string;
 	DISCORD_WEBHOOK_CONTACT: string;
 	DISCORD_WEBHOOK_ANNOUNCEMENTS: string;
+	SUBSCRIPTIONS: KVNamespace;
+	VAPID_PRIVATE_KEY: string;
 };
 
 // Define custom variables for our context
@@ -1647,6 +1650,57 @@ app.delete('/api/security/bans/:ip', authMiddleware, adminMiddleware, async (c) 
 	await c.env.DB.prepare('DELETE FROM banned_ips WHERE ip = ?').bind(ip).run();
 	await logEvent(c.env.DB, 'INFO', `IP Unbanned: ${ip}`);
 	return c.json({ message: 'IP Unbanned' });
+});
+
+// --- Push Notification Routes ---
+
+app.post('/api/notifications/subscribe', async (c) => {
+	try {
+		const sub = await c.req.json();
+		// Store subscription in KV. Use endpoint as key to prevent duplicates.
+		await c.env.SUBSCRIPTIONS.put(sub.endpoint, JSON.stringify(sub));
+		return c.json({ message: 'Subscribed!' }, 201);
+	} catch (e) {
+		return c.json({ error: 'Failed to subscribe' }, 500);
+	}
+});
+
+app.post('/api/notifications/broadcast', authMiddleware, adminMiddleware, async (c) => {
+	const data = await c.req.json();
+	const { title, body, url, image } = data;
+
+	// Configure web-push
+	webpush.setVapidDetails(
+		'mailto:admin@omefans.com',
+		'BFW5zwtA-gigvSBijdfXKLGDur837vjKr7DYKewMI63cNL-9B4OHypQsp1oyxG1zAoxmOVqUlvJ8K1gvOW6jHWY',
+		c.env.VAPID_PRIVATE_KEY
+	);
+
+	// Get all subscriptions from KV
+	const value = await c.env.SUBSCRIPTIONS.list();
+	const notifications = [];
+
+	for (const key of value.keys) {
+		const subData = await c.env.SUBSCRIPTIONS.get(key.name);
+		if (subData) {
+			const subscription = JSON.parse(subData);
+			const payload = JSON.stringify({ title, body, url, image });
+			
+			// Send notification
+			const p = webpush.sendNotification(subscription, payload)
+				.catch(err => {
+					if (err.statusCode === 410 || err.statusCode === 404) {
+						// Subscription is gone, delete from KV
+						return c.env.SUBSCRIPTIONS.delete(key.name);
+					}
+					console.error('Push error', err);
+				});
+			notifications.push(p);
+		}
+	}
+
+	await Promise.all(notifications);
+	return c.json({ message: 'Broadcast sent' });
 });
 
 // --- Export the Hono app ---

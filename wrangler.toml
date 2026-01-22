@@ -3,9 +3,15 @@
 name = "omefans-site" # This MUST match the subdomain of your worker URL.
 main = "index.ts" # The entry point for your backend code.
 compatibility_date = "2024-05-01"
+node_compat = true
 
 # This section links your D1 database to your Worker.
 [[d1_databases]]
 binding = "DB" # The variable name for the database inside your code.
 database_name = "omefans-db"
 database_id = "66441058-5ea0-46ec-86f2-1026c6f77ad7"
+
+# This section For Push Notification
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "4d730489462f486bb923d630dff78afc"
