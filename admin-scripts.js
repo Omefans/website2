@@ -620,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function triggerPushBroadcast(data) {
+    async function sendPushNotification(title, body, url, image) {
         try {
             await authenticatedFetch(`${AppConfig.backendUrl}/api/notifications/broadcast`, {
                 method: 'POST',
@@ -629,10 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     url: data.affiliateUrl,
                     image: data.imageUrl
                 })
+                body: JSON.stringify({ title, body, url, image })
             });
             showToast('Push notification broadcasted!', 'success');
         } catch (e) {
             console.error('Broadcast failed', e);
+            showToast('Failed to send push notification', 'error');
         }
     }
 
@@ -682,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Trigger Custom Cloudflare Push Notification
             if (!isEditing) {
                 triggerPushBroadcast(data);
+                sendPushNotification("New Content Alert! 🔥", `Check out ${data.name}!`, data.affiliateUrl, data.imageUrl);
             }
         } catch (error) {
             showToast(`${isEditing ? 'Update failed' : 'Add failed'}: ${error.message}`, 'error');
@@ -1117,6 +1121,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handlePostAnnouncement(e, websiteOnly = false) {
         e.preventDefault();
+        if (!postAnnouncementForm) return;
+
         const button = websiteOnly ? document.getElementById('post-website-only-btn') : postAnnouncementForm.querySelector('button[type="submit"]');
         const title = document.getElementById('announcement-title').value;
         const message = document.getElementById('announcement-message').value;
@@ -1137,6 +1143,11 @@ document.addEventListener('DOMContentLoaded', () => {
             announcementModal.classList.remove('show');
             postAnnouncementForm.reset();
             loadAnnouncements();
+
+            // Trigger Push Notification if not website only
+            if (!websiteOnly) {
+                sendPushNotification(title, message, linkUrl || 'https://omefans.com', imageUrl);
+            }
         } catch (error) {
             showToast(`Error: ${error.message}`, 'error');
         } finally {
